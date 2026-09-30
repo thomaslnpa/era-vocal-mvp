@@ -1,0 +1,10 @@
+{
+  "description": "Facilitates prompt creation and solution development by guiding users through structured input, enhancing productivity and clarity in project planning.",
+  "robots": {
+    "index": false
+  },
+  "accessibility": {
+    "addBypassLinks": false,
+    "ignoreReducedMotion": false
+  }
+}
