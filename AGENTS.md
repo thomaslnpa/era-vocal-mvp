@@ -2,6 +2,18 @@
 
 React + Vite + Tailwind CSS project running inside Figma Make.
 
+## Références produit
+
+Lire ces fichiers avant une modification produit ou UI. `src/App.tsx` fait foi si un brief diverge.
+
+- `docs/produit.md` - promesse, utilisateur, qualification, ce qu'il ne faut pas construire
+- `docs/ecrans.md` - écrans réels, navigation, écarts avec les briefs
+- `docs/donnees.md` - type `Prospect`, état, ce qui est mocké
+- `docs/design.md` - couleurs ERA, typo, composants à réutiliser
+- `docs/code.md` - où écrire, limites du prototype
+
+Briefs historiques : `src/imports/pasted_text/`.
+
 ## Development Server
 
 A Vite development server is **already running** on `$PORT` (default 8443). You don't need to start it manually.
