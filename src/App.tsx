@@ -1,17 +1,21 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
+import { supabase } from '@/lib/supabase'
+import eraLogo from '@/assets/era-logo.svg'
+import type { Tables } from '@/lib/database.types'
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 type Screen = 'home' | 'prospects' | 'detail' | 'ai-analysis'
-type Qualification = 'CHAUD' | 'TIÈDE' | 'FROID'
-type Filter = 'Tous' | 'Chaud' | 'Tiède' | 'Froid' | 'À relancer'
+type Qualification = 'VERT' | 'ORANGE' | 'ROUGE'
+type Filter = 'Tous' | 'Rouge' | 'Orange' | 'Vert' | 'À relancer'
 
 interface Prospect {
-  id: number
+  id: string | number
+  isDemo?: boolean
   prenom: string
   nom: string
   tel: string
   email: string
-  qualification: Qualification
+  qualification: Qualification | null
   typeBien: string
   typologie: string
   secteur: string
@@ -33,14 +37,14 @@ interface Prospect {
 }
 
 // ── Data ───────────────────────────────────────────────────────────────────────
-const PROSPECTS: Prospect[] = [
+const DEMO_DATA: Prospect[] = [
   {
     id: 1,
     prenom: 'Sophie',
     nom: 'Martin',
     tel: '06 12 34 56 78',
     email: 'sophie.martin@example.fr',
-    qualification: 'TIÈDE',
+    qualification: 'ORANGE',
     typeBien: 'Appartement',
     typologie: 'T3',
     secteur: 'Toulouse Centre',
@@ -61,7 +65,7 @@ const PROSPECTS: Prospect[] = [
     prochaineAction: 'Faire un point sur l\'accord bancaire',
     prochaineActionDate: '15 octobre 2026',
     canal: 'WhatsApp',
-    messageSuggere: 'Bonjour Sophie, je reviens vers vous concernant votre projet d\'achat d\'un T3 à Toulouse Centre. Avez-vous eu un retour de votre banque concernant votre accord de financement ? Je reste disponible pour vous accompagner dans cette étape. Bonne journée, Nicolas.',
+    messageSuggere: 'Bonjour Sophie, je reviens vers vous concernant votre projet d\'achat d\'un T3 à Toulouse Centre. Avez-vous eu un retour de votre banque concernant votre accord de financement ? Je reste disponible pour vous accompagner dans cette étape. Bonne journée, Yohann.',
   },
   {
     id: 2,
@@ -69,7 +73,7 @@ const PROSPECTS: Prospect[] = [
     nom: 'Morel',
     tel: '06 98 76 54 32',
     email: 'julien.morel@example.fr',
-    qualification: 'FROID',
+    qualification: 'ROUGE',
     typeBien: 'Maison',
     typologie: 'T5',
     secteur: 'Balma',
@@ -89,7 +93,7 @@ const PROSPECTS: Prospect[] = [
     prochaineAction: 'Réactiver le projet',
     prochaineActionDate: 'Aujourd\'hui',
     canal: 'Appel',
-    messageSuggere: 'Bonjour Julien, j\'espère que vous allez bien. Je souhaitais revenir vers vous concernant votre projet d\'acquisition d\'une maison à Balma. Avez-vous eu l\'occasion de faire avancer votre réflexion ? Je serais ravi d\'en discuter avec vous. Bonne journée, Nicolas.',
+    messageSuggere: 'Bonjour Julien, j\'espère que vous allez bien. Je souhaitais revenir vers vous concernant votre projet d\'acquisition d\'une maison à Balma. Avez-vous eu l\'occasion de faire avancer votre réflexion ? Je serais ravi d\'en discuter avec vous. Bonne journée, Yohann.',
   },
   {
     id: 3,
@@ -97,7 +101,7 @@ const PROSPECTS: Prospect[] = [
     nom: 'Laurent',
     tel: '07 23 45 67 89',
     email: 'emilie.laurent@example.fr',
-    qualification: 'CHAUD',
+    qualification: 'VERT',
     typeBien: 'Appartement',
     typologie: 'T4',
     secteur: 'Toulouse / Côte Pavée',
@@ -116,7 +120,7 @@ const PROSPECTS: Prospect[] = [
     prochaineAction: 'Proposer les nouvelles annonces',
     prochaineActionDate: 'Demain',
     canal: 'WhatsApp',
-    messageSuggere: 'Bonjour Émilie, de nouvelles annonces correspondant à vos critères viennent d\'être publiées à Toulouse Côte Pavée. Je vous les transmets dès maintenant. Êtes-vous disponible cette semaine pour une visite ? Bonne journée, Nicolas.',
+    messageSuggere: 'Bonjour Émilie, de nouvelles annonces correspondant à vos critères viennent d\'être publiées à Toulouse Côte Pavée. Je vous les transmets dès maintenant. Êtes-vous disponible cette semaine pour une visite ? Bonne journée, Yohann.',
   },
   {
     id: 4,
@@ -124,7 +128,7 @@ const PROSPECTS: Prospect[] = [
     nom: 'Bernard',
     tel: '06 55 44 33 22',
     email: 'camille.bernard@example.fr',
-    qualification: 'TIÈDE',
+    qualification: 'ORANGE',
     typeBien: 'Appartement',
     typologie: 'T2',
     secteur: 'Toulouse / Saint-Étienne',
@@ -141,7 +145,7 @@ const PROSPECTS: Prospect[] = [
     prochaineAction: 'Relancer sur la décision achat/location',
     prochaineActionDate: 'Dans 3 jours',
     canal: 'Appel',
-    messageSuggere: 'Bonjour Camille, j\'espère que vous allez bien. Avez-vous eu le temps de réfléchir à votre projet ? Achat ou location, je suis là pour vous aider à prendre la meilleure décision selon votre situation. N\'hésitez pas à me rappeler. Bonne journée, Nicolas.',
+    messageSuggere: 'Bonjour Camille, j\'espère que vous allez bien. Avez-vous eu le temps de réfléchir à votre projet ? Achat ou location, je suis là pour vous aider à prendre la meilleure décision selon votre situation. N\'hésitez pas à me rappeler. Bonne journée, Yohann.',
   },
   {
     id: 5,
@@ -149,7 +153,7 @@ const PROSPECTS: Prospect[] = [
     nom: 'Garcia',
     tel: '07 11 22 33 44',
     email: 'thomas.garcia@example.fr',
-    qualification: 'FROID',
+    qualification: 'ROUGE',
     typeBien: 'Maison',
     typologie: 'T4',
     secteur: 'Colomiers',
@@ -166,21 +170,102 @@ const PROSPECTS: Prospect[] = [
     prochaineAction: 'Vérifier avancement de la vente de son appartement',
     prochaineActionDate: '28 septembre',
     canal: 'WhatsApp',
-    messageSuggere: 'Bonjour Thomas, j\'espère que tout avance bien de votre côté. Avez-vous des nouvelles concernant la vente de votre appartement actuel ? Dès que vous aurez une visibilité, nous pourrons reprendre ensemble la recherche de votre maison à Colomiers. Bonne journée, Nicolas.',
+    messageSuggere: 'Bonjour Thomas, j\'espère que tout avance bien de votre côté. Avez-vous des nouvelles concernant la vente de votre appartement actuel ? Dès que vous aurez une visibilité, nous pourrons reprendre ensemble la recherche de votre maison à Colomiers. Bonne journée, Yohann.',
   },
 ]
+
+// Fiches fictives de démonstration (pastille « Démo »)
+const PROSPECTS: Prospect[] = DEMO_DATA.map(p => ({ ...p, isDemo: true }))
+
+// ── Données réelles (Supabase, schéma eravocal) ───────────────────────────────
+const SCORE_TO_QUALIF: Record<string, Qualification> = { rouge: 'ROUGE', orange: 'ORANGE', vert: 'VERT' }
+const DELAI_LABEL: Record<string, string> = {
+  immediat: 'Immédiat',
+  moins_d_un_mois: 'Moins d\'un mois',
+  un_a_six_mois: '1 à 6 mois',
+  plus_de_six_mois: 'Plus de 6 mois',
+}
+const FINANCEMENT_LABEL: Record<string, string> = {
+  solide: 'Solide',
+  en_cours: 'En cours',
+  aucun: 'Aucun',
+  inconnu: 'Inconnu',
+}
+
+function acheteurToProspect(a: Tables<{ schema: 'eravocal' }, 'acheteurs'>): Prospect {
+  const details = (a.details && typeof a.details === 'object' && !Array.isArray(a.details) ? a.details : {}) as Record<string, unknown>
+  return {
+    id: a.id,
+    prenom: a.prenom ?? '',
+    nom: a.nom,
+    tel: a.telephone ?? '',
+    email: a.email ?? '',
+    qualification: a.score ? SCORE_TO_QUALIF[a.score] : null,
+    typeBien: a.type_bien ?? '',
+    typologie: '',
+    secteur: a.secteur ?? '',
+    budget: a.budget ?? '',
+    horizon: a.delai_acquisition ? DELAI_LABEL[a.delai_acquisition] : '',
+    relance: '',
+    relanceLabel: '',
+    financement: a.financement_statut ? FINANCEMENT_LABEL[a.financement_statut] : '',
+    apport: typeof details.apport === 'string' ? details.apport : '',
+    criteres: [],
+    motivation: '',
+    frein: '',
+    historique: [],
+    prochaineAction: '',
+    prochaineActionDate: '',
+    canal: '',
+    messageSuggere: '',
+  }
+}
+
+// Acheteurs réels + fiches de démo, mis à jour en temps réel
+function useProspects(): Prospect[] {
+  const [reels, setReels] = useState<Prospect[]>([])
+
+  useEffect(() => {
+    let active = true
+    const load = async () => {
+      const { data, error } = await supabase.from('acheteurs').select('*').order('created_at', { ascending: false })
+      if (error) return console.error('Supabase acheteurs :', error.message)
+      if (active) setReels(data.map(acheteurToProspect))
+    }
+    load()
+    const channel = supabase
+      .channel('acheteurs-live')
+      .on('postgres_changes', { event: '*', schema: 'eravocal', table: 'acheteurs' }, load)
+      .subscribe()
+    return () => {
+      active = false
+      supabase.removeChannel(channel)
+    }
+  }, [])
+
+  return [...reels, ...PROSPECTS]
+}
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
 function qualifBadge(q: Qualification) {
   const map = {
-    CHAUD: { bg: 'bg-[#FEE8EA]', text: 'text-[#D00C29]', dot: 'bg-[#D00C29]' },
-    TIÈDE: { bg: 'bg-[#FEF0E6]', text: 'text-[#E07B39]', dot: 'bg-[#E07B39]' },
-    FROID: { bg: 'bg-[#E8EBF5]', text: 'text-[#1A2A63]', dot: 'bg-[#1A2A63]' },
+    ROUGE: { bg: 'bg-[#FEE8EA]', text: 'text-[#D00C29]', dot: 'bg-[#D00C29]' },
+    ORANGE: { bg: 'bg-[#FEF0E6]', text: 'text-[#E07B39]', dot: 'bg-[#E07B39]' },
+    VERT: { bg: 'bg-[#E6F4EA]', text: 'text-[#2E7D32]', dot: 'bg-[#2E7D32]' },
   }
   return map[q]
 }
 
-function QualifBadge({ q }: { q: Qualification }) {
+function DemoBadge() {
+  return (
+    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-600 uppercase tracking-wide bg-[#F3F4F6] text-[#6B7280] border border-dashed border-[#D1D5DB]">
+      Démo
+    </span>
+  )
+}
+
+function QualifBadge({ q }: { q: Qualification | null }) {
+  if (!q) return null
   const s = qualifBadge(q)
   return (
     <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-600 tracking-wide ${s.bg} ${s.text}`}>
@@ -245,14 +330,9 @@ function HomeScreen({ onOpenDetail, onOpenAnalysis }: {
       {/* Barre fixe mobile : logo + profil (sur desktop, ils sont dans le menu latéral) */}
       <div className="md:hidden px-5 pt-4 pb-3 bg-white border-b border-[#F0E8E0] shrink-0">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded bg-[#850831] flex items-center justify-center">
-              <span className="text-white text-xs font-700 tracking-wider">ERA</span>
-            </div>
-            <span className="text-[#1A2A63] text-xs font-500 tracking-wide uppercase">France</span>
-          </div>
+          <img src={eraLogo} alt="Era Immo" className="h-14 w-auto" />
           <div className="w-9 h-9 rounded-full bg-[#850831]/10 flex items-center justify-center">
-            <span className="text-[#850831] text-sm font-600">N</span>
+            <span className="text-[#850831] text-sm font-600">Y</span>
           </div>
         </div>
       </div>
@@ -264,7 +344,7 @@ function HomeScreen({ onOpenDetail, onOpenAnalysis }: {
         {/* Bonjour + stats — dans le scroll */}
         <div className="bg-white border-b border-[#F0E8E0]">
         <div className="max-w-5xl mx-auto px-5 md:px-8 pt-5 md:pt-8 pb-5">
-          <h1 className="text-2xl md:text-3xl font-serif text-[#1A2A63] leading-tight">Bonjour Nicolas 👋</h1>
+          <h1 className="text-2xl md:text-3xl font-serif text-[#1A2A63] leading-tight">Bonjour Yohann 👋</h1>
           <p className="text-sm text-[#6B7280] mt-1">Voici ce qui mérite votre attention aujourd'hui.</p>
           <div className="flex gap-3 mt-4 md:max-w-md">
             <div className="flex-1 bg-[#FEE8EA] rounded-xl px-4 py-3 border border-[#FECDD3]">
@@ -304,7 +384,7 @@ function HomeScreen({ onOpenDetail, onOpenAnalysis }: {
             />
             <WhatsAppMessageCard
               prospect="Émilie Laurent"
-              info="Qualification passée en CHAUD"
+              info="Qualification passée en VERT"
               updated={false}
               onView={() => {}}
             />
@@ -620,14 +700,15 @@ function ProspectTaskCard({ task, prospect }: { task: ProspectTask; prospect: Pr
 }
 
 // ── Screen: Prospects ─────────────────────────────────────────────────────────
-function ProspectsScreen({ onOpenDetail }: {
+function ProspectsScreen({ prospects, onOpenDetail }: {
+  prospects: Prospect[]
   onOpenDetail: (p: Prospect) => void
 }) {
   const [search, setSearch] = useState('')
   const [filter, setFilter] = useState<Filter>('Tous')
-  const filters: Filter[] = ['Tous', 'Chaud', 'Tiède', 'Froid', 'À relancer']
+  const filters: Filter[] = ['Tous', 'Rouge', 'Orange', 'Vert', 'À relancer']
 
-  const filtered = PROSPECTS.filter(p => {
+  const filtered = prospects.filter(p => {
     const name = `${p.prenom} ${p.nom}`.toLowerCase()
     const matchSearch = name.includes(search.toLowerCase())
     const matchFilter =
@@ -698,9 +779,10 @@ function ProspectRow({ prospect: p, onClick }: { prospect: Prospect; onClick: ()
           <div className="flex items-center gap-2">
             <p className="font-600 text-[#111827] text-sm">{p.prenom} {p.nom}</p>
             <QualifBadge q={p.qualification} />
+            {p.isDemo && <DemoBadge />}
           </div>
-          <p className="text-xs text-[#9CA3AF] mt-0.5 truncate">{p.typeBien} {p.typologie} · {p.secteur} · {p.budget}</p>
-          <p className="text-xs font-600 text-[#850831] mt-1">Relance : {p.relance}</p>
+          <p className="text-xs text-[#9CA3AF] mt-0.5 truncate">{[`${p.typeBien} ${p.typologie}`.trim(), p.secteur, p.budget].filter(Boolean).join(' · ')}</p>
+          {p.relance && <p className="text-xs font-600 text-[#850831] mt-1">Relance : {p.relance}</p>}
         </div>
         <span className="text-[#D1D5DB] text-lg">›</span>
       </div>
@@ -722,7 +804,10 @@ function DetailScreen({ prospect: p, onBack }: {
   const toggleHistorique = (i: number) =>
     setExpandedHistorique(prev => prev.includes(i) ? prev.filter(x => x !== i) : [...prev, i])
 
-  const taches: ProspectTask[] = [
+  // Valeurs en dur du prototype : réservées aux fiches de démo
+  const d = (v: string) => (p.isDemo ? v : '')
+
+  const taches: ProspectTask[] = !p.isDemo ? [] : [
     {
       date: p.prochaineActionDate,
       icon: p.canal === 'WhatsApp' ? '💬' : '📞',
@@ -735,14 +820,14 @@ function DetailScreen({ prospect: p, onBack }: {
       icon: '💬',
       label: 'Envoyer une sélection de biens',
       contexte: '4–5 appartements correspondant aux nouveaux critères.',
-      messageSuggere: `Bonjour ${p.prenom}, je vous transmets une sélection de biens correspondant à vos critères. N'hésitez pas à me faire part de vos retours. Bonne journée, Nicolas.`,
+      messageSuggere: `Bonjour ${p.prenom}, je vous transmets une sélection de biens correspondant à vos critères. N'hésitez pas à me faire part de vos retours. Bonne journée, Yohann.`,
     },
     {
       date: '28 octobre',
       icon: '📞',
       label: 'Faire un point sur l\'avancement du projet',
       contexte: '',
-      messageSuggere: `Bonjour ${p.prenom}, je souhaitais faire un point avec vous sur l'avancement de votre projet. Avez-vous du nouveau ? Bonne journée, Nicolas.`,
+      messageSuggere: `Bonjour ${p.prenom}, je souhaitais faire un point avec vous sur l'avancement de votre projet. Avez-vous du nouveau ? Bonne journée, Yohann.`,
     },
   ]
 
@@ -761,13 +846,14 @@ function DetailScreen({ prospect: p, onBack }: {
               <h1 className="text-2xl md:text-3xl font-serif text-[#1A2A63]">{p.prenom} {p.nom}</h1>
               <div className="flex items-center gap-2 mt-2">
                 <QualifBadge q={p.qualification} />
+                {p.isDemo && <DemoBadge />}
               </div>
             </div>
             <div className="w-12 h-12 rounded-full bg-[#850831]/10 flex items-center justify-center shrink-0">
               <span className="text-[#850831] font-700 text-base">{p.prenom[0]}{p.nom[0]}</span>
             </div>
           </div>
-          <p className="text-sm text-[#6B7280] mt-2">{p.tel} · {p.email}</p>
+          <p className="text-sm text-[#6B7280] mt-2">{[p.tel, p.email].filter(Boolean).join(' · ') || '-'}</p>
           <div className="flex gap-3 mt-4 md:max-w-md">
             <button className="flex-1 flex items-center justify-center gap-2 bg-[#850831] text-white text-sm font-600 py-2.5 rounded-xl active:scale-95 transition-transform">
               <span>📞</span> Appeler
@@ -785,6 +871,9 @@ function DetailScreen({ prospect: p, onBack }: {
             <p className="text-[10px] font-700 text-[#9CA3AF] uppercase tracking-widest">Prochaines actions</p>
           </div>
           <div className="flex gap-3 overflow-x-auto hide-scrollbar px-5 pb-1">
+            {taches.length === 0 && (
+              <p className="text-sm text-[#9CA3AF] italic">Aucune action prévue.</p>
+            )}
             {taches.map((t, i) => (
               <ProspectTaskCard key={i} task={t} prospect={p} />
             ))}
@@ -797,22 +886,22 @@ function DetailScreen({ prospect: p, onBack }: {
 
           {/* ── Informations prospect ── */}
           <InfoCard title="Informations prospect" onEdit={() => setEditSection('info')}>
-            <Row label="Situation actuelle" value="Locataire" />
-            <Row label="Situation familiale" value="Célibataire" />
-            <Row label="Lieu de travail" value="Toulouse Centre" />
-            <Row label="Situation professionnelle" value="CDI" />
-            <Row label="Revenus approximatifs" value="3 200 € / mois" />
+            <Row label="Situation actuelle" value={d("Locataire")} />
+            <Row label="Situation familiale" value={d("Célibataire")} />
+            <Row label="Lieu de travail" value={d("Toulouse Centre")} />
+            <Row label="Situation professionnelle" value={d("CDI")} />
+            <Row label="Revenus approximatifs" value={d("3 200 € / mois")} />
             {infoOpen && (
               <div className="fade-in">
-                <Row label="Adresse" value="Non renseigné" />
-                <Row label="Locataire depuis" value="Non renseigné" />
-                <Row label="Loyer actuel" value="Non renseigné" />
-                <Row label="Revente nécessaire" value="Non" />
-                <Row label="Enfants" value="Non renseigné" />
-                <Row label="Secteur d'activité" value="Non renseigné" />
-                <Row label="Canal préféré" value="WhatsApp" />
-                <Row label="Origine du prospect" value="Recommandation" />
-                <Row label="Agent responsable" value="Nicolas" />
+                <Row label="Adresse" value={d("Non renseigné")} />
+                <Row label="Locataire depuis" value={d("Non renseigné")} />
+                <Row label="Loyer actuel" value={d("Non renseigné")} />
+                <Row label="Revente nécessaire" value={d("Non")} />
+                <Row label="Enfants" value={d("Non renseigné")} />
+                <Row label="Secteur d'activité" value={d("Non renseigné")} />
+                <Row label="Canal préféré" value={d("WhatsApp")} />
+                <Row label="Origine du prospect" value={d("Recommandation")} />
+                <Row label="Agent responsable" value={d("Yohann")} />
               </div>
             )}
             <button
@@ -832,16 +921,16 @@ function DetailScreen({ prospect: p, onBack }: {
             <Row label="Horizon" value={p.horizon} />
             {projetOpen && (
               <div className="fade-in">
-                <Row label="Usage" value="Résidence principale" />
-                <Row label="Ancien / Récent" value="Indifférent" />
-                <Row label="Superficie" value="Non renseigné" />
-                <Row label="Pièces" value="Non renseigné" />
-                <Row label="Chambres" value="2 minimum" />
-                <Row label="Ascenseur" value="Souhaité" />
-                <Row label="Étage" value="Non renseigné" />
-                <Row label="Balcon / Terrasse" value="Indispensable" />
-                <Row label="Parking / Garage" value="Souhaité" />
-                <Row label="Travaux acceptés" value="Non" />
+                <Row label="Usage" value={d("Résidence principale")} />
+                <Row label="Ancien / Récent" value={d("Indifférent")} />
+                <Row label="Superficie" value={d("Non renseigné")} />
+                <Row label="Pièces" value={d("Non renseigné")} />
+                <Row label="Chambres" value={d("2 minimum")} />
+                <Row label="Ascenseur" value={d("Souhaité")} />
+                <Row label="Étage" value={d("Non renseigné")} />
+                <Row label="Balcon / Terrasse" value={d("Indispensable")} />
+                <Row label="Parking / Garage" value={d("Souhaité")} />
+                <Row label="Travaux acceptés" value={d("Non")} />
               </div>
             )}
             <button
@@ -856,16 +945,16 @@ function DetailScreen({ prospect: p, onBack }: {
           <InfoCard title="Financement" onEdit={() => setEditSection('financement')}>
             <Row label="Budget" value={p.budget} />
             <Row label="Situation financement" value={p.financement} />
-            <Row label="Banque consultée" value="Oui" />
-            <Row label="Accord bancaire" value="En attente" />
+            <Row label="Banque consultée" value={d("Oui")} />
+            <Row label="Accord bancaire" value={d("En attente")} />
             <Row label="Apport" value={p.apport} />
             {financementOpen && (
               <div className="fade-in">
-                <Row label="Emprunt nécessaire" value="Oui" />
-                <Row label="Montant emprunt" value="270 000 €" />
-                <Row label="Durée envisagée" value="20 ans" />
-                <Row label="Taux" value="Non renseigné" />
-                <Row label="Courtier" value="Non renseigné" />
+                <Row label="Emprunt nécessaire" value={d("Oui")} />
+                <Row label="Montant emprunt" value={d("270 000 €")} />
+                <Row label="Durée envisagée" value={d("20 ans")} />
+                <Row label="Taux" value={d("Non renseigné")} />
+                <Row label="Courtier" value={d("Non renseigné")} />
               </div>
             )}
             <button
@@ -881,6 +970,7 @@ function DetailScreen({ prospect: p, onBack }: {
           {/* ── Critères importants ── */}
           <InfoCard title="Critères importants recherchés" onEdit={() => setEditSection('criteres')}>
             <div className="space-y-2">
+              {p.criteres.length === 0 && <p className="text-sm text-[#9CA3AF]">-</p>}
               {p.criteres.map((c, i) => {
                 const isIndispensable = c.toLowerCase().includes('indispensable')
                 return (
@@ -902,11 +992,11 @@ function DetailScreen({ prospect: p, onBack }: {
             <div className="space-y-3">
               <div>
                 <p className="text-xs text-[#9CA3AF] mb-1">Motivation</p>
-                <p className="text-sm text-[#374151] font-500">{p.motivation}</p>
+                <p className="text-sm text-[#374151] font-500">{p.motivation || '-'}</p>
               </div>
               <div>
                 <p className="text-xs text-[#9CA3AF] mb-1">Frein actuel</p>
-                <p className="text-sm text-[#E07B39] font-500">{p.frein}</p>
+                <p className="text-sm text-[#E07B39] font-500">{p.frein || '-'}</p>
               </div>
             </div>
           </InfoCard>
@@ -1023,7 +1113,7 @@ function Row({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex items-center justify-between py-1.5 border-b border-[#F9FAFB] last:border-0">
       <span className="text-sm text-[#9CA3AF]">{label}</span>
-      <span className="text-sm font-500 text-[#111827]">{value}</span>
+      <span className="text-sm font-500 text-[#111827]">{value || '-'}</span>
     </div>
   )
 }
@@ -1074,7 +1164,7 @@ function AIAnalysisScreen({ onBack }: { onBack: () => void }) {
   const [tacheLabel, setTacheLabel] = useState('Envoyer les nouvelles annonces')
   const [tacheDate, setTacheDate] = useState('Demain · 10h00')
   const [tacheCanal, setTacheCanal] = useState('Email')
-  const [qualif, setQualif] = useState<'FROID' | 'TIÈDE' | 'CHAUD'>('TIÈDE')
+  const [qualif, setQualif] = useState<'ROUGE' | 'ORANGE' | 'VERT'>('ORANGE')
 
   return (
     <div className="flex flex-col h-full bg-[#FFF1EA] relative">
@@ -1174,7 +1264,7 @@ function AIAnalysisScreen({ onBack }: { onBack: () => void }) {
               <button onClick={() => setEditTarget('qualification')} className="text-xs font-600 text-[#850831] active:opacity-60">Modifier</button>
             </div>
             <div className="flex items-center gap-2 mb-1.5">
-              <QualifBadge q="FROID" />
+              <QualifBadge q="ROUGE" />
               <span className="text-[#9CA3AF] text-sm">→</span>
               <QualifBadge q={qualif} />
             </div>
@@ -1264,7 +1354,7 @@ function AIAnalysisScreen({ onBack }: { onBack: () => void }) {
         <Overlay onClose={() => setEditTarget(null)}>
           <EditSheet title="Modifier la qualification" onClose={() => setEditTarget(null)}>
             <div className="flex gap-3">
-              {(['CHAUD', 'TIÈDE', 'FROID'] as const).map(q => (
+              {(['VERT', 'ORANGE', 'ROUGE'] as const).map(q => (
                 <button
                   key={q}
                   onClick={() => setQualif(q)}
@@ -1350,11 +1440,8 @@ function SideNav({ active, onChange }: {
   ]
   return (
     <aside className="hidden md:flex w-60 shrink-0 flex-col bg-white border-r border-[#F0E8E0] px-4 py-6">
-      <div className="flex items-center gap-2 px-2 mb-8">
-        <div className="w-8 h-8 rounded bg-[#850831] flex items-center justify-center">
-          <span className="text-white text-xs font-700 tracking-wider">ERA</span>
-        </div>
-        <span className="text-[#1A2A63] text-xs font-500 tracking-wide uppercase">France</span>
+      <div className="px-2 mb-8">
+        <img src={eraLogo} alt="Era Immo" className="h-24 w-auto" />
       </div>
       <nav className="space-y-1">
         {items.map(item => (
@@ -1372,9 +1459,9 @@ function SideNav({ active, onChange }: {
       </nav>
       <div className="mt-auto flex items-center gap-3 px-2">
         <div className="w-9 h-9 rounded-full bg-[#850831]/10 flex items-center justify-center">
-          <span className="text-[#850831] text-sm font-600">N</span>
+          <span className="text-[#850831] text-sm font-600">Y</span>
         </div>
-        <span className="text-sm font-500 text-[#111827]">Nicolas</span>
+        <span className="text-sm font-500 text-[#111827]">Yohann</span>
       </div>
     </aside>
   )
@@ -1393,12 +1480,15 @@ function NavItem({ icon, label, active, onClick }: { icon: string; label: string
 export default function App() {
   const [screen, setScreen] = useState<Screen>('home')
   const [navTab, setNavTab] = useState<'home' | 'prospects'>('home')
-  const [selectedProspect, setSelectedProspect] = useState<Prospect>(PROSPECTS[0])
+  const prospects = useProspects()
+  const [selectedId, setSelectedId] = useState<Prospect['id']>(PROSPECTS[0].id)
+  // Dérivé de la liste pour que la fiche ouverte suive les mises à jour temps réel
+  const selectedProspect = prospects.find(p => p.id === selectedId) ?? PROSPECTS[0]
 
   const showNav = screen === 'home' || screen === 'prospects'
 
   function openDetail(p: Prospect) {
-    setSelectedProspect(p)
+    setSelectedId(p.id)
     setScreen('detail')
   }
 
@@ -1411,9 +1501,10 @@ export default function App() {
     <div className="flex h-dvh bg-[#FFF1EA]">
       <SideNav active={navTab} onChange={(t) => { setNavTab(t); setScreen(t) }} />
 
-      <main className="relative flex-1 min-w-0 h-full">
+      <main className="flex flex-col flex-1 min-w-0 h-full">
         {/* Content */}
-        <div className="absolute inset-0">
+        <div className="relative flex-1 min-h-0">
+          <div className="absolute inset-0">
           {screen === 'home' && (
             <HomeScreen
               onOpenDetail={openDetail}
@@ -1421,7 +1512,7 @@ export default function App() {
             />
           )}
           {screen === 'prospects' && (
-            <ProspectsScreen onOpenDetail={openDetail} />
+            <ProspectsScreen prospects={prospects} onOpenDetail={openDetail} />
           )}
           {screen === 'detail' && (
             <DetailScreen
@@ -1432,7 +1523,13 @@ export default function App() {
           {screen === 'ai-analysis' && (
             <AIAnalysisScreen onBack={() => setScreen('home')} />
           )}
+          </div>
         </div>
+
+        {/* Footer (sur mobile, laisse la place à la barre de navigation fixe) */}
+        <footer className={`shrink-0 bg-white border-t border-[#F0E8E0] py-2 text-center text-xs text-[#9CA3AF] ${showNav ? 'pb-16 md:pb-2' : ''}`}>
+          © 2026 Era Immo - Tous droits réservés
+        </footer>
 
         {/* Nav mobile */}
         {showNav && (

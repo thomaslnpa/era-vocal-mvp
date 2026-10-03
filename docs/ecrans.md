@@ -6,7 +6,7 @@ Navigation visible : Accueil et Prospects. Barre basse en dessous de `md`, menu 
 
 ## Accueil
 
-`HomeScreen`. Fond chaud, salutation « Bonjour Nicolas », deux compteurs (tâches en retard, tâches aujourd'hui), puis :
+`HomeScreen`. Fond chaud, salutation « Bonjour Yohann », deux compteurs (tâches en retard, tâches aujourd'hui), puis :
 
 1. Carrousel « Derniers messages WhatsApp » (fond vert). Trois cartes en dur. Seule Sophie Martin ouvre `ai-analysis`. Julien et Émilie n'ont pas d'action.
 2. Section « En retard » : prospects avec `isLate` (Julien Morel).
@@ -52,7 +52,7 @@ Contenu, état local, non relié au tableau `PROSPECTS` :
 
 - Prospect identifié : Sophie Martin (le bouton Modifier du bandeau n'édite rien).
 - Quatre changements : situation CDD vers CDI, budget 450 000 € vers 500 000 €, critères terrasse et parking, tâche « Envoyer les nouvelles annonces ».
-- Qualification FROID vers TIÈDE, modifiable.
+- Qualification ROUGE vers ORANGE, modifiable.
 - Transcription dans `TranscriptionAccordion`.
 
 Ces valeurs (budget 500 000 €, secteur Carmes / Esquirol) contredisent la fiche Sophie (300 000 €, Toulouse Centre). C'est volontaire pour la démo du vocal, pas une source de vérité.

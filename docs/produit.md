@@ -14,7 +14,7 @@ L'agent reste décisionnaire. L'IA n'est pas un chatbot. Elle travaille en arri�
 
 Agent immobilier ERA, surtout sur smartphone, entre deux appels, déjà sur WhatsApp. Peu de temps pour saisir un compte rendu. L'interface est mobile-first, rapide, avec peu de champs obligatoires.
 
-Persona de démo : Nicolas.
+Persona de démo : Yohann.
 
 ## Canal principal
 
@@ -24,7 +24,7 @@ Le vocal peut aussi créer une tâche spontanée. Ce second parcours n'est pas d
 
 ## Qualification
 
-Uniquement CHAUD, TIÈDE, FROID. Jamais de score sur 100. Les règles de scoring ne sont pas figées. Toujours expliquer la qualification par 2 ou 3 faits (financement, horizon, activité du projet). L'agent peut la modifier.
+Uniquement ROUGE, ORANGE, VERT (score de la base). Jamais de score sur 100. Les règles de scoring ne sont pas figées. Toujours expliquer la qualification par 2 ou 3 faits (financement, horizon, activité du projet). L'agent peut la modifier.
 
 ## À ne pas construire
 

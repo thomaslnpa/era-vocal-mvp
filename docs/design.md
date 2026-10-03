@@ -9,14 +9,15 @@ Définies dans `src/index.css` (`@theme`) et recopiées en hex dans le JSX :
 - Principal, CTA, accents : `#850831`
 - Fond d'écran : `#FFF1EA`
 - Blanc des cartes : `#FFFFFF`
-- Rouge ERA, retard, CHAUD : `#D00C29` (fond de badge `#FEE8EA`)
-- Bleu ERA, titres serif, FROID : `#1A2A63` (fond de badge `#E8EBF5`)
-- TIÈDE : `#E07B39` (fond `#FEF0E6`)
+- Rouge ERA, retard, ROUGE : `#D00C29` (fond de badge `#FEE8EA`)
+- Bleu ERA, titres serif : `#1A2A63`
+- ORANGE : `#E07B39` (fond `#FEF0E6`)
+- VERT : `#2E7D32` (fond `#E6F4EA`)
 - Bordures chaudes : `#F0E8E0`
 - Texte secondaire : `#6B7280`, tertiaire `#9CA3AF`
 - Bandeau WhatsApp : fond `#E8F5E9`, texte `#2E7D32`
 
-Le rouge sert au retard et au badge CHAUD, peu ailleurs. Le bordeaux porte les CTA.
+Le rouge sert au retard et au badge ROUGE, peu ailleurs. Le bordeaux porte les CTA.
 
 Les tokens Tailwind `era-primary`, `era-red`, `era-blue`, `era-warm`, `chaud`, `tiede`, `froid` existent. L'UI actuelle utilise surtout les hex arbitraires (`bg-[#850831]`). Rester cohérent avec le fichier touché.
 
@@ -30,7 +31,7 @@ Le JSX utilise `font-500`, `font-600`, `font-700`. Ce ne sont pas les classes Ta
 
 Tout est dans `src/App.tsx`. Ne pas recréer un style de carte parallèle.
 
-- `QualifBadge` : pastille CHAUD / TIÈDE / FROID.
+- `QualifBadge` : pastille ROUGE / ORANGE / VERT.
 - `ActionCard` : tâche accueil. Pied Voir fiche, Message, Appel. Cercle de validation en haut à droite.
 - `ProspectTaskCard` : même langage, variante fiche. Largeur `w-72`, pied Message seul, crayon + cercle en haut à droite. Le contexte fiche est déjà la fiche, l'appel est dans le header.
 - `Overlay` : bottom sheet mobile, dialogue centré à partir de `md` (`max-w-md`).

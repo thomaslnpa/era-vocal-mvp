@@ -19,13 +19,13 @@ Formatage : `pnpm format` (oxfmt). Toolchain dans `.mise.toml`.
 - Composants fonctionnels, état local `useState`, pas de store.
 - Données de démo : constante `PROSPECTS` en tête de fichier.
 - Navigation par `setScreen`, pas par URL.
-- Textes UI en français, vouvoiement dans les messages suggérés, signature « Nicolas ».
+- Textes UI en français, vouvoiement dans les messages suggérés, signature « Yohann ».
 - Classes Tailwind dans le JSX, couleurs en hex arbitraires.
 - Handlers vides ou boutons sans `onClick` sont des trous de prototype, pas des oublis à « brancher » sur une API.
 
 ## Limites à respecter
 
-- Ne pas ajouter de backend, d'auth, ni d'envoi WhatsApp réel pour habiller le prototype.
+- Seule la liste et la fiche prospects lisent Supabase (`eravocal.acheteurs`). Pas d'écriture depuis l'app, pas d'auth, pas d'envoi WhatsApp réel.
 - Ne pas transformer une feuille placeholder (`SimpleEditSheet`) en formulaire complet sans demande : le brief de fiche veut une édition par section, le code ne l'a pas encore.
 - Ne pas aligner de force l'analyse WhatsApp sur la fiche Sophie : les deux jeux de chiffres illustrent deux moments (fiche actuelle et vocal plus récent).
 - `vite.config.ts` et `.figma/` appartiennent au socle Figma Make. Ne pas les modifier pour une tâche UI.

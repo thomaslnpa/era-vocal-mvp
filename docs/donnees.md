@@ -1,13 +1,18 @@
 # Données
 
-Tout est en mémoire dans `src/App.tsx`. Pas d'API, pas de persistance, pas de base. Recharger la page restaure `PROSPECTS`.
+Deux sources, fusionnées par `useProspects()` dans `src/App.tsx` :
+
+- Réel : table `eravocal.acheteurs` (Supabase, lecture seule avec la clé anon), mise à jour en temps réel (Realtime). `acheteurToProspect` convertit une ligne en `Prospect` : `score` rouge/orange/vert vers `ROUGE`/`ORANGE`/`VERT` (valeurs de la base), champs absents laissés vides (affichés `-`), pas de relance ni d'historique.
+- Démo : `PROSPECTS` (5 fiches fictives, `isDemo: true`, pastille « Démo »). Seules ces fiches affichent les valeurs en dur de la fiche détail (`d()` dans `DetailScreen`) et les tâches.
+
+L'accueil (`HomeScreen`) n'utilise que `PROSPECTS`. Client : `src/lib/supabase.ts`, types générés : `src/lib/database.types.ts` (`supabase gen types typescript --linked --schema eravocal`). Droits `anon` : voir `supabase/anon_lecture_eravocal.sql`.
 
 ## Type `Prospect`
 
 Champs présents :
 
 - `id`, `prenom`, `nom`, `tel`, `email`
-- `qualification` : `CHAUD` | `TIÈDE` | `FROID`
+- `qualification` : `ROUGE` | `ORANGE` | `VERT`
 - `typeBien`, `typologie`, `secteur`, `budget`, `horizon` (chaînes affichées, pas des nombres)
 - `relance` (clé de tri : `aujourd'hui`, `demain`, `dans 3 jours`, ou une date texte) et `relanceLabel`
 - `isLate` optionnel
@@ -16,7 +21,7 @@ Champs présents :
 - `historique` : `{ date, type, resume }`, type `vocal` | `note` | `tache`
 - `prochaineAction`, `prochaineActionDate`, `canal`, `messageSuggere`
 
-Cinq fiches : Sophie Martin (TIÈDE), Julien Morel (FROID, seul `isLate`), Émilie Laurent (CHAUD), Camille Bernard (TIÈDE), Thomas Garcia (FROID).
+Cinq fiches : Sophie Martin (ORANGE), Julien Morel (ROUGE, seul `isLate`), Émilie Laurent (VERT), Camille Bernard (ORANGE), Thomas Garcia (ROUGE).
 
 ## Ce que le type ne porte pas
 
@@ -46,4 +51,4 @@ Julien a `relance: "aujourd'hui"` et `isLate: true`, donc il n'apparaît que dan
 
 ## Filtres liste
 
-`Chaud` / `Tiède` / `Froid` comparent `qualification` à `filter.toUpperCase()` (`TIÈDE`, `FROID`, `CHAUD`). `À relancer` teste seulement `relance === "aujourd'hui"`.
+`Rouge` / `Orange` / `Vert` comparent `qualification` à `filter.toUpperCase()`. `À relancer` teste seulement `relance === "aujourd'hui"`.
