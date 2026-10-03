@@ -1,7 +1,7 @@
 import { useState, useRef } from 'react'
 
 // ── Types ──────────────────────────────────────────────────────────────────────
-type Screen = 'home' | 'prospects' | 'detail' | 'ai-analysis' | 'new-prospect' | 'task-voice' | 'note-analysis'
+type Screen = 'home' | 'prospects' | 'detail' | 'ai-analysis'
 type Qualification = 'CHAUD' | 'TIÈDE' | 'FROID'
 type Filter = 'Tous' | 'Chaud' | 'Tiède' | 'Froid' | 'À relancer'
 
@@ -193,21 +193,21 @@ function QualifBadge({ q }: { q: Qualification }) {
 // ── Bottom Sheet ──────────────────────────────────────────────────────────────
 function Overlay({ onClose, children }: { onClose: () => void; children: React.ReactNode }) {
   return (
-    <div className="absolute inset-0 z-50 flex flex-col justify-end">
+    <div className="fixed inset-0 z-50 flex flex-col justify-end md:justify-center md:items-center md:p-6">
       <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px]" onClick={onClose} />
-      <div className="relative bottom-sheet-enter">
+      <div className="relative bottom-sheet-enter md:w-full md:max-w-md md:rounded-3xl md:overflow-hidden">
         {children}
       </div>
     </div>
   )
 }
 
-// ── AI Validation Card ────────────────────────────────────────────────────────
-function AIValidationCard({ prospect, info, updated, onVerify }: {
+// ── WhatsApp Message Card ─────────────────────────────────────────────────────
+function WhatsAppMessageCard({ prospect, info, updated, onView }: {
   prospect: string
   info: string
   updated: boolean
-  onVerify: () => void
+  onView: () => void
 }) {
   return (
     <div className="shrink-0 w-44 bg-white rounded-xl border border-[#C8E6C9] shadow-sm flex flex-col justify-between">
@@ -218,10 +218,10 @@ function AIValidationCard({ prospect, info, updated, onVerify }: {
         </div>
       </div>
       <button
-        onClick={onVerify}
+        onClick={onView}
         className="w-full h-9 min-h-9 shrink-0 border-t border-[#C8E6C9] text-xs font-700 text-[#2E7D32] flex items-center justify-center gap-1 active:bg-[#F1F8E9] transition-colors rounded-b-xl"
       >
-        Vérifier <span>→</span>
+        Voir <span>→</span>
       </button>
     </div>
   )
@@ -242,8 +242,8 @@ function HomeScreen({ onOpenDetail, onOpenAnalysis }: {
   return (
     <div className="flex flex-col h-full bg-[#FFF1EA] relative">
 
-      {/* Barre fixe — logo + profil uniquement */}
-      <div className="px-5 pt-14 pb-3 bg-white border-b border-[#F0E8E0] shrink-0">
+      {/* Barre fixe mobile : logo + profil (sur desktop, ils sont dans le menu latéral) */}
+      <div className="md:hidden px-5 pt-4 pb-3 bg-white border-b border-[#F0E8E0] shrink-0">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 rounded bg-[#850831] flex items-center justify-center">
@@ -259,13 +259,14 @@ function HomeScreen({ onOpenDetail, onOpenAnalysis }: {
 
       {/* Contenu scrollable — tout le reste */}
       <div className="flex-1 overflow-y-auto hide-scrollbar">
-      <div className="pb-24 fade-in">
+      <div className="pb-24 md:pb-10 fade-in">
 
         {/* Bonjour + stats — dans le scroll */}
-        <div className="px-5 pt-5 pb-5 bg-white border-b border-[#F0E8E0]">
-          <h1 className="text-2xl font-serif text-[#1A2A63] leading-tight">Bonjour Nicolas 👋</h1>
+        <div className="bg-white border-b border-[#F0E8E0]">
+        <div className="max-w-5xl mx-auto px-5 md:px-8 pt-5 md:pt-8 pb-5">
+          <h1 className="text-2xl md:text-3xl font-serif text-[#1A2A63] leading-tight">Bonjour Nicolas 👋</h1>
           <p className="text-sm text-[#6B7280] mt-1">Voici ce qui mérite votre attention aujourd'hui.</p>
-          <div className="flex gap-3 mt-4">
+          <div className="flex gap-3 mt-4 md:max-w-md">
             <div className="flex-1 bg-[#FEE8EA] rounded-xl px-4 py-3 border border-[#FECDD3]">
               <p className="text-2xl font-700 text-[#D00C29]">{lateCount}</p>
               <p className="text-xs text-[#9CA3AF] mt-0.5">tâche{lateCount > 1 ? 's' : ''} en retard</p>
@@ -276,39 +277,43 @@ function HomeScreen({ onOpenDetail, onOpenAnalysis }: {
             </div>
           </div>
         </div>
+        </div>
 
-        {/* À valider — carrousel IA */}
-        <section className="bg-[#E8F5E9] pt-5 pb-4 border-b border-[#C8E6C9]">
+        {/* Derniers messages WhatsApp — carrousel IA */}
+        <section className="bg-[#E8F5E9] border-b border-[#C8E6C9]">
+        <div className="max-w-5xl mx-auto pt-5 pb-4 md:px-3">
           <div className="flex items-center justify-between px-5 mb-3">
             <div className="flex items-center gap-2">
               <span className="text-sm">🎙</span>
-              <h2 className="text-xs font-700 text-[#2E7D32] uppercase tracking-widest">À valider</h2>
-              <span className="text-xs text-[#4CAF50] font-400">— depuis WhatsApp</span>
+              <h2 className="text-xs font-700 text-[#2E7D32] uppercase tracking-widest">Derniers messages WhatsApp</h2>
               <span className="bg-[#2E7D32] text-white text-[10px] font-700 px-1.5 py-0.5 rounded-full leading-none">3</span>
             </div>
           </div>
           <div className="flex gap-3 overflow-x-auto hide-scrollbar px-5 pb-1">
-            <AIValidationCard
+            <WhatsAppMessageCard
               prospect="Sophie Martin"
-              info="Relance proposée : 15 octobre"
+              info="Relance programmée : 15 octobre"
               updated={false}
-              onVerify={onOpenAnalysis}
+              onView={onOpenAnalysis}
             />
-            <AIValidationCard
+            <WhatsAppMessageCard
               prospect="Julien Morel"
               info="3 infos mises à jour"
               updated
-              onVerify={() => {}}
+              onView={() => {}}
             />
-            <AIValidationCard
+            <WhatsAppMessageCard
               prospect="Émilie Laurent"
-              info="Qualification CHAUD proposée"
+              info="Qualification passée en CHAUD"
               updated={false}
-              onVerify={() => {}}
+              onView={() => {}}
             />
           </div>
+        </div>
         </section>
 
+        <div className="max-w-5xl mx-auto md:px-3">
+        <div className="lg:grid lg:grid-cols-2 lg:items-start">
         {/* En retard */}
         {lateProspects.length > 0 && (
           <section className="px-5 pt-5">
@@ -316,7 +321,7 @@ function HomeScreen({ onOpenDetail, onOpenAnalysis }: {
               <span className="w-2 h-2 rounded-full bg-[#D00C29]" />
               <h2 className="text-xs font-700 text-[#D00C29] uppercase tracking-widest">En retard</h2>
             </div>
-            <div className="space-y-3">
+            <div className="grid gap-3">
               {lateProspects.map(p => (
                 <ActionCard key={p.id} prospect={p} onView={() => onOpenDetail(p)} isLate onMessage={() => setMessageProspect(p)} />
               ))}
@@ -330,12 +335,13 @@ function HomeScreen({ onOpenDetail, onOpenAnalysis }: {
             <span className="w-2 h-2 rounded-full bg-[#850831]" />
             <h2 className="text-xs font-600 text-[#9CA3AF] uppercase tracking-widest">À faire aujourd'hui</h2>
           </div>
-          <div className="space-y-3">
+          <div className="grid gap-3">
             {todayProspects.map(p => (
               <ActionCard key={p.id} prospect={p} onView={() => onOpenDetail(p)} onMessage={() => setMessageProspect(p)} />
             ))}
           </div>
         </section>
+        </div>
 
         {/* À venir */}
         <section className="px-5 pt-5">
@@ -359,14 +365,13 @@ function HomeScreen({ onOpenDetail, onOpenAnalysis }: {
             ))}
           </div>
         </section>
+        </div>
       </div>
       </div>
 
-      {/* Message modal — rendu hors du scroll, ancré au bas du frame */}
+      {/* Message modal — rendu hors du scroll */}
       {messageProspect && (
-        <Overlay onClose={() => setMessageProspect(null)}>
-          <MessageModal prospect={messageProspect} onClose={() => setMessageProspect(null)} />
-        </Overlay>
+        <MessageModal prospect={messageProspect} onClose={() => setMessageProspect(null)} />
       )}
     </div>
   )
@@ -384,7 +389,7 @@ function MessageModal({ prospect: p, onClose }: { prospect: Prospect; onClose: (
   return (
     <Overlay onClose={onClose}>
       <div className="bg-white rounded-t-3xl px-5 pt-5 pb-10">
-        <div className="w-10 h-1 bg-[#E5E7EB] rounded-full mx-auto mb-5" />
+        <div className="w-10 h-1 bg-[#E5E7EB] rounded-full mx-auto md:hidden mb-5" />
         <div className="flex items-center gap-2 mb-1">
           <span className="text-base">✨</span>
           <h3 className="text-base font-700 text-[#111827]">Message généré</h3>
@@ -579,22 +584,15 @@ function ProspectTaskCard({ task, prospect }: { task: ProspectTask; prospect: Pr
         </div>
       </div>
 
-      {/* Message modal — rendered outside card scroll */}
       {showMessage && (
-        <div className="fixed inset-0 z-50 flex flex-col justify-end" style={{ maxWidth: 390, margin: '0 auto' }}>
-          <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px]" onClick={() => setShowMessage(false)} />
-          <div className="relative bottom-sheet-enter">
-            <MessageModal prospect={syntheticProspect} onClose={() => setShowMessage(false)} />
-          </div>
-        </div>
+        <MessageModal prospect={syntheticProspect} onClose={() => setShowMessage(false)} />
       )}
 
       {/* Edit bottom sheet */}
       {editing && (
-        <div className="fixed inset-0 z-50 flex flex-col justify-end" style={{ maxWidth: 390, margin: '0 auto' }}>
-          <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px]" onClick={() => setEditing(false)} />
-          <div className="relative bottom-sheet-enter bg-white rounded-t-3xl px-5 pt-5 pb-10">
-            <div className="w-10 h-1 bg-[#E5E7EB] rounded-full mx-auto mb-5" />
+        <Overlay onClose={() => setEditing(false)}>
+          <div className="bg-white rounded-t-3xl px-5 pt-5 pb-10">
+            <div className="w-10 h-1 bg-[#E5E7EB] rounded-full mx-auto md:hidden mb-5" />
             <h3 className="text-base font-700 text-[#111827] mb-4">Modifier la tâche</h3>
             <div className="space-y-3">
               <div>
@@ -615,16 +613,15 @@ function ProspectTaskCard({ task, prospect }: { task: ProspectTask; prospect: Pr
               <button onClick={() => setEditing(false)} className="flex-1 py-3.5 rounded-2xl bg-[#850831] text-white text-sm font-700 active:scale-[0.98] transition-transform">Enregistrer</button>
             </div>
           </div>
-        </div>
+        </Overlay>
       )}
     </>
   )
 }
 
 // ── Screen: Prospects ─────────────────────────────────────────────────────────
-function ProspectsScreen({ onOpenDetail, onNewProspect }: {
+function ProspectsScreen({ onOpenDetail }: {
   onOpenDetail: (p: Prospect) => void
-  onNewProspect: () => void
 }) {
   const [search, setSearch] = useState('')
   const [filter, setFilter] = useState<Filter>('Tous')
@@ -643,17 +640,10 @@ function ProspectsScreen({ onOpenDetail, onNewProspect }: {
   return (
     <div className="flex flex-col h-full bg-[#FFF1EA]">
       {/* Header */}
-      <div className="px-5 pt-14 pb-4 bg-white border-b border-[#F0E8E0]">
-        <div className="flex items-center justify-between mb-4">
-          <h1 className="text-2xl font-serif text-[#1A2A63]">Prospects</h1>
-          <button
-            onClick={onNewProspect}
-            className="flex items-center gap-1.5 bg-[#850831] text-white text-sm font-600 px-3.5 py-2 rounded-full active:scale-95 transition-transform"
-          >
-            <span className="text-base leading-none">+</span> Nouveau
-          </button>
-        </div>
-        <div className="relative mb-3">
+      <div className="bg-white border-b border-[#F0E8E0]">
+      <div className="max-w-5xl mx-auto px-5 md:px-8 pt-6 md:pt-8 pb-4">
+        <h1 className="text-2xl md:text-3xl font-serif text-[#1A2A63] mb-4">Prospects</h1>
+        <div className="relative mb-3 md:max-w-md">
           <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[#9CA3AF] text-base">🔍</span>
           <input
             value={search}
@@ -678,14 +668,17 @@ function ProspectsScreen({ onOpenDetail, onNewProspect }: {
           ))}
         </div>
       </div>
+      </div>
 
-      <div className="flex-1 overflow-y-auto hide-scrollbar px-5 pt-4 pb-24">
+      <div className="flex-1 overflow-y-auto hide-scrollbar">
+      <div className="max-w-5xl mx-auto px-5 md:px-8 pt-4 pb-24 md:pb-10">
         <p className="text-xs text-[#9CA3AF] mb-3">{filtered.length} prospect{filtered.length > 1 ? 's' : ''}</p>
-        <div className="space-y-2.5 fade-in">
+        <div className="grid gap-2.5 md:grid-cols-2 xl:grid-cols-3 fade-in">
           {filtered.map(p => (
             <ProspectRow key={p.id} prospect={p} onClick={() => onOpenDetail(p)} />
           ))}
         </div>
+      </div>
       </div>
     </div>
   )
@@ -716,11 +709,9 @@ function ProspectRow({ prospect: p, onClick }: { prospect: Prospect; onClick: ()
 }
 
 // ── Screen: Detail ────────────────────────────────────────────────────────────
-function DetailScreen({ prospect: p, onBack, onOpenAnalysis, onOpenAddSheet }: {
+function DetailScreen({ prospect: p, onBack }: {
   prospect: Prospect
   onBack: () => void
-  onOpenAnalysis: () => void
-  onOpenAddSheet: () => void
 }) {
   const [editSection, setEditSection] = useState<string | null>(null)
   const [infoOpen, setInfoOpen] = useState(false)
@@ -757,16 +748,17 @@ function DetailScreen({ prospect: p, onBack, onOpenAnalysis, onOpenAddSheet }: {
 
   return (
     <div className="flex flex-col h-full bg-[#FFF1EA] relative">
-      <div className="flex-1 overflow-y-auto hide-scrollbar pb-32">
+      <div className="flex-1 overflow-y-auto hide-scrollbar pb-8">
 
         {/* ── Header ── */}
-        <div className="bg-white px-5 pt-14 pb-5 border-b border-[#F0E8E0]">
+        <div className="bg-white border-b border-[#F0E8E0]">
+        <div className="max-w-5xl mx-auto px-5 md:px-8 pt-6 md:pt-8 pb-5">
           <button onClick={onBack} className="flex items-center gap-1.5 text-[#850831] text-sm font-500 mb-4 active:opacity-60">
             ‹ Retour
           </button>
           <div className="flex items-start justify-between">
             <div>
-              <h1 className="text-2xl font-serif text-[#1A2A63]">{p.prenom} {p.nom}</h1>
+              <h1 className="text-2xl md:text-3xl font-serif text-[#1A2A63]">{p.prenom} {p.nom}</h1>
               <div className="flex items-center gap-2 mt-2">
                 <QualifBadge q={p.qualification} />
               </div>
@@ -776,7 +768,7 @@ function DetailScreen({ prospect: p, onBack, onOpenAnalysis, onOpenAddSheet }: {
             </div>
           </div>
           <p className="text-sm text-[#6B7280] mt-2">{p.tel} · {p.email}</p>
-          <div className="flex gap-3 mt-4">
+          <div className="flex gap-3 mt-4 md:max-w-md">
             <button className="flex-1 flex items-center justify-center gap-2 bg-[#850831] text-white text-sm font-600 py-2.5 rounded-xl active:scale-95 transition-transform">
               <span>📞</span> Appeler
             </button>
@@ -785,9 +777,10 @@ function DetailScreen({ prospect: p, onBack, onOpenAnalysis, onOpenAddSheet }: {
             </button>
           </div>
         </div>
+        </div>
 
         {/* ── Prochaines actions — carrousel horizontal ── */}
-        <div className="pt-5">
+        <div className="max-w-5xl mx-auto pt-5 md:px-3">
           <div className="flex items-center justify-between px-5 mb-3">
             <p className="text-[10px] font-700 text-[#9CA3AF] uppercase tracking-widest">Prochaines actions</p>
           </div>
@@ -798,7 +791,9 @@ function DetailScreen({ prospect: p, onBack, onOpenAnalysis, onOpenAddSheet }: {
           </div>
         </div>
 
-        <div className="px-5 pt-5 space-y-4 fade-in">
+        {/* Mobile : une colonne dans l'ordre du DOM. Desktop : deux colonnes. */}
+        <div className="max-w-5xl mx-auto px-5 md:px-8 pt-5 fade-in lg:grid lg:grid-cols-2 lg:gap-4 lg:items-start">
+        <div className="space-y-4">
 
           {/* ── Informations prospect ── */}
           <InfoCard title="Informations prospect" onEdit={() => setEditSection('info')}>
@@ -880,7 +875,9 @@ function DetailScreen({ prospect: p, onBack, onOpenAnalysis, onOpenAddSheet }: {
               {financementOpen ? 'Voir moins ↑' : 'Voir plus ↓'}
             </button>
           </InfoCard>
+        </div>
 
+        <div className="space-y-4 mt-4 lg:mt-0">
           {/* ── Critères importants ── */}
           <InfoCard title="Critères importants recherchés" onEdit={() => setEditSection('criteres')}>
             <div className="space-y-2">
@@ -964,18 +961,9 @@ function DetailScreen({ prospect: p, onBack, onOpenAnalysis, onOpenAddSheet }: {
               })}
             </div>
           </InfoCard>
+        </div>
 
         </div>
-      </div>
-
-      {/* ── CTA fixe ── */}
-      <div className="absolute bottom-16 left-0 right-0 px-5 pb-4 pt-3 bg-gradient-to-t from-[#FFF1EA] to-transparent">
-        <button
-          onClick={onOpenAddSheet}
-          className="w-full bg-[#850831] text-white text-sm font-700 py-4 rounded-2xl shadow-lg active:scale-[0.98] transition-transform"
-        >
-          + Ajouter une note ou une tâche
-        </button>
       </div>
 
       {/* Edit sheets */}
@@ -1000,7 +988,7 @@ function DetailScreen({ prospect: p, onBack, onOpenAnalysis, onOpenAddSheet }: {
 function SimpleEditSheet({ title, onClose }: { title: string; onClose: () => void }) {
   return (
     <div className="bg-white rounded-t-3xl px-5 pt-5 pb-10">
-      <div className="w-10 h-1 bg-[#E5E7EB] rounded-full mx-auto mb-5" />
+      <div className="w-10 h-1 bg-[#E5E7EB] rounded-full mx-auto md:hidden mb-5" />
       <h3 className="text-base font-700 text-[#111827] mb-1">Modifier</h3>
       <p className="text-xs text-[#9CA3AF] mb-5">{title}</p>
       <p className="text-sm text-[#6B7280] bg-[#F9FAFB] rounded-xl px-4 py-3 mb-5">
@@ -1040,51 +1028,13 @@ function Row({ label, value }: { label: string; value: string }) {
   )
 }
 
-function AddNoteSheet({ onClose, onVocal }: { onClose: () => void; onVocal: () => void }) {
-  return (
-    <div className="bg-white rounded-t-3xl px-5 pt-5 pb-10">
-      <div className="w-10 h-1 bg-[#E5E7EB] rounded-full mx-auto mb-6" />
-      <h3 className="text-base font-700 text-[#111827] mb-4">Ajouter à Sophie Martin</h3>
-      <div className="space-y-3">
-        {[
-          { icon: '🎙️', label: 'Compte rendu vocal', sub: 'Dictez votre compte rendu', action: onVocal },
-          { icon: '✏️', label: 'Note écrite', sub: 'Saisissez une note rapide', action: onClose },
-          { icon: '✓', label: 'Créer une tâche', sub: 'Planifiez une action', action: onClose },
-        ].map(item => (
-          <button
-            key={item.label}
-            onClick={item.action}
-            className="w-full flex items-center gap-4 bg-[#F9FAFB] rounded-2xl px-4 py-3.5 active:bg-[#F3F4F6] transition-colors text-left"
-          >
-            <span className="text-2xl">{item.icon}</span>
-            <div>
-              <p className="text-sm font-600 text-[#111827]">{item.label}</p>
-              <p className="text-xs text-[#9CA3AF]">{item.sub}</p>
-            </div>
-          </button>
-        ))}
-      </div>
-    </div>
-  )
-}
-
 // ── Transcription Accordion ───────────────────────────────────────────────────
-function TranscriptionAccordion({ source = 'whatsapp' }: { source?: 'whatsapp' | 'vocal-app' | 'text-app' }) {
+function TranscriptionAccordion() {
   const [open, setOpen] = useState(false)
 
-  const transcriptions = {
-    'whatsapp': `« Je viens d'avoir Sophie Martin au téléphone. Elle m'a confirmé que son projet est toujours actif. Elle cherche un T3 sur le secteur Carmes / Esquirol, son budget a évolué, elle peut aller jusqu'à 500 000 €. Elle est maintenant en CDI depuis le mois dernier, ça change sa situation pour le financement. Elle tient vraiment à avoir une terrasse, c'est indispensable pour elle. Un parking serait bien aussi mais c'est secondaire. Elle m'a demandé de lui envoyer les nouvelles annonces demain matin par email. Je pense qu'on peut requalifier son dossier, elle est beaucoup plus active qu'avant. »`,
-    'vocal-app': `« Nouveau contact, Marie Dupont. Elle cherche un T3 sur Bordeaux centre, budget autour de 280 000 €. Projet pour le printemps 2027. Elle aimerait un balcon ou une terrasse, c'est indispensable pour elle. Un parking serait un plus. Célibataire, situation stable. À recontacter rapidement pour lui envoyer une première sélection. »`,
-    'text-app': `« Marie Dupont, cherche un T3 à Bordeaux centre, budget 280 000 €, projet pour le printemps 2027. Souhaite balcon ou terrasse (indispensable), parking souhaité. Célibataire. Envoyer une sélection de biens cette semaine. »`,
-  }
+  const transcription = `« Je viens d'avoir Sophie Martin au téléphone. Elle m'a confirmé que son projet est toujours actif. Elle cherche un T3 sur le secteur Carmes / Esquirol, son budget a évolué, elle peut aller jusqu'à 500 000 €. Elle est maintenant en CDI depuis le mois dernier, ça change sa situation pour le financement. Elle tient vraiment à avoir une terrasse, c'est indispensable pour elle. Un parking serait bien aussi mais c'est secondaire. Elle m'a demandé de lui envoyer les nouvelles annonces demain matin par email. Je pense qu'on peut requalifier son dossier, elle est beaucoup plus active qu'avant. »`
 
-  const badges = {
-    'whatsapp':   { icon: '💬', label: 'WhatsApp · vocal',   color: 'text-[#25D366] bg-[#F0FFF4] border-[#C8E6C9]' },
-    'vocal-app':  { icon: '🎙️', label: 'Note vocale · app',  color: 'text-[#850831] bg-[#FFF1EA] border-[#F0D8CA]' },
-    'text-app':   { icon: '✏️', label: 'Note écrite · app',  color: 'text-[#1A2A63] bg-[#EEF2FF] border-[#C7D2FE]' },
-  }
-
-  const badge = badges[source]
+  const badge = { icon: '💬', label: 'WhatsApp · vocal', color: 'text-[#25D366] bg-[#F0FFF4] border-[#C8E6C9]' }
 
   return (
     <div className="border border-[#E5E7EB] rounded-2xl bg-white overflow-hidden">
@@ -1104,7 +1054,7 @@ function TranscriptionAccordion({ source = 'whatsapp' }: { source?: 'whatsapp' |
             <span className={`text-[10px] font-600 px-2 py-0.5 rounded-full border ${badge.color}`}>{badge.icon} {badge.label}</span>
             <span className="text-[10px] text-[#9CA3AF]">20 sept. 2026 · 10h14</span>
           </div>
-          <p className="text-sm text-[#374151] leading-relaxed italic">{transcriptions[source]}</p>
+          <p className="text-sm text-[#374151] leading-relaxed italic">{transcription}</p>
         </div>
       )}
     </div>
@@ -1114,8 +1064,7 @@ function TranscriptionAccordion({ source = 'whatsapp' }: { source?: 'whatsapp' |
 // ── Screen: AI Analysis (refonte) ────────────────────────────────────────────
 type EditTarget = 'prospect' | 'projet' | 'criteres' | 'tache' | 'qualification' | null
 
-function AIAnalysisScreen({ onBack, onBackToDashboard, titleOverride, transcriptionSource = 'whatsapp', prospect }: { onBack: () => void; onBackToDashboard?: () => void; titleOverride?: string; transcriptionSource?: 'whatsapp' | 'vocal-app' | 'text-app'; prospect?: Prospect }) {
-  const [validated, setValidated] = useState(false)
+function AIAnalysisScreen({ onBack }: { onBack: () => void }) {
   const [editTarget, setEditTarget] = useState<EditTarget>(null)
 
   // State mutable par l'agent
@@ -1127,45 +1076,22 @@ function AIAnalysisScreen({ onBack, onBackToDashboard, titleOverride, transcript
   const [tacheCanal, setTacheCanal] = useState('Email')
   const [qualif, setQualif] = useState<'FROID' | 'TIÈDE' | 'CHAUD'>('TIÈDE')
 
-  if (validated) {
-    return (
-      <div className="flex flex-col h-full bg-[#FFF1EA]">
-        <div className="flex-1 flex flex-col items-center justify-center px-8 text-center">
-          <div className="w-20 h-20 rounded-full bg-[#F0FDF4] border-2 border-[#BBF7D0] flex items-center justify-center text-4xl mb-5 fade-in">✓</div>
-          <h2 className="text-2xl font-serif text-[#111827] mb-2">Modifications enregistrées</h2>
-          <div className="space-y-2 mt-3 mb-8">
-            {['3 informations mises à jour', '1 tâche créée', 'Google Calendar mis à jour'].map(line => (
-              <p key={line} className="text-sm text-[#6B7280] flex items-center justify-center gap-2">
-                <span className="text-[#16A34A]">✓</span> {line}
-              </p>
-            ))}
-          </div>
-          <button
-            onClick={onBackToDashboard ?? onBack}
-            className="bg-[#850831] text-white text-sm font-700 px-8 py-4 rounded-2xl shadow-md active:scale-95 transition-transform"
-          >
-            Retour au tableau de bord
-          </button>
-        </div>
-      </div>
-    )
-  }
-
   return (
     <div className="flex flex-col h-full bg-[#FFF1EA] relative">
       {/* Scrollable content */}
-      <div className="flex-1 overflow-y-auto hide-scrollbar pb-28">
+      <div className="flex-1 overflow-y-auto hide-scrollbar pb-8">
 
         {/* Header */}
-        <div className="bg-white px-5 pt-14 pb-5 border-b border-[#F0E8E0]">
+        <div className="bg-white border-b border-[#F0E8E0]">
+        <div className="max-w-3xl mx-auto px-5 md:px-8 pt-6 md:pt-8 pb-5">
           <button onClick={onBack} className="flex items-center gap-1.5 text-[#850831] text-sm font-500 mb-4 active:opacity-60">
             ‹ Retour
           </button>
           <div className="flex items-center gap-3 mb-4">
             <div className="w-9 h-9 rounded-full bg-[#E8F5E9] flex items-center justify-center text-lg shrink-0">🎙</div>
             <div>
-              <h1 className="text-lg font-serif text-[#1A2A63] leading-tight">{titleOverride ?? 'Message WhatsApp analysé'}</h1>
-              <p className="text-xs text-[#9CA3AF]">Vérifiez les actions détectées avant de les appliquer.</p>
+              <h1 className="text-lg md:text-2xl font-serif text-[#1A2A63] leading-tight">Message WhatsApp analysé</h1>
+              <p className="text-xs text-[#9CA3AF]">Modifications déjà appliquées, validées depuis WhatsApp.</p>
             </div>
           </div>
 
@@ -1174,12 +1100,11 @@ function AIAnalysisScreen({ onBack, onBackToDashboard, titleOverride, transcript
             <div className="flex items-start justify-between">
               <div>
                 <p className="text-[10px] font-700 text-[#9CA3AF] uppercase tracking-widest mb-1">Prospect identifié</p>
-                <p className="text-sm font-700 text-[#111827]">{prospect ? `${prospect.prenom} ${prospect.nom}` : 'Sophie Martin'}</p>
-                <p className="text-xs text-[#6B7280] mt-0.5">{prospect ? prospect.tel : '06 12 34 56 78'}</p>
+                <p className="text-sm font-700 text-[#111827]">Sophie Martin</p>
+                <p className="text-xs text-[#6B7280] mt-0.5">06 12 34 56 78</p>
               </div>
               <button className="text-xs font-600 text-[#850831] active:opacity-60 mt-0.5">Modifier</button>
             </div>
-            {!prospect && <button className="mt-2.5 text-xs text-[#9CA3AF] font-500 active:opacity-60">+ Créer un nouveau prospect</button>}
           </div>
 
           {/* Rappel projet */}
@@ -1188,12 +1113,13 @@ function AIAnalysisScreen({ onBack, onBackToDashboard, titleOverride, transcript
             <p className="text-xs text-[#6B7280] font-500">T3 · {budget} · Carmes / Esquirol</p>
           </div>
         </div>
+        </div>
 
-        <div className="px-5 pt-5 space-y-3 fade-in">
+        <div className="max-w-3xl mx-auto px-5 md:px-8 pt-5 space-y-3 fade-in">
 
           {/* Titre section */}
           <div className="flex items-center gap-2">
-            <p className="text-xs font-700 text-[#111827] uppercase tracking-widest">Actions détectées</p>
+            <p className="text-xs font-700 text-[#111827] uppercase tracking-widest">Modifications appliquées</p>
             <span className="bg-[#1A2A63] text-white text-[10px] font-700 px-1.5 py-0.5 rounded-full">4</span>
           </div>
 
@@ -1258,19 +1184,9 @@ function AIAnalysisScreen({ onBack, onBackToDashboard, titleOverride, transcript
           </div>
 
           {/* Transcription complète */}
-          <TranscriptionAccordion source={transcriptionSource} />
+          <TranscriptionAccordion />
 
         </div>
-      </div>
-
-      {/* CTA fixe */}
-      <div className="absolute bottom-0 left-0 right-0 px-5 pb-6 pt-3 bg-gradient-to-t from-[#FFF1EA] via-[#FFF1EA] to-transparent">
-        <button
-          onClick={() => setValidated(true)}
-          className="w-full bg-[#850831] text-white text-sm font-700 py-4 rounded-2xl shadow-lg active:scale-[0.98] transition-transform"
-        >
-          Tout valider
-        </button>
       </div>
 
       {/* Bottom sheets de modification */}
@@ -1398,7 +1314,7 @@ function ActionRow({ label, from, to }: { label: string; from: string; to: strin
 function EditSheet({ title, children, onClose }: { title: string; children: React.ReactNode; onClose: () => void }) {
   return (
     <div className="bg-white rounded-t-3xl px-5 pt-5 pb-10">
-      <div className="w-10 h-1 bg-[#E5E7EB] rounded-full mx-auto mb-5" />
+      <div className="w-10 h-1 bg-[#E5E7EB] rounded-full mx-auto md:hidden mb-5" />
       <h3 className="text-base font-700 text-[#111827] mb-4">{title}</h3>
       {children}
       <button
@@ -1411,632 +1327,56 @@ function EditSheet({ title, children, onClose }: { title: string; children: Reac
   )
 }
 
-// ── Screen: New Prospect ──────────────────────────────────────────────────────
-function NewProspectScreen({ onBack }: { onBack: () => void }) {
-  const [expanded, setExpanded] = useState(false)
-  const [created, setCreated] = useState(false)
-  const [prenom, setPrenom] = useState('')
-  const [nom, setNom] = useState('')
-  const [tel, setTel] = useState('')
-  const [email, setEmail] = useState('')
-
-  if (created) {
-    return (
-      <div className="flex flex-col h-full bg-[#FFF1EA]">
-        <div className="flex-1 flex flex-col items-center justify-center px-8 text-center">
-          <div className="w-20 h-20 rounded-full bg-[#F0FDF4] border-2 border-[#BBF7D0] flex items-center justify-center text-4xl mb-5 fade-in">
-            ✓
-          </div>
-          <h2 className="text-2xl font-serif text-[#111827] mb-2">Prospect créé</h2>
-          <p className="text-sm text-[#9CA3AF]">{prenom || 'Nouveau'} {nom || 'prospect'} a été ajouté à votre liste.</p>
-
-          <button className="mt-8 flex items-center gap-2 bg-[#850831] text-white text-sm font-700 px-6 py-4 rounded-2xl shadow-md active:scale-95 transition-transform">
-            <span>🎙</span> Ajouter un premier compte rendu
-          </button>
-          <button onClick={onBack} className="mt-3 text-[#9CA3AF] text-sm font-500 active:opacity-60">
-            Retour aux prospects
-          </button>
-        </div>
-      </div>
-    )
-  }
-
-  return (
-    <div className="flex flex-col h-full bg-[#FFF1EA]">
-      <div className="flex-1 overflow-y-auto hide-scrollbar pb-24">
-        <div className="bg-white px-5 pt-14 pb-5 border-b border-[#F0E8E0]">
-          <button onClick={onBack} className="flex items-center gap-1.5 text-[#850831] text-sm font-500 mb-4 active:opacity-60">
-            ‹ Retour
-          </button>
-          <h1 className="text-2xl font-serif text-[#1A2A63]">Nouveau prospect</h1>
-          <p className="text-sm text-[#9CA3AF] mt-1">Ajoutez l'essentiel. Vous complèterez la fiche plus tard.</p>
-        </div>
-
-        <div className="px-5 pt-5 space-y-4 fade-in">
-          <div className="bg-white rounded-2xl px-4 py-4 space-y-4 border border-[#F0E8E0] shadow-sm">
-            <Field label="Prénom" value={prenom} onChange={setPrenom} placeholder="Sophie" />
-            <Field label="Nom" value={nom} onChange={setNom} placeholder="Martin" />
-          </div>
-
-          <div className="bg-white rounded-2xl px-4 py-4 space-y-4 border border-[#F0E8E0] shadow-sm">
-            <Field label="Téléphone" value={tel} onChange={setTel} placeholder="06 12 34 56 78" type="tel" />
-            <Field label="Email" value={email} onChange={setEmail} placeholder="sophie.martin@example.fr" type="email" />
-            <p className="text-xs text-[#9CA3AF] bg-[#FFF8F5] rounded-lg px-3 py-2">
-              ℹ️ Un numéro de téléphone ou une adresse email est nécessaire.
-            </p>
-          </div>
-
-          {/* Section optionnelle */}
-          <button
-            onClick={() => setExpanded(!expanded)}
-            className="w-full flex items-center justify-between bg-white rounded-2xl px-4 py-4 border border-[#F0E8E0] shadow-sm active:bg-[#FFF8F5] transition-colors"
-          >
-            <span className="text-sm font-600 text-[#850831]">+ Ajouter des informations sur le projet</span>
-            <span className={`text-[#9CA3AF] transition-transform ${expanded ? 'rotate-180' : ''}`}>▾</span>
-          </button>
-
-          {expanded && (
-            <div className="bg-white rounded-2xl px-4 py-4 space-y-4 border border-[#F0E8E0] shadow-sm fade-in">
-              {[
-                { label: 'Type de bien', placeholder: 'Appartement, Maison…' },
-                { label: 'Secteur', placeholder: 'Toulouse Centre, Balma…' },
-                { label: 'Budget', placeholder: '300 000 €' },
-                { label: 'Horizon', placeholder: 'Avant janvier 2027' },
-                { label: 'Motivations', placeholder: 'Résidence principale…' },
-                { label: 'Freins', placeholder: 'Financement en cours…' },
-              ].map(f => (
-                <Field key={f.label} label={f.label} value="" onChange={() => {}} placeholder={f.placeholder} />
-              ))}
-            </div>
-          )}
-        </div>
-      </div>
-
-      <div className="absolute bottom-16 left-0 right-0 px-5 pb-4 pt-3 bg-gradient-to-t from-[#FFF1EA] to-transparent">
-        <button
-          onClick={() => setCreated(true)}
-          className="w-full bg-[#850831] text-white text-sm font-700 py-4 rounded-2xl shadow-lg active:scale-[0.98] transition-transform"
-        >
-          Créer le prospect
-        </button>
-      </div>
-    </div>
-  )
-}
-
-function Field({ label, value, onChange, placeholder, type = 'text' }: {
-  label: string; value: string; onChange: (v: string) => void; placeholder: string; type?: string
-}) {
-  return (
-    <div>
-      <label className="text-xs font-600 text-[#6B7280] block mb-1.5">{label}</label>
-      <input
-        type={type}
-        value={value}
-        onChange={e => onChange(e.target.value)}
-        placeholder={placeholder}
-        className="w-full bg-[#F9FAFB] border border-[#E5E7EB] rounded-xl px-3.5 py-3 text-sm outline-none focus:border-[#850831] focus:ring-1 focus:ring-[#850831]/20 transition-all placeholder:text-[#D1D5DB]"
-      />
-    </div>
-  )
-}
-
-// ── Screen: Task by Voice ─────────────────────────────────────────────────────
-function TaskVoiceScreen({ onBack, onValidate, existingProspect }: {
-  onBack: () => void
-  onValidate: (mode: 'vocal' | 'text') => void
-  existingProspect?: Prospect
-}) {
-  const [mode, setMode] = useState<'vocal' | 'text'>('vocal')
-  const [step, setStep] = useState<'listen' | 'transcribe' | 'processing'>('listen')
-  const [textNote, setTextNote] = useState('')
-
-  const switchMode = (m: 'vocal' | 'text') => { setMode(m); setStep('listen') }
-
-  return (
-    <div className="flex flex-col h-full bg-[#FFF1EA]">
-      <div className="bg-white px-5 pt-14 pb-4 border-b border-[#F0E8E0]">
-        <button onClick={onBack} className="flex items-center gap-1.5 text-[#850831] text-sm font-500 mb-4 active:opacity-60">
-          ‹ Retour
-        </button>
-        <h1 className="text-2xl font-serif text-[#1A2A63]">Créer une note</h1>
-
-        {/* Sous-titre : prospect existant ou nouveau */}
-        {existingProspect ? (
-          <div className="mt-2 mb-4 bg-[#F9FAFB] border border-[#E5E7EB] rounded-xl px-3 py-2.5 flex items-center gap-3">
-            <div className="w-8 h-8 rounded-full bg-[#FFF1EA] border border-[#F0D8CA] flex items-center justify-center text-xs font-600 text-[#850831] shrink-0">
-              {existingProspect.prenom[0]}{existingProspect.nom[0]}
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-600 text-[#111827]">{existingProspect.prenom} {existingProspect.nom}</p>
-              <p className="text-xs text-[#9CA3AF]">{existingProspect.typeBien} · {existingProspect.secteur}</p>
-            </div>
-            <QualifBadge q={existingProspect.qualification} />
-          </div>
-        ) : (
-          <p className="text-sm text-[#9CA3AF] mt-1 mb-4">Nouveau prospect</p>
-        )}
-
-        {/* Toggle tabs */}
-        <div className="flex gap-2 bg-[#F3F4F6] rounded-xl p-1">
-          <button
-            onClick={() => switchMode('vocal')}
-            className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-sm font-600 transition-all ${mode === 'vocal' ? 'bg-white text-[#850831] shadow-sm' : 'text-[#9CA3AF]'}`}
-          >
-            <span className="text-base">🎙️</span> Vocal
-          </button>
-          <button
-            onClick={() => switchMode('text')}
-            className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-sm font-600 transition-all ${mode === 'text' ? 'bg-white text-[#850831] shadow-sm' : 'text-[#9CA3AF]'}`}
-          >
-            <span className="text-base">✏️</span> Texte
-          </button>
-        </div>
-      </div>
-
-      <div className="flex-1 flex flex-col items-center justify-center px-8 fade-in">
-        {mode === 'vocal' && step === 'listen' && (
-          <div className="text-center w-full">
-            <button
-              onClick={() => { setStep('transcribe'); setTimeout(() => { setStep('processing'); setTimeout(() => onValidate('vocal'), 1200) }, 2000) }}
-              className="w-24 h-24 rounded-full bg-[#850831] flex items-center justify-center shadow-2xl shadow-[#850831]/30 active:scale-95 transition-transform mx-auto mb-6"
-            >
-              <span className="text-5xl">🎙️</span>
-            </button>
-            <p className="text-base font-600 text-[#111827]">Appuyez pour dicter</p>
-            <p className="text-sm text-[#9CA3AF] mt-1">Décrivez votre prospect et les informations clés</p>
-          </div>
-        )}
-
-        {mode === 'vocal' && step === 'transcribe' && (
-          <div className="text-center fade-in">
-            <div className="w-24 h-24 rounded-full bg-[#850831]/10 border-2 border-[#850831] flex items-center justify-center mx-auto mb-6 animate-pulse">
-              <span className="text-5xl">🎙️</span>
-            </div>
-            <p className="text-base font-600 text-[#850831]">Je vous écoute...</p>
-            <p className="text-sm text-[#9CA3AF] mt-1 italic">« Nouveau contact, Marie Dupont, cherche un T3 à Bordeaux... »</p>
-          </div>
-        )}
-
-        {step === 'processing' && (
-          <div className="text-center fade-in">
-            <div className="w-20 h-20 rounded-full bg-[#FFF1EA] border-2 border-[#850831]/20 flex items-center justify-center mx-auto mb-5 animate-pulse">
-              <span className="text-4xl">✨</span>
-            </div>
-            <p className="text-base font-600 text-[#111827]">Analyse en cours…</p>
-            <p className="text-sm text-[#9CA3AF] mt-1">L'IA extrait les informations</p>
-          </div>
-        )}
-
-        {mode === 'text' && step === 'listen' && (
-          <div className="w-full fade-in">
-            <p className="text-sm font-600 text-[#111827] mb-2">Décrivez votre nouveau prospect</p>
-            <p className="text-xs text-[#9CA3AF] mb-4">Prénom, nom, ce qu'il cherche, son budget, ses critères…</p>
-            <textarea
-              value={textNote}
-              onChange={e => setTextNote(e.target.value)}
-              placeholder="Ex : Marie Dupont, cherche un T3 à Bordeaux centre, budget 280 000 €, projet pour le printemps 2027…"
-              rows={6}
-              className="w-full bg-white border border-[#E5E7EB] rounded-2xl px-4 py-3.5 text-sm text-[#111827] outline-none focus:border-[#850831] resize-none placeholder:text-[#D1D5DB] shadow-sm"
-            />
-            <button
-              onClick={() => { setStep('processing'); setTimeout(() => onValidate('text'), 1000) }}
-              disabled={textNote.trim().length < 5}
-              className="mt-4 w-full bg-[#850831] text-white text-sm font-700 py-4 rounded-2xl shadow-md active:scale-[0.98] transition-all disabled:opacity-40 disabled:scale-100"
-            >
-              Analyser la note
-            </button>
-          </div>
-        )}
-      </div>
-    </div>
-  )
-}
-
-// ── Screen: Note Analysis (nouveau prospect) ─────────────────────────────────
-function NoteAnalysisScreen({ noteMode, onBack, onBackToDashboard }: {
-  noteMode: 'vocal' | 'text'
-  onBack: () => void
-  onBackToDashboard: () => void
-}) {
-  const [validated, setValidated] = useState(false)
-  type NoteEditTarget = 'prospect' | 'projet' | 'criteres' | 'tache' | 'qualification' | null
-  const [editTarget, setEditTarget] = useState<NoteEditTarget>(null)
-
-  // Données extraites — prénom et tel manquants pour déclencher la validation
-  const [prenom, setPrenom] = useState('')
-  const [nom, setNom] = useState('Dupont')
-  const [tel, setTel] = useState('')
-  const [situation, setSituation] = useState('Célibataire')
-  const [typeBien, setTypeBien] = useState('T3')
-  const [secteur, setSecteur] = useState('Bordeaux centre')
-  const [budget, setBudget] = useState('280 000 €')
-  const [horizon, setHorizon] = useState('Printemps 2027')
-  const [criteres, setCriteres] = useState(['Balcon ou terrasse — indispensable', 'Parking — souhaité'])
-  const [tacheLabel, setTacheLabel] = useState('Envoyer une sélection de biens')
-  const [tacheDate, setTacheDate] = useState('Demain · 10h00')
-  const [tacheCanal, setTacheCanal] = useState('Email')
-  const [qualif, setQualif] = useState<'FROID' | 'TIÈDE' | 'CHAUD'>('TIÈDE')
-
-  const nomComplet = [prenom, nom].filter(Boolean).join(' ') || '—'
-  const missing = [!prenom.trim() && 'Prénom', !nom.trim() && 'Nom', !tel.trim() && 'Téléphone'].filter(Boolean) as string[]
-  const canCreate = missing.length === 0
-
-  if (validated) {
-    return (
-      <div className="flex flex-col h-full bg-[#FFF1EA]">
-        <div className="flex-1 flex flex-col items-center justify-center px-8 text-center">
-          <div className="w-20 h-20 rounded-full bg-[#F0FDF4] border-2 border-[#BBF7D0] flex items-center justify-center text-4xl mb-5 fade-in">✓</div>
-          <h2 className="text-2xl font-serif text-[#111827] mb-2">Fiche créée</h2>
-          <div className="space-y-2 mt-3 mb-8">
-            {['Nouveau prospect ajouté', '1 tâche créée', 'Disponible dans votre liste'].map(line => (
-              <p key={line} className="text-sm text-[#6B7280] flex items-center justify-center gap-2">
-                <span className="text-[#16A34A]">✓</span> {line}
-              </p>
-            ))}
-          </div>
-          <button onClick={onBackToDashboard} className="bg-[#850831] text-white text-sm font-700 px-8 py-4 rounded-2xl shadow-md active:scale-95 transition-transform">
-            Retour au tableau de bord
-          </button>
-        </div>
-      </div>
-    )
-  }
-
-  return (
-    <div className="flex flex-col h-full bg-[#FFF1EA] relative">
-      <div className="flex-1 overflow-y-auto hide-scrollbar pb-28">
-
-        {/* Header — même structure qu'AIAnalysisScreen */}
-        <div className="bg-white px-5 pt-14 pb-5 border-b border-[#F0E8E0]">
-          <button onClick={onBack} className="flex items-center gap-1.5 text-[#850831] text-sm font-500 mb-4 active:opacity-60">
-            ‹ Retour
-          </button>
-          <div className="flex items-center gap-3 mb-4">
-            <div className="w-9 h-9 rounded-full bg-[#FFF1EA] border border-[#F0D8CA] flex items-center justify-center text-lg shrink-0">
-              {noteMode === 'vocal' ? '🎙️' : '✏️'}
-            </div>
-            <div>
-              <h1 className="text-lg font-serif text-[#1A2A63] leading-tight">
-                {noteMode === 'vocal' ? 'Note vocale analysée' : 'Note écrite analysée'}
-              </h1>
-              <p className="text-xs text-[#9CA3AF]">Vérifiez les actions détectées avant de les appliquer.</p>
-            </div>
-          </div>
-
-          {/* Nouveau prospect — avec alerte si champs manquants */}
-          <div className={`rounded-xl border px-4 py-3 ${missing.length > 0 ? 'bg-[#FEF2F2] border-[#FECACA]' : 'bg-[#F9FAFB] border-[#E5E7EB]'}`}>
-            <div className="flex items-start justify-between">
-              <div>
-                <p className="text-[10px] font-700 text-[#9CA3AF] uppercase tracking-widest mb-1">Nouveau prospect</p>
-                <p className="text-sm font-700 text-[#111827]">{nomComplet}</p>
-                {tel.trim()
-                  ? <p className="text-xs text-[#6B7280] mt-0.5">{tel}</p>
-                  : <p className="text-xs text-[#EF4444] mt-0.5 italic">Téléphone manquant</p>
-                }
-                {missing.length > 0 && (
-                  <p className="text-[10px] text-[#B91C1C] mt-1.5 font-600">⚠ Manquant : {missing.join(', ')}</p>
-                )}
-              </div>
-              <button onClick={() => setEditTarget('prospect')} className="text-xs font-600 text-[#850831] active:opacity-60 mt-0.5 shrink-0">Modifier</button>
-            </div>
-          </div>
-
-          {/* Rappel projet */}
-          <div className="flex items-center gap-2 mt-3 px-1">
-            <span className="text-sm">🏠</span>
-            <p className="text-xs text-[#6B7280] font-500">{typeBien} · {budget} · {secteur}</p>
-          </div>
-        </div>
-
-        <div className="px-5 pt-5 space-y-3 fade-in">
-
-          {/* Titre section */}
-          <div className="flex items-center gap-2">
-            <p className="text-xs font-700 text-[#111827] uppercase tracking-widest">Actions détectées</p>
-            <span className="bg-[#1A2A63] text-white text-[10px] font-700 px-1.5 py-0.5 rounded-full">4</span>
-          </div>
-
-          {/* Card 1 — Ajout prospect */}
-          <DetectedActionCard icon="👤" category="Ajout du prospect" onEdit={() => setEditTarget('prospect')}>
-            <div className="space-y-1.5">
-              <div className="flex items-center gap-2">
-                <span className="w-1.5 h-1.5 rounded-full bg-[#850831] shrink-0" />
-                <p className="text-sm text-[#374151]">Situation : {situation}</p>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="w-1.5 h-1.5 rounded-full bg-[#850831] shrink-0" />
-                <p className="text-sm text-[#374151]">Horizon : {horizon}</p>
-              </div>
-            </div>
-          </DetectedActionCard>
-
-          {/* Card 2 — Ajout projet */}
-          <DetectedActionCard icon="🏠" category="Ajout du projet" onEdit={() => setEditTarget('projet')}>
-            <div className="space-y-1.5">
-              <div className="flex items-center gap-2">
-                <span className="w-1.5 h-1.5 rounded-full bg-[#850831] shrink-0" />
-                <p className="text-sm text-[#374151]">Type : {typeBien} · {secteur}</p>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="w-1.5 h-1.5 rounded-full bg-[#850831] shrink-0" />
-                <p className="text-sm text-[#374151]">Budget : {budget}</p>
-              </div>
-            </div>
-          </DetectedActionCard>
-
-          {/* Card 3 — Critères */}
-          <DetectedActionCard icon="🔎" category="Ajout de critères" onEdit={() => setEditTarget('criteres')}>
-            <div className="space-y-1.5">
-              {criteres.map((c, i) => (
-                <div key={i} className="flex items-center gap-2">
-                  <span className="w-1.5 h-1.5 rounded-full bg-[#850831] shrink-0" />
-                  <p className="text-sm text-[#374151]">{c}</p>
-                </div>
-              ))}
-            </div>
-          </DetectedActionCard>
-
-          {/* Card 4 — Tâche */}
-          <DetectedActionCard icon="📅" category="Nouvelle tâche" onEdit={() => setEditTarget('tache')}>
-            <p className="text-sm font-600 text-[#111827] mb-1">{tacheLabel}</p>
-            <p className="text-xs text-[#9CA3AF]">{tacheDate} · Canal : {tacheCanal}</p>
-          </DetectedActionCard>
-
-          {/* Qualification */}
-          <div className="bg-white rounded-2xl border border-[#F0E8E0] shadow-sm px-4 py-3.5">
-            <div className="flex items-center justify-between mb-2">
-              <p className="text-[10px] font-700 text-[#9CA3AF] uppercase tracking-widest">Qualification suggérée</p>
-              <button onClick={() => setEditTarget('qualification')} className="text-xs font-600 text-[#850831] active:opacity-60">Modifier</button>
-            </div>
-            <div className="flex items-center gap-2 mb-1.5">
-              <QualifBadge q={qualif} />
-            </div>
-            <p className="text-[10px] text-[#6B7280] bg-[#F9FAFB] rounded-lg px-2.5 py-1.5">
-              Budget défini · projet actif · horizon précisé
-            </p>
-          </div>
-
-          {/* Transcription complète */}
-          <TranscriptionAccordion source={noteMode === 'vocal' ? 'vocal-app' : 'text-app'} />
-        </div>
-      </div>
-
-      {/* CTA fixe */}
-      <div className="absolute bottom-0 left-0 right-0 px-5 pb-6 pt-3 bg-gradient-to-t from-[#FFF1EA] via-[#FFF1EA] to-transparent">
-        {!canCreate && (
-          <p className="text-center text-xs text-[#EF4444] font-500 mb-2">
-            Complétez Prénom, Nom et Téléphone pour créer la fiche
-          </p>
-        )}
-        <button
-          onClick={() => canCreate && setValidated(true)}
-          disabled={!canCreate}
-          className="w-full bg-[#850831] text-white text-sm font-700 py-4 rounded-2xl shadow-lg active:scale-[0.98] transition-all disabled:opacity-40 disabled:scale-100"
-        >
-          Tout valider
-        </button>
-      </div>
-
-      {/* Bottom sheet — Prospect (identité + obligatoires) */}
-      {editTarget === 'prospect' && (
-        <Overlay onClose={() => setEditTarget(null)}>
-          <EditSheet title="Informations du prospect" onClose={() => setEditTarget(null)}>
-            <div className="space-y-3">
-              <div>
-                <label className="text-xs font-600 text-[#6B7280] block mb-1.5">Prénom <span className="text-[#EF4444]">*</span></label>
-                <input value={prenom} onChange={e => setPrenom(e.target.value)} placeholder="Ex : Marie" className="w-full bg-[#F9FAFB] border border-[#E5E7EB] rounded-xl px-3.5 py-3 text-sm outline-none focus:border-[#850831]" />
-              </div>
-              <div>
-                <label className="text-xs font-600 text-[#6B7280] block mb-1.5">Nom <span className="text-[#EF4444]">*</span></label>
-                <input value={nom} onChange={e => setNom(e.target.value)} placeholder="Ex : Dupont" className="w-full bg-[#F9FAFB] border border-[#E5E7EB] rounded-xl px-3.5 py-3 text-sm outline-none focus:border-[#850831]" />
-              </div>
-              <div>
-                <label className="text-xs font-600 text-[#6B7280] block mb-1.5">Téléphone <span className="text-[#EF4444]">*</span></label>
-                <input type="tel" value={tel} onChange={e => setTel(e.target.value)} placeholder="Ex : 06 12 34 56 78" className="w-full bg-[#F9FAFB] border border-[#E5E7EB] rounded-xl px-3.5 py-3 text-sm outline-none focus:border-[#850831]" />
-              </div>
-              <div>
-                <label className="text-xs font-600 text-[#6B7280] block mb-1.5">Situation</label>
-                <input value={situation} onChange={e => setSituation(e.target.value)} className="w-full bg-[#F9FAFB] border border-[#E5E7EB] rounded-xl px-3.5 py-3 text-sm outline-none focus:border-[#850831]" />
-              </div>
-            </div>
-          </EditSheet>
-        </Overlay>
-      )}
-      {editTarget === 'projet' && (
-        <Overlay onClose={() => setEditTarget(null)}>
-          <EditSheet title="Modifier le projet" onClose={() => setEditTarget(null)}>
-            <div className="space-y-3">
-              <div>
-                <label className="text-xs font-600 text-[#6B7280] block mb-1.5">Type de bien</label>
-                <input value={typeBien} onChange={e => setTypeBien(e.target.value)} className="w-full bg-[#F9FAFB] border border-[#E5E7EB] rounded-xl px-3.5 py-3 text-sm outline-none focus:border-[#850831]" />
-              </div>
-              <div>
-                <label className="text-xs font-600 text-[#6B7280] block mb-1.5">Secteur</label>
-                <input value={secteur} onChange={e => setSecteur(e.target.value)} className="w-full bg-[#F9FAFB] border border-[#E5E7EB] rounded-xl px-3.5 py-3 text-sm outline-none focus:border-[#850831]" />
-              </div>
-              <div>
-                <label className="text-xs font-600 text-[#6B7280] block mb-1.5">Budget</label>
-                <input value={budget} onChange={e => setBudget(e.target.value)} className="w-full bg-[#F9FAFB] border border-[#E5E7EB] rounded-xl px-3.5 py-3 text-sm outline-none focus:border-[#850831]" />
-              </div>
-              <div>
-                <label className="text-xs font-600 text-[#6B7280] block mb-1.5">Horizon</label>
-                <input value={horizon} onChange={e => setHorizon(e.target.value)} className="w-full bg-[#F9FAFB] border border-[#E5E7EB] rounded-xl px-3.5 py-3 text-sm outline-none focus:border-[#850831]" />
-              </div>
-            </div>
-          </EditSheet>
-        </Overlay>
-      )}
-      {editTarget === 'criteres' && (
-        <Overlay onClose={() => setEditTarget(null)}>
-          <EditSheet title="Modifier les critères" onClose={() => setEditTarget(null)}>
-            {criteres.map((c, i) => (
-              <div key={i} className="mb-3">
-                <label className="text-xs font-600 text-[#6B7280] block mb-1.5">Critère {i + 1}</label>
-                <input value={c} onChange={e => setCriteres(criteres.map((cr, idx) => idx === i ? e.target.value : cr))} className="w-full bg-[#F9FAFB] border border-[#E5E7EB] rounded-xl px-3.5 py-3 text-sm outline-none focus:border-[#850831]" />
-              </div>
-            ))}
-          </EditSheet>
-        </Overlay>
-      )}
-      {editTarget === 'tache' && (
-        <Overlay onClose={() => setEditTarget(null)}>
-          <EditSheet title="Modifier la tâche" onClose={() => setEditTarget(null)}>
-            <div className="space-y-3">
-              <div>
-                <label className="text-xs font-600 text-[#6B7280] block mb-1.5">Intitulé</label>
-                <input value={tacheLabel} onChange={e => setTacheLabel(e.target.value)} className="w-full bg-[#F9FAFB] border border-[#E5E7EB] rounded-xl px-3.5 py-3 text-sm outline-none focus:border-[#850831]" />
-              </div>
-              <div>
-                <label className="text-xs font-600 text-[#6B7280] block mb-1.5">Date · heure</label>
-                <input value={tacheDate} onChange={e => setTacheDate(e.target.value)} className="w-full bg-[#F9FAFB] border border-[#E5E7EB] rounded-xl px-3.5 py-3 text-sm outline-none focus:border-[#850831]" />
-              </div>
-              <div>
-                <label className="text-xs font-600 text-[#6B7280] block mb-1.5">Canal</label>
-                <div className="flex gap-2">
-                  {['Email', 'WhatsApp', 'Appel'].map(c => (
-                    <button key={c} onClick={() => setTacheCanal(c)} className={`flex-1 py-2.5 rounded-xl text-xs font-600 border transition-all ${tacheCanal === c ? 'bg-[#850831] text-white border-[#850831]' : 'bg-[#F9FAFB] text-[#6B7280] border-[#E5E7EB]'}`}>{c}</button>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </EditSheet>
-        </Overlay>
-      )}
-      {editTarget === 'qualification' && (
-        <Overlay onClose={() => setEditTarget(null)}>
-          <EditSheet title="Modifier la qualification" onClose={() => setEditTarget(null)}>
-            <div className="flex gap-3">
-              {(['CHAUD', 'TIÈDE', 'FROID'] as const).map(q => (
-                <button key={q} onClick={() => setQualif(q)} className={`flex-1 py-3 rounded-xl text-xs font-700 border-2 transition-all ${qualif === q ? 'border-[#850831]' : 'border-[#E5E7EB]'}`}>
-                  <QualifBadge q={q} />
-                </button>
-              ))}
-            </div>
-          </EditSheet>
-        </Overlay>
-      )}
-    </div>
-  )
-}
-
-// ── Add Sheet (from + nav) ────────────────────────────────────────────────────
-function AddSheet({ onClose, onNewProspect, onTaskVoice, onExistingProspectNote }: {
-  onClose: () => void
-  onNewProspect: () => void
-  onTaskVoice: () => void
-  onExistingProspectNote: (p: Prospect) => void
-}) {
-  const [subStep, setSubStep] = useState<'menu' | 'select-prospect'>('menu')
-  const [search, setSearch] = useState('')
-  const filtered = PROSPECTS.filter(p =>
-    `${p.prenom} ${p.nom}`.toLowerCase().includes(search.toLowerCase())
-  )
-
-  return (
-    <Overlay onClose={onClose}>
-      <div className="bg-white rounded-t-3xl px-5 pt-5 pb-10">
-        <div className="w-10 h-1 bg-[#E5E7EB] rounded-full mx-auto mb-6" />
-
-        {subStep === 'menu' && (
-          <>
-            <h3 className="text-base font-700 text-[#111827] mb-1">Que souhaitez-vous ajouter ?</h3>
-            <p className="text-xs text-[#9CA3AF] mb-5">Choisissez le type de note à créer</p>
-            <div className="space-y-3">
-              {[
-                {
-                  icon: '✨',
-                  label: 'Note pour nouveau prospect',
-                  sub: 'Dicter ou écrire, une fiche sera créée',
-                  action: () => { onClose(); onTaskVoice() },
-                },
-                {
-                  icon: '👤',
-                  label: 'Note pour prospect existant',
-                  sub: 'Ajouter une note à une fiche existante',
-                  action: () => setSubStep('select-prospect'),
-                },
-              ].map(item => (
-                <button
-                  key={item.label}
-                  onClick={item.action}
-                  className="w-full flex items-center gap-4 bg-[#F9FAFB] rounded-2xl px-4 py-4 active:bg-[#F3F4F6] transition-colors text-left"
-                >
-                  <span className="text-2xl">{item.icon}</span>
-                  <div>
-                    <p className="text-sm font-600 text-[#111827]">{item.label}</p>
-                    <p className="text-xs text-[#9CA3AF] mt-0.5">{item.sub}</p>
-                  </div>
-                  <span className="ml-auto text-[#D1D5DB] text-lg">›</span>
-                </button>
-              ))}
-            </div>
-          </>
-        )}
-
-        {subStep === 'select-prospect' && (
-          <>
-            <button onClick={() => setSubStep('menu')} className="flex items-center gap-1.5 text-[#850831] text-sm font-500 mb-4">
-              ‹ Retour
-            </button>
-            <h3 className="text-base font-700 text-[#111827] mb-3">Sélectionner un prospect</h3>
-            <div className="relative mb-3">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[#9CA3AF]">🔍</span>
-              <input
-                value={search}
-                onChange={e => setSearch(e.target.value)}
-                placeholder="Rechercher…"
-                className="w-full bg-[#F9FAFB] border border-[#E5E7EB] rounded-xl pl-9 pr-4 py-2.5 text-sm outline-none focus:border-[#850831]"
-              />
-            </div>
-            <div className="space-y-2 max-h-56 overflow-y-auto hide-scrollbar">
-              {filtered.map(p => (
-                <button
-                  key={p.id}
-                  onClick={() => { onExistingProspectNote(p); onClose() }}
-                  className="w-full flex items-center gap-3 bg-[#F9FAFB] rounded-xl px-3 py-2.5 active:bg-[#F3F4F6] transition-colors text-left"
-                >
-                  <div className="w-9 h-9 rounded-full bg-[#FFF1EA] border border-[#F0D8CA] flex items-center justify-center text-xs font-600 text-[#850831] shrink-0">
-                    {p.prenom[0]}{p.nom[0]}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-600 text-[#111827]">{p.prenom} {p.nom}</p>
-                    <p className="text-xs text-[#9CA3AF]">{p.typeBien} · {p.secteur}</p>
-                  </div>
-                  <QualifBadge q={p.qualification} />
-                </button>
-              ))}
-              {filtered.length === 0 && (
-                <p className="text-sm text-[#9CA3AF] text-center py-4">Aucun prospect trouvé</p>
-              )}
-            </div>
-          </>
-        )}
-
-      </div>
-    </Overlay>
-  )
-}
-
 // ── Navigation ────────────────────────────────────────────────────────────────
-function NavBar({ active, onChange, onAdd }: {
+function NavBar({ active, onChange }: {
   active: 'home' | 'prospects'
   onChange: (t: 'home' | 'prospects') => void
-  onAdd: () => void
 }) {
   return (
-    <div className="absolute bottom-0 left-0 right-0 bg-white border-t border-[#F0E8E0] flex items-center px-6 pb-safe">
+    <div className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-[#F0E8E0] flex items-center px-6 pb-[env(safe-area-inset-bottom)]">
       <NavItem icon="🏠" label="Accueil" active={active === 'home'} onClick={() => onChange('home')} />
-      <div className="flex-1 flex justify-center py-2">
-        <button
-          onClick={onAdd}
-          className="w-14 h-14 rounded-full bg-[#850831] flex items-center justify-center shadow-lg shadow-[#850831]/30 active:scale-90 transition-transform -mt-5"
-        >
-          <span className="text-white text-3xl leading-none font-300">+</span>
-        </button>
-      </div>
       <NavItem icon="👥" label="Prospects" active={active === 'prospects'} onClick={() => onChange('prospects')} />
     </div>
+  )
+}
+
+function SideNav({ active, onChange }: {
+  active: 'home' | 'prospects'
+  onChange: (t: 'home' | 'prospects') => void
+}) {
+  const items = [
+    { id: 'home' as const, icon: '🏠', label: 'Accueil' },
+    { id: 'prospects' as const, icon: '👥', label: 'Prospects' },
+  ]
+  return (
+    <aside className="hidden md:flex w-60 shrink-0 flex-col bg-white border-r border-[#F0E8E0] px-4 py-6">
+      <div className="flex items-center gap-2 px-2 mb-8">
+        <div className="w-8 h-8 rounded bg-[#850831] flex items-center justify-center">
+          <span className="text-white text-xs font-700 tracking-wider">ERA</span>
+        </div>
+        <span className="text-[#1A2A63] text-xs font-500 tracking-wide uppercase">France</span>
+      </div>
+      <nav className="space-y-1">
+        {items.map(item => (
+          <button
+            key={item.id}
+            onClick={() => onChange(item.id)}
+            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-600 transition-colors ${
+              active === item.id ? 'bg-[#FFF1EA] text-[#850831]' : 'text-[#6B7280] hover:bg-[#F9FAFB]'
+            }`}
+          >
+            <span className="text-lg">{item.icon}</span>
+            {item.label}
+          </button>
+        ))}
+      </nav>
+      <div className="mt-auto flex items-center gap-3 px-2">
+        <div className="w-9 h-9 rounded-full bg-[#850831]/10 flex items-center justify-center">
+          <span className="text-[#850831] text-sm font-600">N</span>
+        </div>
+        <span className="text-sm font-500 text-[#111827]">Nicolas</span>
+      </div>
+    </aside>
   )
 }
 
@@ -2054,11 +1394,6 @@ export default function App() {
   const [screen, setScreen] = useState<Screen>('home')
   const [navTab, setNavTab] = useState<'home' | 'prospects'>('home')
   const [selectedProspect, setSelectedProspect] = useState<Prospect>(PROSPECTS[0])
-  const [showAddSheet, setShowAddSheet] = useState(false)
-  const [noteMode, setNoteMode] = useState<'vocal' | 'text'>('vocal')
-  const [noteProspect, setNoteProspect] = useState<Prospect | null>(null)
-  const [analysisFromNote, setAnalysisFromNote] = useState(false)
-  const [taskVoiceFrom, setTaskVoiceFrom] = useState<'home' | 'detail'>('home')
 
   const showNav = screen === 'home' || screen === 'prospects'
 
@@ -2073,123 +1408,40 @@ export default function App() {
   }
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-[#E8E0D8]">
-      {/* Mobile frame */}
-      <div
-        className="relative bg-[#FFF1EA] overflow-hidden shadow-2xl"
-        style={{ width: 390, height: 844, borderRadius: 44, maxHeight: '100dvh' }}
-      >
-        {/* Status bar */}
-        <div className="absolute top-0 left-0 right-0 h-12 bg-white z-10 flex items-end justify-between px-8 pb-2">
-          <span className="text-xs font-600 text-[#111827]">9:41</span>
-          <div className="w-28 h-5 bg-black rounded-full mx-auto absolute left-1/2 -translate-x-1/2 top-2" />
-          <div className="flex items-center gap-1">
-            <span className="text-xs">●●●</span>
-            <span className="text-xs">📶</span>
-            <span className="text-xs">🔋</span>
-          </div>
-        </div>
+    <div className="flex h-dvh bg-[#FFF1EA]">
+      <SideNav active={navTab} onChange={(t) => { setNavTab(t); setScreen(t) }} />
 
+      <main className="relative flex-1 min-w-0 h-full">
         {/* Content */}
-        <div className="absolute inset-0 top-0">
+        <div className="absolute inset-0">
           {screen === 'home' && (
             <HomeScreen
               onOpenDetail={openDetail}
-              onOpenAnalysis={() => { setAnalysisFromNote(false); setScreen('ai-analysis') }}
+              onOpenAnalysis={() => setScreen('ai-analysis')}
             />
           )}
           {screen === 'prospects' && (
-            <ProspectsScreen
-              onOpenDetail={openDetail}
-              onNewProspect={() => setScreen('new-prospect')}
-            />
+            <ProspectsScreen onOpenDetail={openDetail} />
           )}
           {screen === 'detail' && (
             <DetailScreen
               prospect={selectedProspect}
               onBack={() => setScreen(navTab)}
-              onOpenAnalysis={() => { setAnalysisFromNote(false); setScreen('ai-analysis') }}
-              onOpenAddSheet={() => {
-                setNoteProspect(selectedProspect)
-                setAnalysisFromNote(false)
-                setTaskVoiceFrom('detail')
-                setScreen('task-voice')
-              }}
             />
           )}
-          {screen === 'new-prospect' && (
-            <NewProspectScreen onBack={() => { setScreen('prospects'); setNavTab('prospects') }} />
-          )}
-          {screen === 'task-voice' && (
-            <TaskVoiceScreen
-              onBack={() => {
-                const dest = taskVoiceFrom === 'detail' ? 'detail' : 'home'
-                setNoteProspect(null)
-                setTaskVoiceFrom('home')
-                setScreen(dest)
-              }}
-              existingProspect={noteProspect ?? undefined}
-              onValidate={(m) => {
-                setNoteMode(m)
-                if (noteProspect) {
-                  setAnalysisFromNote(true)
-                  setScreen('ai-analysis')
-                } else {
-                  setScreen('note-analysis')
-                }
-              }}
-            />
-          )}
-          {screen === 'note-analysis' && (
-            <NoteAnalysisScreen
-              noteMode={noteMode}
-              onBack={() => setScreen('task-voice')}
-              onBackToDashboard={() => { setScreen('home'); setNavTab('home') }}
-            />
-          )}
-          {screen === 'ai-analysis' && analysisFromNote && (
-            <AIAnalysisScreen
-              onBack={() => setScreen('task-voice')}
-              onBackToDashboard={() => {
-                const dest = taskVoiceFrom === 'detail' ? 'detail' : 'home'
-                setAnalysisFromNote(false)
-                setNoteProspect(null)
-                setTaskVoiceFrom('home')
-                setScreen(dest)
-                if (dest === 'home') setNavTab('home')
-              }}
-              titleOverride={noteMode === 'vocal' ? 'Note vocale analysée' : 'Note écrite analysée'}
-              transcriptionSource={noteMode === 'vocal' ? 'vocal-app' : 'text-app'}
-              prospect={noteProspect ?? undefined}
-            />
-          )}
-          {screen === 'ai-analysis' && !analysisFromNote && (
-            <AIAnalysisScreen
-              onBack={() => setScreen('home')}
-              onBackToDashboard={() => { setScreen('home'); setNavTab('home') }}
-            />
+          {screen === 'ai-analysis' && (
+            <AIAnalysisScreen onBack={() => setScreen('home')} />
           )}
         </div>
 
-        {/* Nav */}
+        {/* Nav mobile */}
         {showNav && (
           <NavBar
             active={navTab}
             onChange={(t) => { setNavTab(t); setScreen(t) }}
-            onAdd={() => setShowAddSheet(true)}
           />
         )}
-
-        {/* Add sheet overlay */}
-        {showAddSheet && (
-          <AddSheet
-            onClose={() => setShowAddSheet(false)}
-            onNewProspect={() => { setShowAddSheet(false); setScreen('new-prospect'); setNavTab('prospects') }}
-            onTaskVoice={() => { setNoteProspect(null); setAnalysisFromNote(false); setTaskVoiceFrom('home'); setShowAddSheet(false); setScreen('task-voice') }}
-            onExistingProspectNote={(p) => { setNoteProspect(p); setAnalysisFromNote(false); setTaskVoiceFrom('home'); setShowAddSheet(false); setScreen('task-voice') }}
-          />
-        )}
-      </div>
+      </main>
     </div>
   )
 }
