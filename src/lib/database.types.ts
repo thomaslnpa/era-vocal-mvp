@@ -167,24 +167,42 @@ export type Database = {
         Row: {
           acheteur_id: string
           agent_id: string
+          canal: string | null
+          contexte: string | null
           created_at: string
+          echeance: string
           id: string
+          message_suggere: string | null
+          statut: string
+          termine_le: string | null
           texte: string
           updated_at: string
         }
         Insert: {
           acheteur_id: string
           agent_id: string
+          canal?: string | null
+          contexte?: string | null
           created_at?: string
+          echeance?: string
           id?: string
+          message_suggere?: string | null
+          statut?: string
+          termine_le?: string | null
           texte: string
           updated_at?: string
         }
         Update: {
           acheteur_id?: string
           agent_id?: string
+          canal?: string | null
+          contexte?: string | null
           created_at?: string
+          echeance?: string
           id?: string
+          message_suggere?: string | null
+          statut?: string
+          termine_le?: string | null
           texte?: string
           updated_at?: string
         }
@@ -192,7 +210,7 @@ export type Database = {
           {
             foreignKeyName: "rappels_acheteur_id_fkey"
             columns: ["acheteur_id"]
-            isOneToOne: true
+            isOneToOne: false
             referencedRelation: "acheteurs"
             referencedColumns: ["id"]
           },

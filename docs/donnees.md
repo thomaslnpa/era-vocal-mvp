@@ -1,35 +1,66 @@
 # Données
 
-Deux sources, fusionnées par `useProspects()` dans `src/App.tsx` :
+Deux sources, réelles et démo, pour les prospects comme pour les tâches. Tout est dans `src/App.tsx`.
 
-- Réel : table `eravocal.acheteurs` (Supabase, lecture seule avec la clé anon), mise à jour en temps réel (Realtime). `acheteurToProspect` convertit une ligne en `Prospect` : `score` rouge/orange/vert vers `ROUGE`/`ORANGE`/`VERT` (valeurs de la base), champs absents laissés vides (affichés `-`), pas de relance ni d'historique.
-- Démo : `PROSPECTS` (5 fiches fictives, `isDemo: true`, pastille « Démo »). Seules ces fiches affichent les valeurs en dur de la fiche détail (`d()` dans `DetailScreen`) et les tâches.
+## Prospects
 
-L'accueil (`HomeScreen`) n'utilise que `PROSPECTS`. Client : `src/lib/supabase.ts`, types générés : `src/lib/database.types.ts` (`supabase gen types typescript --linked --schema eravocal`). Droits `anon` : voir `supabase/anon_lecture_eravocal.sql`.
+Fusionnés par `useProspects()` :
 
-## Type `Prospect`
+- Réel : table `eravocal.acheteurs` (Supabase, lecture seule avec la clé anon), mise à jour en temps réel (Realtime). `acheteurToProspect` convertit une ligne en `Prospect` : `score` rouge/orange/vert vers `ROUGE`/`ORANGE`/`VERT` (valeurs de la base), champs absents laissés vides (affichés `-`), pas d'historique propre.
+- Démo : `PROSPECTS` (5 fiches fictives, `isDemo: true`, pastille « Démo »). Seules ces fiches affichent les valeurs en dur de la fiche détail (`d()` dans `DetailScreen`).
 
-Champs présents :
+Client : `src/lib/supabase.ts`, types générés : `src/lib/database.types.ts` (`supabase gen types typescript --linked --schema eravocal`). Droits `anon` : voir `supabase/migrations/`.
+
+### Type `Prospect`
 
 - `id`, `prenom`, `nom`, `tel`, `email`
 - `qualification` : `ROUGE` | `ORANGE` | `VERT`
 - `typeBien`, `typologie`, `secteur`, `budget`, `horizon` (chaînes affichées, pas des nombres)
-- `relance` (clé de tri : `aujourd'hui`, `demain`, `dans 3 jours`, ou une date texte) et `relanceLabel`
-- `isLate` optionnel
 - `financement`, `apport`, `criteres` (liste de chaînes)
 - `motivation`, `frein`
 - `historique` : `{ date, type, resume }`, type `vocal` | `note` | `tache`
-- `prochaineAction`, `prochaineActionDate`, `canal`, `messageSuggere`
 
-Cinq fiches : Sophie Martin (ORANGE), Julien Morel (ROUGE, seul `isLate`), Émilie Laurent (VERT), Camille Bernard (ORANGE), Thomas Garcia (ROUGE).
-
-## Ce que le type ne porte pas
+Cinq fiches de démo : Sophie Martin (ORANGE), Julien Morel (ROUGE), Émilie Laurent (VERT), Camille Bernard (ORANGE), Thomas Garcia (ROUGE).
 
 Le brief prévoit aussi source du lead, agent responsable, budgets min/max, surface, pièces, chambres, critères indispensables et secondaires séparés, notes. Sur la fiche, ces idées sont des lignes en dur dans le JSX, identiques quel que soit le prospect ouvert.
 
-Les tâches du carrousel fiche (`ProspectTask`) ne sont pas stockées sur `Prospect`. Deux d'entre elles sont recréées à chaque rendu.
+## Tâches
 
-L'écran d'analyse a son propre état React (`prospectSituation`, `budget`, `criteres`, tâche, `qualif`). Il n'écrit pas dans `PROSPECTS`.
+À l'écran, on dit toujours « Tâche ». En base, la table s'appelle `eravocal.rappels` (nom historique, conservé pour le workflow n8n).
+
+Fusionnées par `useTaches()`, appelé une fois dans `App` et passé aux écrans (`tachesApi`) :
+
+- Réel : `eravocal.rappels`, temps réel, converti par `rappelToTache`. `acheteur_id` est l'`id` du prospect réel.
+- Démo : `TACHES_DEMO`, en mémoire. Échéances relatives au jour (`isoDuJour(-2)`, `isoDuJour(3)`...) pour que la démo reste cohérente quel que soit le jour. Perdues au rechargement.
+
+### Type `Tache`
+
+- `id`, `prospectId`
+- `echeance` : `YYYY-MM-DD`, date locale. La tâche fonctionne au jour : une heure évoquée reste dans le texte (« Rappeler vers 18h »)
+- `texte`, `contexte`, `messageSuggere`
+- `canal` : `appel` | `whatsapp` | `email`
+- `statut` : `a_faire` | `terminee` | `annulee`, `termineLe` (ISO) pour les deux derniers
+- `isDemo` optionnel
+
+Pas de limite de tâches par prospect.
+
+### Actions
+
+`terminer`, `annuler`, `modifier` (texte, échéance, contexte). Démo : mise à jour locale. Réel : mise à jour optimiste puis `update` Supabase, rechargement en cas d'erreur. L'app ne crée ni ne supprime de tâche : la création passe par l'agent WhatsApp.
+
+Une tâche terminée ou annulée sort de l'accueil et apparaît en tête de l'historique de la fiche (types `tache` et `tache_annulee`).
+
+### Table `eravocal.rappels`
+
+Colonnes : `id`, `agent_id`, `acheteur_id`, `texte`, `echeance` (date, défaut jour courant à Paris), `statut` (défaut `a_faire`), `canal`, `contexte`, `message_suggere`, `termine_le`, `created_at`, `updated_at`. Migration : `supabase/migrations/20261005133000_eravocal_taches.sql`.
+
+Droits `anon` (démo, pas pour la production) : lecture, et mise à jour de `statut`, `echeance`, `texte`, `contexte`, `termine_le` uniquement.
+
+### Création par n8n
+
+Le workflow (`EraVocal/workflow-n8n`, copie dans `.figma/workflow-n8n.json`) extrait du vocal ou du texte le prospect, le jour (`echeance_rappel`, calculé depuis la date du jour), le contenu, le canal et un message suggéré. Sans jour ou sans contenu, il demande de renvoyer la demande complète et n'écrit rien. Sinon il soumet un brouillon dans `validations_en_attente` ; sur « OK », il insère toujours une nouvelle ligne dans `rappels`.
+
+Limites : pas de complément en deux messages, et « décale le rappel » crée une nouvelle tâche. Le report se fait depuis l'app.
 
 ## État d'application
 
@@ -37,18 +68,20 @@ Dans `App` :
 
 - `screen`
 - `navTab` : `home` | `prospects` (la fiche revient sur cet onglet)
-- `selectedProspect` : copie de l'objet au moment du clic, défaut `PROSPECTS[0]`
+- `selectedId` : la fiche ouverte suit les mises à jour temps réel
+- `tachesApi` : tâches et actions
 
-`done`, textes de tâches, feuilles d'édition et accordéons vivent dans le composant. Marquer une tâche terminée ne change pas `PROSPECTS`.
+Feuilles d'édition et accordéons vivent dans les composants. L'écran d'analyse a son propre état React (`prospectSituation`, `budget`, `criteres`, tâche, `qualif`) et n'écrit nulle part.
 
 ## Règles d'affichage accueil
 
-- En retard : `isLate`
-- Aujourd'hui : `relance === "aujourd'hui"` et pas `isLate`
-- À venir : `relance !== "aujourd'hui"`
+Seules les tâches `a_faire` des prospects connus, triées par échéance (`classerTaches`) :
 
-Julien a `relance: "aujourd'hui"` et `isLate: true`, donc il n'apparaît que dans En retard.
+- En retard : échéance avant aujourd'hui
+- Aujourd'hui : échéance égale à aujourd'hui
+- Cette semaine : de demain à dimanche (semaine calendaire)
+- Au-delà : visibles seulement sur la fiche
 
 ## Filtres liste
 
-`Rouge` / `Orange` / `Vert` comparent `qualification` à `filter.toUpperCase()`. `À relancer` teste seulement `relance === "aujourd'hui"`.
+`Rouge` / `Orange` / `Vert` comparent `qualification` à `filter.toUpperCase()`. `À relancer` garde les prospects dont la prochaine tâche à faire est en retard ou aujourd'hui.

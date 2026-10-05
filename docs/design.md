@@ -32,7 +32,8 @@ Le JSX utilise `font-500`, `font-600`, `font-700`. Ce ne sont pas les classes Ta
 Tout est dans `src/App.tsx`. Ne pas recréer un style de carte parallèle.
 
 - `QualifBadge` : pastille ROUGE / ORANGE / VERT.
-- `ActionCard` : tâche accueil. Pied Voir fiche, Message, Appel. Cercle de validation en haut à droite.
+- `ActionCard` : tâche accueil. Pied Voir fiche, Message, Appel. En haut à droite, `TacheControles` (Modifier, Annuler, Terminer), partagé avec `ProspectTaskCard`.
+- `TacheEditSheet` : édition d'une tâche (intitulé, date, contexte, raccourcis de report).
 - `ProspectTaskCard` : même langage, variante fiche. Largeur `w-72`, pied Message seul, crayon + cercle en haut à droite. Le contexte fiche est déjà la fiche, l'appel est dans le header.
 - `Overlay` : bottom sheet mobile, dialogue centré à partir de `md` (`max-w-md`).
 - `MessageModal` : suggestion + copier. Toujours dire que le message n'est pas envoyé.

@@ -1,6 +1,4 @@
--- Lecture seule pour la démo : anon peut lire acheteurs, rappels, debriefs.
--- Historique : appliqué via supabase/migrations/20261003123000_eravocal_anon_read.sql.
--- Les droits d'écriture sur rappels sont dans supabase/migrations/20261005133000_eravocal_taches.sql.
+-- Démo : lecture seule pour la clé anon sur trois tables du schéma eravocal.
 grant usage on schema eravocal to anon;
 
 grant select on eravocal.acheteurs to anon;

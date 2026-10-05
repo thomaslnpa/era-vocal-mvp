@@ -16,8 +16,8 @@ Formatage : `pnpm format` (oxfmt). Toolchain dans `.mise.toml`.
 
 ## Conventions du fichier
 
-- Composants fonctionnels, état local `useState`, pas de store.
-- Données de démo : constante `PROSPECTS` en tête de fichier.
+- Composants fonctionnels, état local `useState`, pas de store. Les tâches sont l'exception : `useTaches()` dans `App`, passé aux écrans.
+- Données de démo : constantes `PROSPECTS` et `TACHES_DEMO` en tête de fichier. Dates de démo relatives au jour (`isoDuJour`), jamais en dur.
 - Navigation par `setScreen`, pas par URL.
 - Textes UI en français, vouvoiement dans les messages suggérés, signature « Yohann ».
 - Classes Tailwind dans le JSX, couleurs en hex arbitraires.
@@ -25,7 +25,8 @@ Formatage : `pnpm format` (oxfmt). Toolchain dans `.mise.toml`.
 
 ## Limites à respecter
 
-- Seule la liste et la fiche prospects lisent Supabase (`eravocal.acheteurs`). Pas d'écriture depuis l'app, pas d'auth, pas d'envoi WhatsApp réel.
+- L'app lit `eravocal.acheteurs` et `eravocal.rappels`. Seule écriture : terminer, annuler ou modifier une tâche (`rappels`, colonnes autorisées à `anon`). Pas de création ni de suppression, pas d'auth, pas d'envoi WhatsApp réel.
+- Toute évolution du schéma passe par une migration dans `supabase/migrations/`, puis régénération de `src/lib/database.types.ts`.
 - Ne pas transformer une feuille placeholder (`SimpleEditSheet`) en formulaire complet sans demande : le brief de fiche veut une édition par section, le code ne l'a pas encore.
 - Ne pas aligner de force l'analyse WhatsApp sur la fiche Sophie : les deux jeux de chiffres illustrent deux moments (fiche actuelle et vocal plus récent).
 - `vite.config.ts` et `.figma/` appartiennent au socle Figma Make. Ne pas les modifier pour une tâche UI.

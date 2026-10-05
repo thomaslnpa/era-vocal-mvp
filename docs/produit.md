@@ -20,7 +20,7 @@ Persona de démo : Yohann.
 
 Après un appel ou une visite, l'agent envoie un vocal WhatsApp à l'assistant. L'app affiche ensuite ce qui a été compris et déjà appliqué, et laisse corriger.
 
-Le vocal peut aussi créer une tâche spontanée. Ce second parcours n'est pas dans le prototype actuel.
+Le vocal peut aussi créer une tâche. L'agent WhatsApp ne l'enregistre qu'avec le minimum : prospect identifié, jour, contenu. La tâche fonctionne au jour ; une heure évoquée reste dans son texte. Pas de limite de tâches par prospect. Dans l'app, l'agent peut terminer, annuler ou modifier (reporter) une tâche ; terminée ou annulée, elle rejoint l'historique de la fiche.
 
 ## Qualification
 

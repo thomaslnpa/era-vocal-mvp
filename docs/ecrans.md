@@ -9,19 +9,23 @@ Navigation visible : Accueil et Prospects. Barre basse en dessous de `md`, menu 
 `HomeScreen`. Fond chaud, salutation « Bonjour Yohann », deux compteurs (tâches en retard, tâches aujourd'hui), puis :
 
 1. Carrousel « Derniers messages WhatsApp » (fond vert). Trois cartes en dur. Seule Sophie Martin ouvre `ai-analysis`. Julien et Émilie n'ont pas d'action.
-2. Section « En retard » : prospects avec `isLate` (Julien Morel).
-3. Section « À faire aujourd'hui » : `relance === "aujourd'hui"` et pas en retard (Sophie Martin).
-4. Section « À venir » : les autres, liste compacte.
+2. Tâches en trois groupes : « En retard », « Aujourd'hui », « Cette semaine » (de demain à dimanche). Chaque groupe a un compteur et un message s'il est vide. À partir de `md`, kanban à trois colonnes égales qui défilent seules (hauteur max 70vh). En dessous, onglets collants (« En retard », « Aujourd'hui », « Semaine ») et une seule liste pleine largeur qui défile avec la page ; l'onglet par défaut est « En retard » s'il contient des tâches, sinon « Aujourd'hui ». Les deux compteurs du haut ouvrent l'onglet correspondant.
 
-Carte d'action (`ActionCard`) : nom, badge, bien, contexte = frein, action recommandée. Pied : Voir fiche, Message, Appel. Le cercle en haut à droite marque la tâche terminée dans l'état local du composant, perdu au changement d'écran. Appel n'a pas de handler.
+Toutes les colonnes utilisent `ActionCard`. La ligne « Prévue : » est rouge en retard, verte aujourd'hui, bordeaux ensuite ; la carte calcule ces couleurs depuis l'échéance.
 
-Message ouvre `MessageModal` : texte suggéré, avertissement qu'il n'est pas envoyé, bouton Copier.
+Tâches de démo et tâches réelles (Supabase) sont mêlées. Règles détaillées dans `docs/donnees.md`.
+
+Carte d'action (`ActionCard`) : nom, badge, bien, contexte de la tâche, icône du canal et texte. En haut à droite, `TacheControles` : Modifier ou reporter (crayon), Annuler (croix, avec confirmation), Terminer (cercle). Pied : Voir fiche, Message, Appel. Appel n'a pas de handler.
+
+Modifier ouvre `TacheEditSheet` : intitulé, date, contexte, raccourcis « Demain », « Dans 3 jours », « Dans 1 semaine ». Terminer, annuler ou reporter met à jour les compteurs et les sections immédiatement.
+
+Message ouvre `MessageModal` : texte suggéré, avertissement qu'il n'est pas envoyé, bouton Copier. Sans message suggéré, la feuille l'indique et masque Copier.
 
 ## Prospects
 
-`ProspectsScreen`. Recherche sur prénom + nom. Filtres : Tous, Chaud, Tiède, Froid, À relancer.
+`ProspectsScreen`. Recherche sur prénom + nom. Filtres : Tous, Rouge, Orange, Vert, À relancer.
 
-« À relancer » ne garde que `relance === "aujourd'hui"`. Ce n'est pas le retard ni les relances futures.
+« À relancer » garde les prospects dont la prochaine tâche à faire est en retard ou aujourd'hui. Chaque ligne affiche « Tâche : » et la date de la prochaine tâche, en rouge si elle est en retard.
 
 Un tap ouvre la fiche. Pas de bouton « Nouveau prospect ».
 
@@ -38,9 +42,9 @@ Chaque bloc métier a Modifier, qui ouvre `SimpleEditSheet`. Cette feuille est u
 
 Informations, Projet et Financement ont Voir plus / Voir moins. Les lignes visibles viennent en partie du prospect (type, budget, apport, critères, motivation, frein, historique). Le reste est le même texte pour tous les prospects (locataire, CDI, 3 200 €, banque consultée, etc.).
 
-Historique : types `vocal`, `note`, `tache`. Vocal et note se déplient. La « transcription complète » est une phrase générée, pas le vocal d'origine. Une tâche d'historique est affichée en entier, sans dépliage.
+Historique : types `vocal`, `note`, `tache`, `tache_annulee`. Les tâches terminées ou annulées du prospect arrivent en tête, la plus récente d'abord (« Tâche réalisée » ou « Tâche annulée »). Vocal et note se déplient. La « transcription complète » est une phrase générée, pas le vocal d'origine. Une tâche d'historique est affichée en entier, sans dépliage.
 
-Tâches du carrousel : la première reprend `prochaineAction` du prospect. Les deux suivantes sont fixes (15 octobre, 28 octobre) pour tous. Modifier sur une tâche édite intitulé, date et contexte en local. Message réutilise `MessageModal`. Pas de bouton fixe « Ajouter une note ou une tâche ».
+Tâches du carrousel (`ProspectTaskCard`) : toutes les tâches à faire du prospect, y compris au-delà de la semaine, triées par échéance. Mêmes contrôles que sur l'accueil (`TacheControles`, `TacheEditSheet`). Message réutilise `MessageModal`. Pas de bouton fixe « Ajouter une note ou une tâche » : les tâches naissent sur WhatsApp.
 
 ## Analyse d'un message WhatsApp
 
@@ -63,7 +67,7 @@ Prévu dans les briefs, pas dans `App.tsx` :
 
 - Onglet Ajouter et bottom sheet (nouveau prospect, compte rendu, tâche).
 - Création de prospect.
-- Enregistrement vocal et création de tâche par la voix.
+- Enregistrement vocal dans l'app. La création de tâche par la voix existe, mais côté workflow n8n, pas dans l'app.
 - Confirmation « relance programmée / ajoutée à l'agenda ».
 - CTA fixe d'ajout sur la fiche.
 - Édition réelle des sections de la fiche, et qualification modifiable dans le header de la fiche.

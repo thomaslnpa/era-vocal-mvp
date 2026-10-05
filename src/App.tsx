@@ -21,20 +21,33 @@ interface Prospect {
   secteur: string
   budget: string
   horizon: string
-  relance: string
-  relanceLabel: string
-  isLate?: boolean
   financement: string
   apport: string
   criteres: string[]
   motivation: string
   frein: string
   historique: { date: string; type: string; resume: string }[]
-  prochaineAction: string
-  prochaineActionDate: string
-  canal: string
-  messageSuggere: string
 }
+
+type Canal = 'appel' | 'whatsapp' | 'email'
+type StatutTache = 'a_faire' | 'terminee' | 'annulee'
+
+// Une tâche par ligne de eravocal.rappels. Échéance au jour, l'heure éventuelle reste dans le texte.
+interface Tache {
+  id: string
+  prospectId: Prospect['id']
+  echeance: string // YYYY-MM-DD, date locale
+  texte: string
+  canal: Canal
+  contexte: string
+  messageSuggere: string
+  statut: StatutTache
+  termineLe?: string
+  isDemo?: boolean
+}
+
+const CANAL_LABEL: Record<Canal, string> = { appel: 'Appel', whatsapp: 'WhatsApp', email: 'Email' }
+const CANAL_ICON: Record<Canal, string> = { appel: '📞', whatsapp: '💬', email: '✉️' }
 
 // ── Data ───────────────────────────────────────────────────────────────────────
 const DEMO_DATA: Prospect[] = [
@@ -50,8 +63,6 @@ const DEMO_DATA: Prospect[] = [
     secteur: 'Toulouse Centre',
     budget: '300 000 €',
     horizon: 'Avant janvier',
-    relance: 'aujourd\'hui',
-    relanceLabel: 'Aujourd\'hui',
     financement: 'En cours',
     apport: '30 000 €',
     criteres: ['Balcon — indispensable', 'Parking — souhaité', 'Minimum 2 chambres'],
@@ -62,10 +73,6 @@ const DEMO_DATA: Prospect[] = [
       { date: '12 sept. 2026', type: 'vocal', resume: 'Recherche d\'un T3 sur Toulouse centre. Budget environ 300 000 €.' },
       { date: '5 août 2026', type: 'tache', resume: 'Email envoyé : "Bonjour Sophie, suite à notre échange de la semaine dernière, je me permets de vous transmettre une sélection de 3 biens correspondant à vos critères sur Toulouse Centre. N\'hésitez pas à me faire part de vos retours."' },
     ],
-    prochaineAction: 'Faire un point sur l\'accord bancaire',
-    prochaineActionDate: '15 octobre 2026',
-    canal: 'WhatsApp',
-    messageSuggere: 'Bonjour Sophie, je reviens vers vous concernant votre projet d\'achat d\'un T3 à Toulouse Centre. Avez-vous eu un retour de votre banque concernant votre accord de financement ? Je reste disponible pour vous accompagner dans cette étape. Bonne journée, Yohann.',
   },
   {
     id: 2,
@@ -79,9 +86,6 @@ const DEMO_DATA: Prospect[] = [
     secteur: 'Balma',
     budget: '450 000 €',
     horizon: 'Automne 2026',
-    relance: 'aujourd\'hui',
-    relanceLabel: 'Aujourd\'hui',
-    isLate: true,
     financement: 'Non démarré',
     apport: '50 000 €',
     criteres: ['Jardin', 'Garage', '4 chambres minimum'],
@@ -90,10 +94,6 @@ const DEMO_DATA: Prospect[] = [
     historique: [
       { date: '5 sept. 2026', type: 'note', resume: 'Projet initialement prévu pour l\'automne. Contact à reprendre.' },
     ],
-    prochaineAction: 'Réactiver le projet',
-    prochaineActionDate: 'Aujourd\'hui',
-    canal: 'Appel',
-    messageSuggere: 'Bonjour Julien, j\'espère que vous allez bien. Je souhaitais revenir vers vous concernant votre projet d\'acquisition d\'une maison à Balma. Avez-vous eu l\'occasion de faire avancer votre réflexion ? Je serais ravi d\'en discuter avec vous. Bonne journée, Yohann.',
   },
   {
     id: 3,
@@ -107,8 +107,6 @@ const DEMO_DATA: Prospect[] = [
     secteur: 'Toulouse / Côte Pavée',
     budget: '520 000 €',
     horizon: 'D\'ici 2 mois',
-    relance: 'demain',
-    relanceLabel: 'Demain',
     financement: 'Accord obtenu',
     apport: '80 000 €',
     criteres: ['Vue dégagée', 'Ascenseur', 'Deux places de parking'],
@@ -117,10 +115,6 @@ const DEMO_DATA: Prospect[] = [
     historique: [
       { date: '18 sept. 2026', type: 'vocal', resume: 'Accord de prêt confirmé. Très motivée. Budget extensible jusqu\'à 550 000 €.' },
     ],
-    prochaineAction: 'Proposer les nouvelles annonces',
-    prochaineActionDate: 'Demain',
-    canal: 'WhatsApp',
-    messageSuggere: 'Bonjour Émilie, de nouvelles annonces correspondant à vos critères viennent d\'être publiées à Toulouse Côte Pavée. Je vous les transmets dès maintenant. Êtes-vous disponible cette semaine pour une visite ? Bonne journée, Yohann.',
   },
   {
     id: 4,
@@ -134,18 +128,12 @@ const DEMO_DATA: Prospect[] = [
     secteur: 'Toulouse / Saint-Étienne',
     budget: '210 000 €',
     horizon: 'Début 2027',
-    relance: 'dans 3 jours',
-    relanceLabel: 'Dans 3 jours',
     financement: 'En cours',
     apport: '20 000 €',
     criteres: ['Lumineux', 'Calme'],
     motivation: 'Premier achat. Veut sécuriser son investissement.',
     frein: 'Hésite encore entre louer et acheter.',
     historique: [],
-    prochaineAction: 'Relancer sur la décision achat/location',
-    prochaineActionDate: 'Dans 3 jours',
-    canal: 'Appel',
-    messageSuggere: 'Bonjour Camille, j\'espère que vous allez bien. Avez-vous eu le temps de réfléchir à votre projet ? Achat ou location, je suis là pour vous aider à prendre la meilleure décision selon votre situation. N\'hésitez pas à me rappeler. Bonne journée, Yohann.',
   },
   {
     id: 5,
@@ -159,23 +147,97 @@ const DEMO_DATA: Prospect[] = [
     secteur: 'Colomiers',
     budget: '380 000 €',
     horizon: 'Printemps 2027',
-    relance: '28 septembre',
-    relanceLabel: '28 septembre',
     financement: 'Non démarré',
     apport: '40 000 €',
     criteres: ['Jardin', 'Quartier calme'],
     motivation: 'Famille qui s\'agrandit, besoin de plus d\'espace.',
     frein: 'Doit d\'abord vendre son appartement actuel.',
     historique: [],
-    prochaineAction: 'Vérifier avancement de la vente de son appartement',
-    prochaineActionDate: '28 septembre',
-    canal: 'WhatsApp',
-    messageSuggere: 'Bonjour Thomas, j\'espère que tout avance bien de votre côté. Avez-vous des nouvelles concernant la vente de votre appartement actuel ? Dès que vous aurez une visibilité, nous pourrons reprendre ensemble la recherche de votre maison à Colomiers. Bonne journée, Yohann.',
   },
 ]
 
 // Fiches fictives de démonstration (pastille « Démo »)
 const PROSPECTS: Prospect[] = DEMO_DATA.map(p => ({ ...p, isDemo: true }))
+
+// ── Tâches : dates ────────────────────────────────────────────────────────────
+function isoDuJour(decalage = 0): string {
+  const d = new Date()
+  d.setDate(d.getDate() + decalage)
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+}
+
+function formatEcheance(iso: string): string {
+  if (iso === isoDuJour()) return 'Aujourd\'hui'
+  if (iso === isoDuJour(1)) return 'Demain'
+  if (iso === isoDuJour(-1)) return 'Hier'
+  const label = new Date(`${iso}T00:00:00`).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })
+  return label.charAt(0).toUpperCase() + label.slice(1)
+}
+
+// Accueil : tâches à faire. En retard < aujourd'hui, puis aujourd'hui, puis de demain à dimanche.
+// Au-delà de dimanche, la tâche n'est visible que sur la fiche.
+function classerTaches(taches: Tache[]) {
+  const aujourdhui = isoDuJour()
+  const dimanche = isoDuJour((7 - new Date().getDay()) % 7)
+  const aFaire = taches.filter(t => t.statut === 'a_faire').sort((a, b) => a.echeance.localeCompare(b.echeance))
+  return {
+    enRetard: aFaire.filter(t => t.echeance < aujourdhui),
+    aujourdhui: aFaire.filter(t => t.echeance === aujourdhui),
+    semaine: aFaire.filter(t => t.echeance > aujourdhui && t.echeance <= dimanche),
+  }
+}
+
+// Échéances relatives au jour courant pour que la démo reste cohérente quel que soit le jour
+const TACHES_DEMO: Tache[] = [
+  {
+    id: 'demo-1', prospectId: 1, echeance: isoDuJour(0), canal: 'whatsapp',
+    texte: 'Faire un point sur l\'accord bancaire',
+    contexte: 'Accord bancaire en attente.',
+    messageSuggere: 'Bonjour Sophie, je reviens vers vous concernant votre projet d\'achat d\'un T3 à Toulouse Centre. Avez-vous eu un retour de votre banque concernant votre accord de financement ? Je reste disponible pour vous accompagner dans cette étape. Bonne journée, Yohann.',
+  },
+  {
+    id: 'demo-2', prospectId: 1, echeance: isoDuJour(2), canal: 'whatsapp',
+    texte: 'Envoyer une sélection de biens',
+    contexte: '4 à 5 appartements correspondant aux nouveaux critères.',
+    messageSuggere: 'Bonjour Sophie, je vous transmets une sélection de biens correspondant à vos critères. N\'hésitez pas à me faire part de vos retours. Bonne journée, Yohann.',
+  },
+  {
+    id: 'demo-3', prospectId: 1, echeance: isoDuJour(10), canal: 'appel',
+    texte: 'Faire un point sur l\'avancement du projet',
+    contexte: '',
+    messageSuggere: 'Bonjour Sophie, je souhaitais faire un point avec vous sur l\'avancement de votre projet. Avez-vous du nouveau ? Bonne journée, Yohann.',
+  },
+  {
+    id: 'demo-4', prospectId: 2, echeance: isoDuJour(-2), canal: 'appel',
+    texte: 'Réactiver le projet',
+    contexte: 'Projet mis en pause. Situation professionnelle incertaine.',
+    messageSuggere: 'Bonjour Julien, j\'espère que vous allez bien. Je souhaitais revenir vers vous concernant votre projet d\'acquisition d\'une maison à Balma. Avez-vous eu l\'occasion de faire avancer votre réflexion ? Je serais ravi d\'en discuter avec vous. Bonne journée, Yohann.',
+  },
+  {
+    id: 'demo-5', prospectId: 3, echeance: isoDuJour(1), canal: 'whatsapp',
+    texte: 'Proposer les nouvelles annonces',
+    contexte: 'Peu de biens disponibles sur le secteur.',
+    messageSuggere: 'Bonjour Émilie, de nouvelles annonces correspondant à vos critères viennent d\'être publiées à Toulouse Côte Pavée. Je vous les transmets dès maintenant. Êtes-vous disponible cette semaine pour une visite ? Bonne journée, Yohann.',
+  },
+  {
+    id: 'demo-6', prospectId: 3, echeance: isoDuJour(4), canal: 'appel',
+    texte: 'Caler une visite à Côte Pavée, la rappeler vers 18h',
+    contexte: 'Financement validé, prête à signer rapidement.',
+    messageSuggere: 'Bonjour Émilie, je vous propose de caler une visite cette semaine à Côte Pavée. Quel créneau vous conviendrait ? Bonne journée, Yohann.',
+  },
+  {
+    id: 'demo-7', prospectId: 4, echeance: isoDuJour(3), canal: 'appel',
+    texte: 'Relancer sur la décision achat/location',
+    contexte: 'Hésite encore entre louer et acheter.',
+    messageSuggere: 'Bonjour Camille, j\'espère que vous allez bien. Avez-vous eu le temps de réfléchir à votre projet ? Achat ou location, je suis là pour vous aider à prendre la meilleure décision selon votre situation. N\'hésitez pas à me rappeler. Bonne journée, Yohann.',
+  },
+  {
+    id: 'demo-8', prospectId: 5, echeance: isoDuJour(-7), canal: 'whatsapp',
+    texte: 'Vérifier avancement de la vente de son appartement',
+    contexte: 'Doit d\'abord vendre son appartement actuel.',
+    messageSuggere: 'Bonjour Thomas, j\'espère que tout avance bien de votre côté. Avez-vous des nouvelles concernant la vente de votre appartement actuel ? Dès que vous aurez une visibilité, nous pourrons reprendre ensemble la recherche de votre maison à Colomiers. Bonne journée, Yohann.',
+  },
+].map(t => ({ ...t, canal: t.canal as Canal, statut: 'a_faire' as StatutTache, isDemo: true }))
 
 // ── Données réelles (Supabase, schéma eravocal) ───────────────────────────────
 const SCORE_TO_QUALIF: Record<string, Qualification> = { rouge: 'ROUGE', orange: 'ORANGE', vert: 'VERT' }
@@ -206,18 +268,12 @@ function acheteurToProspect(a: Tables<{ schema: 'eravocal' }, 'acheteurs'>): Pro
     secteur: a.secteur ?? '',
     budget: a.budget ?? '',
     horizon: a.delai_acquisition ? DELAI_LABEL[a.delai_acquisition] : '',
-    relance: '',
-    relanceLabel: '',
     financement: a.financement_statut ? FINANCEMENT_LABEL[a.financement_statut] : '',
     apport: typeof details.apport === 'string' ? details.apport : '',
     criteres: [],
     motivation: '',
     frein: '',
     historique: [],
-    prochaineAction: '',
-    prochaineActionDate: '',
-    canal: '',
-    messageSuggere: '',
   }
 }
 
@@ -244,6 +300,87 @@ function useProspects(): Prospect[] {
   }, [])
 
   return [...reels, ...PROSPECTS]
+}
+
+type ChampsTache = Pick<Tache, 'echeance' | 'texte' | 'contexte'>
+
+const CANAUX: Canal[] = ['appel', 'whatsapp', 'email']
+const STATUTS: StatutTache[] = ['a_faire', 'terminee', 'annulee']
+
+function rappelToTache(r: Tables<{ schema: 'eravocal' }, 'rappels'>): Tache {
+  return {
+    id: r.id,
+    prospectId: r.acheteur_id,
+    echeance: r.echeance,
+    texte: r.texte,
+    canal: CANAUX.includes(r.canal as Canal) ? (r.canal as Canal) : 'appel',
+    contexte: r.contexte ?? '',
+    messageSuggere: r.message_suggere ?? '',
+    statut: STATUTS.includes(r.statut as StatutTache) ? (r.statut as StatutTache) : 'a_faire',
+    termineLe: r.termine_le ?? undefined,
+  }
+}
+
+// Tâches réelles (eravocal.rappels, temps réel) + tâches de démo en mémoire, partagées entre les écrans
+function useTaches() {
+  const [demo, setDemo] = useState<Tache[]>(TACHES_DEMO)
+  const [reels, setReels] = useState<Tache[]>([])
+  const loadRef = useRef<() => void>(() => {})
+
+  useEffect(() => {
+    let active = true
+    const load = async () => {
+      const { data, error } = await supabase.from('rappels').select('*').order('echeance')
+      if (error) return console.error('Supabase rappels :', error.message)
+      if (active) setReels(data.map(rappelToTache))
+    }
+    loadRef.current = load
+    load()
+    const channel = supabase
+      .channel('rappels-live')
+      .on('postgres_changes', { event: '*', schema: 'eravocal', table: 'rappels' }, load)
+      .subscribe()
+    return () => {
+      active = false
+      supabase.removeChannel(channel)
+    }
+  }, [])
+
+  const maj = (id: string, patch: Partial<Tache>) => {
+    const appliquer = (prev: Tache[]) => prev.map(t => (t.id === id ? { ...t, ...patch } : t))
+    if (demo.some(t => t.id === id)) return setDemo(appliquer)
+    setReels(appliquer)
+    supabase
+      .from('rappels')
+      .update({
+        statut: patch.statut,
+        termine_le: patch.termineLe,
+        echeance: patch.echeance,
+        texte: patch.texte,
+        contexte: patch.contexte,
+      })
+      .eq('id', id)
+      .then(({ error }) => {
+        if (!error) return
+        console.error('Supabase rappels :', error.message)
+        loadRef.current()
+      })
+  }
+
+  return {
+    taches: [...reels, ...demo],
+    terminer: (id: string) => maj(id, { statut: 'terminee', termineLe: new Date().toISOString() }),
+    annuler: (id: string) => maj(id, { statut: 'annulee', termineLe: new Date().toISOString() }),
+    modifier: (id: string, champs: ChampsTache) => maj(id, champs),
+  }
+}
+
+type TachesApi = ReturnType<typeof useTaches>
+
+function tachesAFaire(taches: Tache[], prospectId: Prospect['id']) {
+  return taches
+    .filter(t => t.prospectId === prospectId && t.statut === 'a_faire')
+    .sort((a, b) => a.echeance.localeCompare(b.echeance))
 }
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
@@ -313,16 +450,46 @@ function WhatsAppMessageCard({ prospect, info, updated, onView }: {
 }
 
 // ── Screen: Home ──────────────────────────────────────────────────────────────
-function HomeScreen({ onOpenDetail, onOpenAnalysis }: {
+function HomeScreen({ prospects, tachesApi, onOpenDetail, onOpenAnalysis }: {
+  prospects: Prospect[]
+  tachesApi: TachesApi
   onOpenDetail: (p: Prospect) => void
   onOpenAnalysis: () => void
 }) {
-  const lateProspects = PROSPECTS.filter(p => p.isLate)
-  const todayProspects = PROSPECTS.filter(p => p.relance === 'aujourd\'hui' && !p.isLate)
-  const upcoming = PROSPECTS.filter(p => p.relance !== 'aujourd\'hui')
-  const lateCount = lateProspects.length
-  const todayCount = todayProspects.length
-  const [messageProspect, setMessageProspect] = useState<Prospect | null>(null)
+  const { enRetard, aujourdhui, semaine } = classerTaches(
+    tachesApi.taches.filter(t => prospects.some(p => p.id === t.prospectId)),
+  )
+  const prospectDe = (t: Tache) => prospects.find(p => p.id === t.prospectId)!
+  const lateCount = enRetard.length
+  const todayCount = aujourdhui.length
+  const [messageTache, setMessageTache] = useState<Tache | null>(null)
+  const colonnes = [
+    { id: 'retard', titre: 'En retard', onglet: 'En retard', taches: enRetard, point: 'bg-[#D00C29]', texte: 'text-[#D00C29]', vide: 'Aucune tâche en retard.' },
+    { id: 'aujourdhui', titre: 'Aujourd\'hui', onglet: 'Aujourd\'hui', taches: aujourdhui, point: 'bg-[#2E7D32]', texte: 'text-[#2E7D32]', vide: 'Aucune tâche prévue aujourd\'hui.' },
+    { id: 'semaine', titre: 'Cette semaine', onglet: 'Semaine', taches: semaine, point: 'bg-[#850831]', texte: 'text-[#850831]', vide: 'Rien d\'autre cette semaine.' },
+  ]
+  // Mobile : un onglet à la fois. Ouvre sur le retard s'il y en a, sinon sur aujourd'hui.
+  const [onglet, setOnglet] = useState(() => (enRetard.length > 0 ? 'retard' : 'aujourdhui'))
+  const colonneActive = colonnes.find(c => c.id === onglet) ?? colonnes[1]
+  const tachesRef = useRef<HTMLDivElement>(null)
+
+  function ouvrirOnglet(id: string) {
+    setOnglet(id)
+    tachesRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }
+
+  const carte = (t: Tache) => (
+    <ActionCard
+      key={t.id}
+      tache={t}
+      prospect={prospectDe(t)}
+      onView={() => onOpenDetail(prospectDe(t))}
+      onMessage={() => setMessageTache(t)}
+      onTerminer={() => tachesApi.terminer(t.id)}
+      onAnnuler={() => tachesApi.annuler(t.id)}
+      onModifier={champs => tachesApi.modifier(t.id, champs)}
+    />
+  )
 
   return (
     <div className="flex flex-col h-full bg-[#FFF1EA] relative">
@@ -347,14 +514,14 @@ function HomeScreen({ onOpenDetail, onOpenAnalysis }: {
           <h1 className="text-2xl md:text-3xl font-serif text-[#1A2A63] leading-tight">Bonjour Yohann 👋</h1>
           <p className="text-sm text-[#6B7280] mt-1">Voici ce qui mérite votre attention aujourd'hui.</p>
           <div className="flex gap-3 mt-4 md:max-w-md">
-            <div className="flex-1 bg-[#FEE8EA] rounded-xl px-4 py-3 border border-[#FECDD3]">
+            <button onClick={() => ouvrirOnglet('retard')} className="flex-1 text-left bg-[#FEE8EA] rounded-xl px-4 py-3 border border-[#FECDD3] active:scale-[0.98] transition-transform">
               <p className="text-2xl font-700 text-[#D00C29]">{lateCount}</p>
               <p className="text-xs text-[#9CA3AF] mt-0.5">tâche{lateCount > 1 ? 's' : ''} en retard</p>
-            </div>
-            <div className="flex-1 bg-[#FFF1EA] rounded-xl px-4 py-3 border border-[#F0D8CA]">
+            </button>
+            <button onClick={() => ouvrirOnglet('aujourdhui')} className="flex-1 text-left bg-[#FFF1EA] rounded-xl px-4 py-3 border border-[#F0D8CA] active:scale-[0.98] transition-transform">
               <p className="text-2xl font-700 text-[#850831]">{todayCount}</p>
               <p className="text-xs text-[#9CA3AF] mt-0.5">tâche{todayCount > 1 ? 's' : ''} aujourd'hui</p>
-            </div>
+            </button>
           </div>
         </div>
         </div>
@@ -392,76 +559,68 @@ function HomeScreen({ onOpenDetail, onOpenAnalysis }: {
         </div>
         </section>
 
-        <div className="max-w-5xl mx-auto md:px-3">
-        <div className="lg:grid lg:grid-cols-2 lg:items-start">
-        {/* En retard */}
-        {lateProspects.length > 0 && (
-          <section className="px-5 pt-5">
-            <div className="flex items-center gap-2 mb-3">
-              <span className="w-2 h-2 rounded-full bg-[#D00C29]" />
-              <h2 className="text-xs font-700 text-[#D00C29] uppercase tracking-widest">En retard</h2>
-            </div>
-            <div className="grid gap-3">
-              {lateProspects.map(p => (
-                <ActionCard key={p.id} prospect={p} onView={() => onOpenDetail(p)} isLate onMessage={() => setMessageProspect(p)} />
-              ))}
-            </div>
-          </section>
-        )}
-
-        {/* À faire aujourd'hui */}
-        <section className="px-5 pt-5">
-          <div className="flex items-center gap-2 mb-3">
-            <span className="w-2 h-2 rounded-full bg-[#850831]" />
-            <h2 className="text-xs font-600 text-[#9CA3AF] uppercase tracking-widest">À faire aujourd'hui</h2>
-          </div>
-          <div className="grid gap-3">
-            {todayProspects.map(p => (
-              <ActionCard key={p.id} prospect={p} onView={() => onOpenDetail(p)} onMessage={() => setMessageProspect(p)} />
-            ))}
-          </div>
-        </section>
-        </div>
-
-        {/* À venir */}
-        <section className="px-5 pt-5">
-          <h2 className="text-xs font-600 text-[#9CA3AF] uppercase tracking-widest mb-3">À venir</h2>
-          <div className="bg-white rounded-2xl divide-y divide-[#F3F4F6] shadow-sm border border-[#F0E8E0]">
-            {upcoming.map((p, i) => (
-              <div
-                key={p.id}
-                onClick={() => onOpenDetail(p)}
-                className={`flex items-center gap-3 px-4 py-3.5 cursor-pointer active:bg-[#FFF8F5] ${i === 0 ? 'rounded-t-2xl' : ''} ${i === upcoming.length - 1 ? 'rounded-b-2xl' : ''}`}
-              >
-                <div className="w-9 h-9 rounded-full bg-[#FFF1EA] flex items-center justify-center shrink-0">
-                  <span className="text-sm font-600 text-[#850831]">{p.prenom[0]}{p.nom[0]}</span>
-                </div>
-                <div className="flex-1">
-                  <p className="text-sm font-600 text-[#111827]">{p.prenom} {p.nom}</p>
-                  <p className="text-xs text-[#9CA3AF]">Relance {p.relance}</p>
-                </div>
-                <QualifBadge q={p.qualification} />
+        <div ref={tachesRef}>
+          {/* Mobile : onglets avec compteurs, une liste pleine largeur qui défile avec la page */}
+          <div className="md:hidden">
+            <div className="sticky top-0 z-10 bg-[#FFF1EA] px-5 pt-4 pb-3">
+              <div className="flex gap-1 bg-white rounded-xl p-1 border border-[#F0E8E0]">
+                {colonnes.map(c => (
+                  <button
+                    key={c.id}
+                    onClick={() => setOnglet(c.id)}
+                    className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-700 transition-all ${
+                      onglet === c.id ? 'bg-[#FFF1EA] ' + c.texte : 'text-[#9CA3AF]'
+                    }`}
+                  >
+                    {c.onglet}
+                    <span className={`text-[10px] px-1.5 py-0.5 rounded-full leading-none ${onglet === c.id ? 'bg-white' : 'bg-[#F3F4F6]'}`}>{c.taches.length}</span>
+                  </button>
+                ))}
               </div>
+            </div>
+            <div className="grid gap-3 px-5">
+              {colonneActive.taches.length === 0 && (
+                <p className="text-sm text-[#9CA3AF] italic py-2">{colonneActive.vide}</p>
+              )}
+              {colonneActive.taches.map(carte)}
+            </div>
+          </div>
+
+          {/* Tablette et bureau : kanban, chaque colonne défile seule */}
+          <div className="hidden md:grid md:grid-cols-3 gap-3 max-w-6xl mx-auto px-8 pt-5 pb-2">
+            {colonnes.map(c => (
+              <section key={c.id} className="min-w-0 flex flex-col bg-white/60 rounded-2xl border border-[#F0E8E0]">
+                <div className="flex items-center gap-2 px-3 pt-3 pb-2">
+                  <span className={`w-2 h-2 rounded-full ${c.point}`} />
+                  <h2 className={`text-xs font-700 uppercase tracking-widest ${c.texte}`}>{c.titre}</h2>
+                  <span className="ml-auto text-[10px] font-700 text-[#6B7280] bg-[#F3F4F6] px-1.5 py-0.5 rounded-full leading-none">{c.taches.length}</span>
+                </div>
+                <div className="grid auto-rows-max content-start gap-3 px-2 pb-2 max-h-[70vh] overflow-y-auto hide-scrollbar">
+                  {c.taches.length === 0 && (
+                    <p className="text-sm text-[#9CA3AF] italic px-1 py-2">{c.vide}</p>
+                  )}
+                  {c.taches.map(carte)}
+                </div>
+              </section>
             ))}
           </div>
-        </section>
         </div>
       </div>
       </div>
 
       {/* Message modal — rendu hors du scroll */}
-      {messageProspect && (
-        <MessageModal prospect={messageProspect} onClose={() => setMessageProspect(null)} />
+      {messageTache && (
+        <MessageModal tache={messageTache} prospect={prospectDe(messageTache)} onClose={() => setMessageTache(null)} />
       )}
     </div>
   )
 }
 
-function MessageModal({ prospect: p, onClose }: { prospect: Prospect; onClose: () => void }) {
+function MessageModal({ tache: t, prospect: p, onClose }: { tache: Tache; prospect: Prospect; onClose: () => void }) {
   const [copied, setCopied] = useState(false)
 
   function handleCopy() {
-    navigator.clipboard.writeText(p.messageSuggere).catch(() => {})
+    navigator.clipboard.writeText(t.messageSuggere).catch(() => {})
     setCopied(true)
     setTimeout(() => setCopied(false), 2000)
   }
@@ -474,10 +633,16 @@ function MessageModal({ prospect: p, onClose }: { prospect: Prospect; onClose: (
           <span className="text-base">✨</span>
           <h3 className="text-base font-700 text-[#111827]">Message généré</h3>
         </div>
-        <p className="text-xs text-[#9CA3AF] mb-4">Pour {p.prenom} {p.nom} · via {p.canal}</p>
+        <p className="text-xs text-[#9CA3AF] mb-4">Pour {p.prenom} {p.nom} · via {CANAL_LABEL[t.canal]}</p>
 
+        {!t.messageSuggere && (
+          <p className="text-sm text-[#9CA3AF] italic">Aucun message suggéré pour cette tâche.</p>
+        )}
+
+        {t.messageSuggere && (
+        <>
         <div className="bg-[#F9FAFB] rounded-2xl px-4 py-4 border border-[#E5E7EB] mb-4">
-          <p className="text-sm text-[#374151] leading-relaxed">{p.messageSuggere}</p>
+          <p className="text-sm text-[#374151] leading-relaxed">{t.messageSuggere}</p>
         </div>
 
         <p className="text-xs text-[#9CA3AF] text-center mb-4">
@@ -494,29 +659,148 @@ function MessageModal({ prospect: p, onClose }: { prospect: Prospect; onClose: (
         >
           {copied ? '✓ Copié dans le presse-papiers' : 'Copier le message'}
         </button>
+        </>
+        )}
       </div>
     </Overlay>
   )
 }
 
-function ActionCard({ prospect: p, onView, onMessage, isLate }: { prospect: Prospect; onView: () => void; onMessage: () => void; isLate?: boolean }) {
-  const [done, setDone] = useState(false)
+// ── Tâche : contrôles partagés par ActionCard et ProspectTaskCard ────────────
+function TacheControles({ onModifier, onAnnuler, onTerminer }: {
+  onModifier: () => void
+  onAnnuler: () => void
+  onTerminer: () => void
+}) {
+  const [confirmAnnuler, setConfirmAnnuler] = useState(false)
 
-  const borderColor = isLate ? 'border-[#FECDD3]' : 'border-[#F0E8E0]'
+  return (
+    <>
+      <div className="flex items-center gap-1.5 shrink-0">
+        <button
+          onClick={onModifier}
+          className="w-7 h-7 flex items-center justify-center text-[#9CA3AF] active:text-[#850831] transition-colors"
+          title="Modifier ou reporter"
+          aria-label="Modifier ou reporter"
+        >
+          <span className="text-sm">✏️</span>
+        </button>
+        <button
+          onClick={() => setConfirmAnnuler(true)}
+          className="w-7 h-7 flex items-center justify-center text-base text-[#9CA3AF] active:text-[#D00C29] transition-colors"
+          title="Annuler la tâche"
+          aria-label="Annuler la tâche"
+        >
+          ✕
+        </button>
+        <button
+          onClick={onTerminer}
+          className="w-7 h-7 rounded-full border-2 border-[#D1D5DB] flex items-center justify-center active:border-[#4ADE80] active:bg-[#F0FDF4] transition-all"
+          title="Marquer comme terminé"
+          aria-label="Marquer comme terminé"
+        />
+      </div>
 
-  if (done) {
-    return (
-      <div className="bg-white rounded-2xl border border-[#E5E7EB] px-4 py-3 flex items-center gap-3 fade-in opacity-60">
-        <div className="w-6 h-6 rounded-full bg-[#F0FDF4] border-2 border-[#4ADE80] flex items-center justify-center shrink-0">
-          <span className="text-[#16A34A] text-xs font-700">✓</span>
+      {confirmAnnuler && (
+        <Overlay onClose={() => setConfirmAnnuler(false)}>
+          <div className="bg-white rounded-t-3xl px-5 pt-5 pb-10">
+            <div className="w-10 h-1 bg-[#E5E7EB] rounded-full mx-auto md:hidden mb-5" />
+            <h3 className="text-base font-700 text-[#111827] mb-1">Annuler cette tâche ?</h3>
+            <p className="text-sm text-[#6B7280] mb-5">Elle sera retirée de vos tâches et conservée dans l'historique de la fiche.</p>
+            <div className="flex gap-3">
+              <button onClick={() => setConfirmAnnuler(false)} className="flex-1 py-3.5 rounded-2xl border border-[#E5E7EB] text-sm font-600 text-[#6B7280]">Garder</button>
+              <button
+                onClick={() => { setConfirmAnnuler(false); onAnnuler() }}
+                className="flex-1 py-3.5 rounded-2xl bg-[#D00C29] text-white text-sm font-700 active:scale-[0.98] transition-transform"
+              >
+                Annuler la tâche
+              </button>
+            </div>
+          </div>
+        </Overlay>
+      )}
+    </>
+  )
+}
+
+const REPORTS_RAPIDES = [
+  { label: 'Demain', decalage: 1 },
+  { label: 'Dans 3 jours', decalage: 3 },
+  { label: 'Dans 1 semaine', decalage: 7 },
+]
+
+function TacheEditSheet({ tache, onSave, onClose }: {
+  tache: Tache
+  onSave: (champs: ChampsTache) => void
+  onClose: () => void
+}) {
+  const [texte, setTexte] = useState(tache.texte)
+  const [echeance, setEcheance] = useState(tache.echeance)
+  const [contexte, setContexte] = useState(tache.contexte)
+
+  function enregistrer() {
+    onSave({ texte: texte.trim() || tache.texte, echeance, contexte: contexte.trim() })
+    onClose()
+  }
+
+  return (
+    <Overlay onClose={onClose}>
+      <div className="bg-white rounded-t-3xl px-5 pt-5 pb-10">
+        <div className="w-10 h-1 bg-[#E5E7EB] rounded-full mx-auto md:hidden mb-5" />
+        <h3 className="text-base font-700 text-[#111827] mb-4">Modifier la tâche</h3>
+        <div className="space-y-3">
+          <div>
+            <label className="text-xs font-600 text-[#6B7280] block mb-1.5">Intitulé</label>
+            <input value={texte} onChange={e => setTexte(e.target.value)} className="w-full bg-[#F9FAFB] border border-[#E5E7EB] rounded-xl px-3.5 py-3 text-sm outline-none focus:border-[#850831]" />
+          </div>
+          <div>
+            <label className="text-xs font-600 text-[#6B7280] block mb-1.5">Date</label>
+            <input type="date" value={echeance} onChange={e => e.target.value && setEcheance(e.target.value)} className="w-full bg-[#F9FAFB] border border-[#E5E7EB] rounded-xl px-3.5 py-3 text-sm outline-none focus:border-[#850831]" />
+            <div className="flex gap-2 mt-2 overflow-x-auto hide-scrollbar">
+              {REPORTS_RAPIDES.map(r => {
+                const iso = isoDuJour(r.decalage)
+                return (
+                  <button
+                    key={r.label}
+                    onClick={() => setEcheance(iso)}
+                    className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-600 transition-all ${
+                      echeance === iso ? 'bg-[#850831] text-white' : 'bg-[#F3F4F6] text-[#6B7280] active:bg-[#E5E7EB]'
+                    }`}
+                  >
+                    {r.label}
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+          <div>
+            <label className="text-xs font-600 text-[#6B7280] block mb-1.5">Contexte</label>
+            <input value={contexte} onChange={e => setContexte(e.target.value)} className="w-full bg-[#F9FAFB] border border-[#E5E7EB] rounded-xl px-3.5 py-3 text-sm outline-none focus:border-[#850831]" />
+          </div>
         </div>
-        <div className="flex-1">
-          <p className="text-sm font-600 text-[#6B7280]">{p.prenom} {p.nom}</p>
-          <p className="text-xs text-[#9CA3AF]">Tâche marquée comme terminée</p>
+        <div className="flex gap-3 mt-5">
+          <button onClick={onClose} className="flex-1 py-3.5 rounded-2xl border border-[#E5E7EB] text-sm font-600 text-[#6B7280]">Fermer</button>
+          <button onClick={enregistrer} className="flex-1 py-3.5 rounded-2xl bg-[#850831] text-white text-sm font-700 active:scale-[0.98] transition-transform">Enregistrer</button>
         </div>
       </div>
-    )
-  }
+    </Overlay>
+  )
+}
+
+function ActionCard({ tache: t, prospect: p, onView, onMessage, onTerminer, onAnnuler, onModifier }: {
+  tache: Tache
+  prospect: Prospect
+  onView: () => void
+  onMessage: () => void
+  onTerminer: () => void
+  onAnnuler: () => void
+  onModifier: (champs: ChampsTache) => void
+}) {
+  const [editing, setEditing] = useState(false)
+  const isLate = t.echeance < isoDuJour()
+  const isToday = t.echeance === isoDuJour()
+  const borderColor = isLate ? 'border-[#FECDD3]' : 'border-[#F0E8E0]'
+  const prevueColor = isLate ? 'text-[#D00C29]' : isToday ? 'text-[#2E7D32]' : 'text-[#850831]'
 
   return (
     <>
@@ -530,23 +814,21 @@ function ActionCard({ prospect: p, onView, onMessage, isLate }: { prospect: Pros
               </div>
               <p className="text-xs text-[#9CA3AF] mt-0.5">{p.typeBien} {p.typologie} · {p.secteur} · {p.budget}</p>
             </div>
-            {/* Terminé checkbox */}
-            <button
-              onClick={() => setDone(true)}
-              className="w-7 h-7 rounded-full border-2 border-[#D1D5DB] flex items-center justify-center shrink-0 active:border-[#4ADE80] active:bg-[#F0FDF4] transition-all mt-0.5"
-              title="Marquer comme terminé"
-            />
+            <TacheControles onModifier={() => setEditing(true)} onAnnuler={onAnnuler} onTerminer={onTerminer} />
           </div>
 
-          <div className="bg-[#FFF8F5] rounded-xl px-3 py-2.5 mt-2">
-            <p className="text-xs text-[#9CA3AF] mb-1">Contexte</p>
-            <p className="text-sm text-[#374151] font-500">{p.frein}</p>
-          </div>
+          {t.contexte && (
+            <div className="bg-[#FFF8F5] rounded-xl px-3 py-2.5 mt-2">
+              <p className="text-xs text-[#9CA3AF] mb-1">Contexte</p>
+              <p className="text-sm text-[#374151] font-500">{t.contexte}</p>
+            </div>
+          )}
 
           <div className="flex items-center gap-2 mt-3">
-            <span className="text-sm">{p.canal === 'WhatsApp' ? '💬' : '📞'}</span>
-            <p className="text-sm font-600 text-[#1A2A63]">{p.prochaineAction}</p>
+            <span className="text-sm">{CANAL_ICON[t.canal]}</span>
+            <p className="text-sm font-600 text-[#1A2A63]">{t.texte}</p>
           </div>
+          <p className={`text-xs font-600 mt-1.5 ${prevueColor}`}>Prévue : {formatEcheance(t.echeance)}</p>
         </div>
 
         {/* 3 action buttons */}
@@ -574,43 +856,21 @@ function ActionCard({ prospect: p, onView, onMessage, isLate }: { prospect: Pros
         </div>
       </div>
 
+      {editing && <TacheEditSheet tache={t} onSave={onModifier} onClose={() => setEditing(false)} />}
     </>
   )
 }
 
 // ── ProspectTaskCard — variante fiche prospect de ActionCard ──────────────────
-interface ProspectTask {
-  date: string
-  icon: string
-  label: string
-  contexte: string
-  messageSuggere: string
-}
-
-function ProspectTaskCard({ task, prospect }: { task: ProspectTask; prospect: Prospect }) {
-  const [done, setDone] = useState(false)
+function ProspectTaskCard({ tache, prospect, onTerminer, onAnnuler, onModifier }: {
+  tache: Tache
+  prospect: Prospect
+  onTerminer: () => void
+  onAnnuler: () => void
+  onModifier: (champs: ChampsTache) => void
+}) {
   const [showMessage, setShowMessage] = useState(false)
   const [editing, setEditing] = useState(false)
-  const [label, setLabel] = useState(task.label)
-  const [date, setDate] = useState(task.date)
-  const [contexte, setContexte] = useState(task.contexte)
-
-  // Synthetic prospect-like object for MessageModal
-  const syntheticProspect = { ...prospect, prochaineAction: label, messageSuggere: task.messageSuggere }
-
-  if (done) {
-    return (
-      <div className="shrink-0 w-72 bg-white rounded-2xl border border-[#E5E7EB] px-4 py-3 flex items-center gap-3 fade-in opacity-60">
-        <div className="w-6 h-6 rounded-full bg-[#F0FDF4] border-2 border-[#4ADE80] flex items-center justify-center shrink-0">
-          <span className="text-[#16A34A] text-xs font-700">✓</span>
-        </div>
-        <div className="flex-1">
-          <p className="text-sm font-600 text-[#6B7280]">{label}</p>
-          <p className="text-xs text-[#9CA3AF]">Tâche terminée</p>
-        </div>
-      </div>
-    )
-  }
 
   return (
     <>
@@ -618,36 +878,23 @@ function ProspectTaskCard({ task, prospect }: { task: ProspectTask; prospect: Pr
         <div className="px-4 pt-4 pb-3 flex-1 flex flex-col">
           {/* Header : date + contrôles */}
           <div className="flex items-start justify-between gap-2 mb-2">
-            <p className="text-xs font-700 text-[#850831]">{date}</p>
-            <div className="flex items-center gap-2 shrink-0">
-              <button
-                onClick={() => setEditing(true)}
-                className="w-6 h-6 flex items-center justify-center text-[#9CA3AF] active:text-[#850831] transition-colors"
-                title="Modifier"
-              >
-                <span className="text-sm">✏️</span>
-              </button>
-              <button
-                onClick={() => setDone(true)}
-                className="w-7 h-7 rounded-full border-2 border-[#D1D5DB] flex items-center justify-center active:border-[#4ADE80] active:bg-[#F0FDF4] transition-all"
-                title="Marquer comme terminé"
-              />
-            </div>
+            <p className={`text-xs font-700 ${tache.echeance < isoDuJour() ? 'text-[#D00C29]' : 'text-[#850831]'}`}>{formatEcheance(tache.echeance)}</p>
+            <TacheControles onModifier={() => setEditing(true)} onAnnuler={onAnnuler} onTerminer={onTerminer} />
           </div>
 
           {/* Contexte + Action — flex-1 pour pousser le footer en bas */}
           <div className="flex-1 flex flex-col justify-end">
-            {contexte ? (
+            {tache.contexte ? (
               <div className="bg-[#FFF8F5] rounded-xl px-3 py-2 mb-2">
                 <p className="text-xs text-[#9CA3AF] mb-0.5">Contexte</p>
-                <p className="text-sm text-[#374151]">{contexte}</p>
+                <p className="text-sm text-[#374151]">{tache.contexte}</p>
               </div>
             ) : null}
 
             {/* Action */}
             <div className="flex items-center gap-2">
-              <span className="text-sm">{task.icon}</span>
-              <p className="text-sm font-600 text-[#1A2A63] leading-snug">{label}</p>
+              <span className="text-sm">{CANAL_ICON[tache.canal]}</span>
+              <p className="text-sm font-600 text-[#1A2A63] leading-snug">{tache.texte}</p>
             </div>
           </div>
         </div>
@@ -665,55 +912,33 @@ function ProspectTaskCard({ task, prospect }: { task: ProspectTask; prospect: Pr
       </div>
 
       {showMessage && (
-        <MessageModal prospect={syntheticProspect} onClose={() => setShowMessage(false)} />
+        <MessageModal tache={tache} prospect={prospect} onClose={() => setShowMessage(false)} />
       )}
 
-      {/* Edit bottom sheet */}
-      {editing && (
-        <Overlay onClose={() => setEditing(false)}>
-          <div className="bg-white rounded-t-3xl px-5 pt-5 pb-10">
-            <div className="w-10 h-1 bg-[#E5E7EB] rounded-full mx-auto md:hidden mb-5" />
-            <h3 className="text-base font-700 text-[#111827] mb-4">Modifier la tâche</h3>
-            <div className="space-y-3">
-              <div>
-                <label className="text-xs font-600 text-[#6B7280] block mb-1.5">Intitulé</label>
-                <input value={label} onChange={e => setLabel(e.target.value)} className="w-full bg-[#F9FAFB] border border-[#E5E7EB] rounded-xl px-3.5 py-3 text-sm outline-none focus:border-[#850831]" />
-              </div>
-              <div>
-                <label className="text-xs font-600 text-[#6B7280] block mb-1.5">Date</label>
-                <input value={date} onChange={e => setDate(e.target.value)} className="w-full bg-[#F9FAFB] border border-[#E5E7EB] rounded-xl px-3.5 py-3 text-sm outline-none focus:border-[#850831]" />
-              </div>
-              <div>
-                <label className="text-xs font-600 text-[#6B7280] block mb-1.5">Contexte</label>
-                <input value={contexte} onChange={e => setContexte(e.target.value)} className="w-full bg-[#F9FAFB] border border-[#E5E7EB] rounded-xl px-3.5 py-3 text-sm outline-none focus:border-[#850831]" />
-              </div>
-            </div>
-            <div className="flex gap-3 mt-5">
-              <button onClick={() => setEditing(false)} className="flex-1 py-3.5 rounded-2xl border border-[#E5E7EB] text-sm font-600 text-[#6B7280]">Annuler</button>
-              <button onClick={() => setEditing(false)} className="flex-1 py-3.5 rounded-2xl bg-[#850831] text-white text-sm font-700 active:scale-[0.98] transition-transform">Enregistrer</button>
-            </div>
-          </div>
-        </Overlay>
-      )}
+      {editing && <TacheEditSheet tache={tache} onSave={onModifier} onClose={() => setEditing(false)} />}
     </>
   )
 }
 
 // ── Screen: Prospects ─────────────────────────────────────────────────────────
-function ProspectsScreen({ prospects, onOpenDetail }: {
+function ProspectsScreen({ prospects, taches, onOpenDetail }: {
   prospects: Prospect[]
+  taches: Tache[]
   onOpenDetail: (p: Prospect) => void
 }) {
   const [search, setSearch] = useState('')
   const [filter, setFilter] = useState<Filter>('Tous')
   const filters: Filter[] = ['Tous', 'Rouge', 'Orange', 'Vert', 'À relancer']
 
+  const prochaineTache = (p: Prospect): Tache | undefined => tachesAFaire(taches, p.id)[0]
+
   const filtered = prospects.filter(p => {
     const name = `${p.prenom} ${p.nom}`.toLowerCase()
     const matchSearch = name.includes(search.toLowerCase())
+    const prochaine = prochaineTache(p)
     const matchFilter =
       filter === 'Tous' ? true :
-      filter === 'À relancer' ? p.relance === 'aujourd\'hui' :
+      filter === 'À relancer' ? !!prochaine && prochaine.echeance <= isoDuJour() :
       p.qualification === filter.toUpperCase() as Qualification
     return matchSearch && matchFilter
   })
@@ -756,7 +981,7 @@ function ProspectsScreen({ prospects, onOpenDetail }: {
         <p className="text-xs text-[#9CA3AF] mb-3">{filtered.length} prospect{filtered.length > 1 ? 's' : ''}</p>
         <div className="grid gap-2.5 md:grid-cols-2 xl:grid-cols-3 fade-in">
           {filtered.map(p => (
-            <ProspectRow key={p.id} prospect={p} onClick={() => onOpenDetail(p)} />
+            <ProspectRow key={p.id} prospect={p} prochaine={prochaineTache(p)} onClick={() => onOpenDetail(p)} />
           ))}
         </div>
       </div>
@@ -765,7 +990,7 @@ function ProspectsScreen({ prospects, onOpenDetail }: {
   )
 }
 
-function ProspectRow({ prospect: p, onClick }: { prospect: Prospect; onClick: () => void }) {
+function ProspectRow({ prospect: p, prochaine, onClick }: { prospect: Prospect; prochaine?: Tache; onClick: () => void }) {
   return (
     <div
       onClick={onClick}
@@ -782,7 +1007,11 @@ function ProspectRow({ prospect: p, onClick }: { prospect: Prospect; onClick: ()
             {p.isDemo && <DemoBadge />}
           </div>
           <p className="text-xs text-[#9CA3AF] mt-0.5 truncate">{[`${p.typeBien} ${p.typologie}`.trim(), p.secteur, p.budget].filter(Boolean).join(' · ')}</p>
-          {p.relance && <p className="text-xs font-600 text-[#850831] mt-1">Relance : {p.relance}</p>}
+          {prochaine && (
+            <p className={`text-xs font-600 mt-1 ${prochaine.echeance < isoDuJour() ? 'text-[#D00C29]' : 'text-[#850831]'}`}>
+              Tâche : {formatEcheance(prochaine.echeance)}
+            </p>
+          )}
         </div>
         <span className="text-[#D1D5DB] text-lg">›</span>
       </div>
@@ -791,44 +1020,36 @@ function ProspectRow({ prospect: p, onClick }: { prospect: Prospect; onClick: ()
 }
 
 // ── Screen: Detail ────────────────────────────────────────────────────────────
-function DetailScreen({ prospect: p, onBack }: {
+function DetailScreen({ prospect: p, tachesApi, onBack }: {
   prospect: Prospect
+  tachesApi: TachesApi
   onBack: () => void
 }) {
   const [editSection, setEditSection] = useState<string | null>(null)
   const [infoOpen, setInfoOpen] = useState(false)
   const [projetOpen, setProjetOpen] = useState(false)
   const [financementOpen, setFinancementOpen] = useState(false)
-  const [expandedHistorique, setExpandedHistorique] = useState<number[]>([])
+  const [expandedHistorique, setExpandedHistorique] = useState<string[]>([])
 
-  const toggleHistorique = (i: number) =>
-    setExpandedHistorique(prev => prev.includes(i) ? prev.filter(x => x !== i) : [...prev, i])
+  const toggleHistorique = (cle: string) =>
+    setExpandedHistorique(prev => prev.includes(cle) ? prev.filter(x => x !== cle) : [...prev, cle])
 
   // Valeurs en dur du prototype : réservées aux fiches de démo
   const d = (v: string) => (p.isDemo ? v : '')
 
-  const taches: ProspectTask[] = !p.isDemo ? [] : [
-    {
-      date: p.prochaineActionDate,
-      icon: p.canal === 'WhatsApp' ? '💬' : '📞',
-      label: p.prochaineAction,
-      contexte: p.frein,
-      messageSuggere: p.messageSuggere,
-    },
-    {
-      date: '15 octobre',
-      icon: '💬',
-      label: 'Envoyer une sélection de biens',
-      contexte: '4–5 appartements correspondant aux nouveaux critères.',
-      messageSuggere: `Bonjour ${p.prenom}, je vous transmets une sélection de biens correspondant à vos critères. N'hésitez pas à me faire part de vos retours. Bonne journée, Yohann.`,
-    },
-    {
-      date: '28 octobre',
-      icon: '📞',
-      label: 'Faire un point sur l\'avancement du projet',
-      contexte: '',
-      messageSuggere: `Bonjour ${p.prenom}, je souhaitais faire un point avec vous sur l'avancement de votre projet. Avez-vous du nouveau ? Bonne journée, Yohann.`,
-    },
+  const taches = tachesAFaire(tachesApi.taches, p.id)
+
+  // Tâches terminées ou annulées en tête de l'historique, la plus récente d'abord
+  const historique = [
+    ...tachesApi.taches
+      .filter(t => t.prospectId === p.id && t.statut !== 'a_faire' && t.termineLe)
+      .sort((a, b) => b.termineLe!.localeCompare(a.termineLe!))
+      .map(t => ({
+        date: new Date(t.termineLe!).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' }),
+        type: t.statut === 'annulee' ? 'tache_annulee' : 'tache',
+        resume: t.texte,
+      })),
+    ...p.historique,
   ]
 
   return (
@@ -874,8 +1095,15 @@ function DetailScreen({ prospect: p, onBack }: {
             {taches.length === 0 && (
               <p className="text-sm text-[#9CA3AF] italic">Aucune action prévue.</p>
             )}
-            {taches.map((t, i) => (
-              <ProspectTaskCard key={i} task={t} prospect={p} />
+            {taches.map(t => (
+              <ProspectTaskCard
+                key={t.id}
+                tache={t}
+                prospect={p}
+                onTerminer={() => tachesApi.terminer(t.id)}
+                onAnnuler={() => tachesApi.annuler(t.id)}
+                onModifier={champs => tachesApi.modifier(t.id, champs)}
+              />
             ))}
           </div>
         </div>
@@ -1003,19 +1231,21 @@ function DetailScreen({ prospect: p, onBack }: {
 
           {/* ── Historique ── */}
           <InfoCard title="Historique">
-            {p.historique.length === 0 && (
+            {historique.length === 0 && (
               <p className="text-sm text-[#9CA3AF] italic">Aucune interaction enregistrée.</p>
             )}
             <div className="space-y-0">
-              {p.historique.map((h, i) => {
-                const open = expandedHistorique.includes(i)
-                const isTache = h.type === 'tache'
+              {historique.map((h, i) => {
+                const cle = `${h.date}|${h.type}|${h.resume}`
+                const open = expandedHistorique.includes(cle)
+                const isAnnulee = h.type === 'tache_annulee'
+                const isTache = h.type === 'tache' || isAnnulee
                 const isNote = h.type === 'note'
-                const icon = isTache ? '✅' : isNote ? '📝' : '🎙️'
-                const iconBg = isTache ? 'bg-[#EEF2FF]' : isNote ? 'bg-[#FFF8F5]' : 'bg-[#E8F5E9]'
-                const typeLabel = isTache ? 'Tâche réalisée' : isNote ? 'Note' : 'Vocal WhatsApp'
+                const icon = isAnnulee ? '✖️' : isTache ? '✅' : isNote ? '📝' : '🎙️'
+                const iconBg = isAnnulee ? 'bg-[#F3F4F6]' : isTache ? 'bg-[#EEF2FF]' : isNote ? 'bg-[#FFF8F5]' : 'bg-[#E8F5E9]'
+                const typeLabel = isAnnulee ? 'Tâche annulée' : isTache ? 'Tâche réalisée' : isNote ? 'Note' : 'Vocal WhatsApp'
                 return (
-                  <div key={i} className={`${i < p.historique.length - 1 ? 'border-b border-[#F3F4F6] pb-3 mb-3' : ''}`}>
+                  <div key={i} className={`${i < historique.length - 1 ? 'border-b border-[#F3F4F6] pb-3 mb-3' : ''}`}>
                     <div className="flex items-start gap-3">
                       <div className={`w-8 h-8 rounded-full ${iconBg} flex items-center justify-center text-sm shrink-0`}>
                         {icon}
@@ -1025,7 +1255,7 @@ function DetailScreen({ prospect: p, onBack }: {
                           <p className="text-xs text-[#9CA3AF]">{h.date} · {typeLabel}</p>
                           {!isTache && (
                             <button
-                              onClick={() => toggleHistorique(i)}
+                              onClick={() => toggleHistorique(cle)}
                               className="text-xs font-600 text-[#850831] shrink-0 active:opacity-60"
                             >
                               {open ? 'Masquer ↑' : 'Voir ↓'}
@@ -1481,6 +1711,7 @@ export default function App() {
   const [screen, setScreen] = useState<Screen>('home')
   const [navTab, setNavTab] = useState<'home' | 'prospects'>('home')
   const prospects = useProspects()
+  const tachesApi = useTaches()
   const [selectedId, setSelectedId] = useState<Prospect['id']>(PROSPECTS[0].id)
   // Dérivé de la liste pour que la fiche ouverte suive les mises à jour temps réel
   const selectedProspect = prospects.find(p => p.id === selectedId) ?? PROSPECTS[0]
@@ -1507,16 +1738,19 @@ export default function App() {
           <div className="absolute inset-0">
           {screen === 'home' && (
             <HomeScreen
+              prospects={prospects}
+              tachesApi={tachesApi}
               onOpenDetail={openDetail}
               onOpenAnalysis={() => setScreen('ai-analysis')}
             />
           )}
           {screen === 'prospects' && (
-            <ProspectsScreen prospects={prospects} onOpenDetail={openDetail} />
+            <ProspectsScreen prospects={prospects} taches={tachesApi.taches} onOpenDetail={openDetail} />
           )}
           {screen === 'detail' && (
             <DetailScreen
               prospect={selectedProspect}
+              tachesApi={tachesApi}
               onBack={() => setScreen(navTab)}
             />
           )}
