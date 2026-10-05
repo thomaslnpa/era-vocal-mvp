@@ -1,0 +1,5708 @@
+{
+  "nodes": [
+    {
+      "parameters": {
+        "updates": [
+          "messages"
+        ],
+        "options": {
+          "messageStatusUpdates": []
+        }
+      },
+      "type": "n8n-nodes-base.whatsAppTrigger",
+      "typeVersion": 1,
+      "position": [
+        -4320,
+        2176
+      ],
+      "id": "26fd1e6b-7b82-422c-a625-4e9ed7d2cfd7",
+      "name": "WhatsApp Trigger",
+      "webhookId": "fad21884-e143-4b72-a1a3-15b3f679fde0",
+      "credentials": {
+        "whatsAppTriggerApi": {
+          "id": "0kcFFVgauafvTRNn",
+          "name": "WhatsApp OAuth account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "a1f0c001-0001-4000-8000-000000000001",
+              "leftValue": "={{ $json.messages }}",
+              "rightValue": "",
+              "operator": {
+                "type": "array",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        -4096,
+        2176
+      ],
+      "id": "96e9c4a2-0a45-4917-a26b-2b8ee4bc2054",
+      "name": "Message reçu ?"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "b2e1d002-0002-4000-8000-000000000001",
+              "leftValue": "={{ $('WhatsApp Trigger').item.json.messages[0].type }}",
+              "rightValue": "audio",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        -288,
+        2128
+      ],
+      "id": "eba61f82-dc71-4b7a-83bd-e0d0567ecc4c",
+      "name": "Vocal ?"
+    },
+    {
+      "parameters": {
+        "url": "={{ 'https://graph.facebook.com/v22.0/' + $('WhatsApp Trigger').item.json.messages[0].audio.id }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "whatsAppApi",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -64,
+        1296
+      ],
+      "id": "b95fb50b-86df-4360-8952-6365b2d0dd6d",
+      "name": "Obtenir l'URL du média",
+      "credentials": {
+        "whatsAppApi": {
+          "id": "V5Ozbzh5axOaEH7T",
+          "name": "WhatsApp account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.url }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "whatsAppApi",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        160,
+        1296
+      ],
+      "id": "40e57de3-1ab9-40dd-95d6-2c931e5c2cfc",
+      "name": "Télécharger le vocal",
+      "credentials": {
+        "whatsAppApi": {
+          "id": "V5Ozbzh5axOaEH7T",
+          "name": "WhatsApp account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const buffer = await this.helpers.getBinaryDataBuffer(0, 'data');\nreturn [{ json: { audioBase64: buffer.toString('base64') } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        384,
+        1296
+      ],
+      "id": "4e5dc8fa-bbb4-4b3f-8910-2ffc96b34235",
+      "name": "Encoder en base64"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://openrouter.ai/api/v1/audio/transcriptions",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ model: 'openai/whisper-large-v3-turbo', language: 'fr', input_audio: { data: $json.audioBase64, format: 'ogg' } }) }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        608,
+        1296
+      ],
+      "id": "086483b3-cfcb-49ed-b8e6-09915c66c2e3",
+      "name": "Transcrire",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "6bIjYgv58bFvfX9B",
+          "name": "OpenRouter API \"Era Vocal API\" - MJ"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "function fusionner(base, dit, creation) {\n  const data = Object.assign({}, base || {});\n  const cles = ['nom', 'prenom', 'telephone', 'email', 'type_bien', 'secteur', 'budget', 'delai', 'financement', 'delai_acquisition', 'financement_statut'];\n  for (const cle of cles) {\n    if (dit[cle]) data[cle] = dit[cle];\n  }\n  if (!data.prenom && data.nom && String(data.nom).includes(' ')) {\n    const parts = String(data.nom).split(/\\s+/).filter(Boolean);\n    if (parts.length >= 2) {\n      data.prenom = parts[0];\n      data.nom = parts.slice(1).join(' ');\n    }\n  }\n  if (dit.score_force) {\n    data.score_force = true;\n    data.score_impose = dit.score_impose;\n  } else {\n    data.score_force = false;\n    data.score_impose = '';\n  }\n  if (!data.financement_statut) data.financement_statut = 'inconnu';\n  data.champs_manquants = [];\n  if (creation) {\n    if (!data.nom) data.champs_manquants.push('nom');\n    if (!data.prenom) data.champs_manquants.push('prénom');\n    if (!data.telephone && !data.email) data.champs_manquants.push('téléphone ou e-mail');\n  }\n  return data;\n}\nconst dit = $('Qualifier le message').first().json.dit || {};\nlet base = {};\nlet creation = true;\ntry {\n  const row = $('Charger le brouillon avant correction').all().map((item) => item.json).find((entry) => entry.id && entry.brouillon && entry.type !== 'choix_homonyme');\n  if (row) {\n    base = row.brouillon;\n    if (row.type === 'mise_a_jour') creation = false;\n  }\n} catch (e) {}\nreturn [{ json: fusionner(base, dit, creation) }];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4192,
+        3232
+      ],
+      "id": "1b1e888d-bdcb-4ed4-98e7-0917f8a4291f",
+      "name": "Extraire la fiche"
+    },
+    {
+      "parameters": {
+        "jsCode": "const body = $('WhatsApp Trigger').item.json.messages[0].text?.body || '';\nreturn [{ json: { text: body } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1056,
+        2992
+      ],
+      "id": "2d237b9e-7f79-4ba2-b48d-022b960619a9",
+      "name": "Préparer le texte"
+    },
+    {
+      "parameters": {
+        "jsCode": "const data = Object.assign({}, $input.first().json);\nconst delai = data.delai_acquisition || '';\nconst financement = data.financement_statut || 'inconnu';\nconst impose = data.score_impose || '';\nconst force = data.score_force === true && ['vert', 'orange', 'rouge'].includes(impose);\nlet score = 'orange';\nif (force) {\n  score = impose;\n} else if (delai === 'immediat' || delai === 'moins_d_un_mois') {\n  score = 'vert';\n} else if (delai === 'plus_de_six_mois' || financement === 'aucun') {\n  score = 'rouge';\n}\ndata.score_force = force;\nreturn [{ json: { extraction: data, score } }];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4416,
+        3232
+      ],
+      "id": "9bd71839-3bbf-4444-ae5a-d2fc1e2500f5",
+      "name": "Calculer le score"
+    },
+    {
+      "parameters": {
+        "jsCode": "const data = $input.first().json.extraction;\nconst score = $input.first().json.score;\nconst line = (label, value) => (value ? label + ' : ' + value : null);\nconst lines = [\n  [data.prenom, data.nom].filter(Boolean).join(' ') || 'Nom non précisé',\n  line('Téléphone', data.telephone),\n  line('E-mail', data.email),\n  [data.type_bien, data.secteur].filter(Boolean).join(', '),\n  line('Budget', data.budget),\n  data.financement || null,\n  line('Délai', data.delai),\n  'Score : ' + score,\n].filter(Boolean);\nif (Array.isArray(data.champs_manquants) && data.champs_manquants.length) {\n  lines.push('Manque : ' + data.champs_manquants.join(', '));\n}\nreturn [{ json: { resume: lines.join('\\n'), extraction: data, score } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4640,
+        3232
+      ],
+      "id": "31c0624e-7a1c-4acd-a944-f1f5d4d08d5e",
+      "name": "Formater le résumé"
+    },
+    {
+      "parameters": {
+        "operation": "send",
+        "phoneNumberId": "=1327715120426075",
+        "recipientPhoneNumber": "={{ $('WhatsApp Trigger').item.json.messages[0].from }}",
+        "textBody": "={{ $('Préparer l\\'enregistrement').item.json.message }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.whatsApp",
+      "typeVersion": 1.1,
+      "position": [
+        7104,
+        3328
+      ],
+      "id": "2e5c214e-7645-42b2-b93e-4ee3e73a89ee",
+      "name": "Envoyer la transcription",
+      "webhookId": "4d2a8878-145c-4129-b3f0-3efd60d3daa4",
+      "credentials": {
+        "whatsAppApi": {
+          "id": "V5Ozbzh5axOaEH7T",
+          "name": "WhatsApp account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "useCustomSchema": true,
+        "schema": "eravocal",
+        "operation": "get",
+        "tableId": "={{ 'agents' }}",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "={{ 'telephone_whatsapp' }}",
+              "keyValue": "={{ $('WhatsApp Trigger').item.json.messages[0].from }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        4864,
+        3232
+      ],
+      "id": "9b290708-30bf-4db0-a8b9-510f1768b841",
+      "name": "Trouver l'agent",
+      "alwaysOutputData": true,
+      "credentials": {
+        "supabaseApi": {
+          "id": "P40Z9AdwC5m9ITuj",
+          "name": "ERA Immo - Estimateur de biens"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "e6c0a431-3333-4c30-9e03-000000000011",
+              "leftValue": "={{ $json.id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        5088,
+        3232
+      ],
+      "id": "3795b0c9-b654-445b-b2e7-3d4ceee914d2",
+      "name": "Agent connu ?"
+    },
+    {
+      "parameters": {
+        "operation": "send",
+        "phoneNumberId": "=1327715120426075",
+        "recipientPhoneNumber": "={{ $('WhatsApp Trigger').item.json.messages[0].from }}",
+        "textBody": "Numéro non reconnu",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.whatsApp",
+      "typeVersion": 1.1,
+      "position": [
+        5312,
+        160
+      ],
+      "id": "7c30fb1a-d5e0-4700-84f0-a66312d61759",
+      "name": "Répondre numéro inconnu",
+      "webhookId": "0c78a749-70fe-4706-b62d-9fd337ea138d",
+      "credentials": {
+        "whatsAppApi": {
+          "id": "V5Ozbzh5axOaEH7T",
+          "name": "WhatsApp account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "useCustomSchema": true,
+        "schema": "eravocal",
+        "operation": "update",
+        "tableId": "={{ 'validations_en_attente' }}",
+        "matchType": "allFilters",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "={{ 'agent_id' }}",
+              "condition": "eq",
+              "keyValue": "={{ $('Trouver l\\'agent').item.json.id }}"
+            },
+            {
+              "keyName": "={{ 'statut' }}",
+              "condition": "eq",
+              "keyValue": "en_attente"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "={{ 'statut' }}",
+              "fieldValue": "remplacee"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        6208,
+        3328
+      ],
+      "id": "ccaa84c0-a82d-44b9-9a20-26e456c1cb4d",
+      "name": "Remplacer l'ancien brouillon",
+      "alwaysOutputData": true,
+      "credentials": {
+        "supabaseApi": {
+          "id": "P40Z9AdwC5m9ITuj",
+          "name": "ERA Immo - Estimateur de biens"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "function formaterDate(value) {\n  if (!value) return '';\n  const date = new Date(value);\n  if (Number.isNaN(date.getTime())) return '';\n  return new Intl.DateTimeFormat('fr-FR', { timeZone: 'Europe/Paris', day: '2-digit', month: '2-digit', year: 'numeric' }).format(date);\n}\nconst formatted = $('Formater le résumé').first().json;\nconst agent = $('Trouver l\\'agent').first().json;\nconst message = $('WhatsApp Trigger').first().json.messages[0];\nconst isAudio = message.type === 'audio';\nconst transcription = isAudio ? $('Transcrire').first().json.text : (message.text && message.text.body) || '';\nconst extraction = Object.assign({}, formatted.extraction, { score: formatted.score });\nlet homonymes = [];\ntry {\n  const found = $('Chercher les homonymes').first().json.homonymes;\n  if (Array.isArray(found)) homonymes = found;\n} catch (e) {}\nlet validationDeja = null;\ntry {\n  validationDeja = $('Charger le brouillon avant correction').all().map((item) => item.json).find((entry) => entry.id && entry.type === 'mise_a_jour' && entry.acheteur_id);\n} catch (e) {}\nconst liste = homonymes.length >= 2 && !validationDeja;\nconst candidats = liste ? homonymes.map((candidat, index) => Object.assign({ index: index + 1 }, candidat)) : null;\nconst consigne = \"Rien n'est enregistré pour l'instant. Réponds OK pour valider, ou annuler pour abandonner.\";\nlet whatsapp = formatted.resume;\nif (liste) {\n  const lignes = candidats.map((candidat) => {\n    const identite = [candidat.prenom, candidat.nom].filter(Boolean).join(' ');\n    const recherche = [candidat.type_bien, candidat.secteur].filter(Boolean).join(', ');\n    const tel = candidat.telephone ? String(candidat.telephone).replace(/\\D/g, '').slice(-4) : '';\n    const details = [recherche, candidat.budget, formaterDate(candidat.created_at), tel].filter(Boolean).join(' - ');\n    return candidat.index + '. ' + identite + (details ? ' - ' + details : '');\n  });\n  const famille = (candidats.find((candidat) => candidat.nom) || {}).nom || 'ce nom';\n  const nombre = candidats.length;\n  const intro = \"J'ai trouvé \" + nombre + (nombre > 1 ? ' prospects' : ' prospect') + ' avec le nom de famille ' + famille + '.';\n  whatsapp = intro + '\\n' + lignes.join('\\n') + '\\nN - Nouvelle fiche';\n} else {\n  whatsapp += '\\n\\n' + consigne;\n}\nreturn [{ json: { agent_id: agent.id, type: isAudio ? 'vocal' : 'texte', transcription, extraction, champs_manquants: formatted.extraction.champs_manquants || [], validation_type: liste ? 'choix_homonyme' : (validationDeja ? 'mise_a_jour' : 'creation'), acheteur_id: validationDeja ? validationDeja.acheteur_id : null, candidats, message: (validationDeja && !liste ? 'Mise à jour de ' + ([validationDeja.brouillon && validationDeja.brouillon.prenom, extraction.nom].filter(Boolean).join(' ') || 'la fiche') + ' :\\n' : '') + whatsapp } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        6432,
+        3328
+      ],
+      "id": "2317cc04-31bb-4d50-9efa-84b245c0fdee",
+      "name": "Préparer l'enregistrement"
+    },
+    {
+      "parameters": {
+        "useCustomSchema": true,
+        "schema": "eravocal",
+        "tableId": "debriefs",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "agent_id",
+              "fieldValue": "={{ $json.agent_id }}"
+            },
+            {
+              "fieldId": "type",
+              "fieldValue": "={{ $json.type }}"
+            },
+            {
+              "fieldId": "transcription",
+              "fieldValue": "={{ $json.transcription }}"
+            },
+            {
+              "fieldId": "extraction",
+              "fieldValue": "={{ $json.extraction }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        6656,
+        3328
+      ],
+      "id": "ff38df80-c393-40b5-960c-9dea592c9c87",
+      "name": "Enregistrer le débrief",
+      "credentials": {
+        "supabaseApi": {
+          "id": "P40Z9AdwC5m9ITuj",
+          "name": "ERA Immo - Estimateur de biens"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "useCustomSchema": true,
+        "schema": "eravocal",
+        "tableId": "validations_en_attente",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "agent_id",
+              "fieldValue": "={{ $('Préparer l\\'enregistrement').item.json.agent_id }}"
+            },
+            {
+              "fieldId": "type",
+              "fieldValue": "={{ $('Préparer l\\'enregistrement').item.json.validation_type }}"
+            },
+            {
+              "fieldId": "acheteur_id",
+              "fieldValue": "={{ $('Préparer l\\'enregistrement').item.json.acheteur_id }}"
+            },
+            {
+              "fieldId": "brouillon",
+              "fieldValue": "={{ $('Préparer l\\'enregistrement').item.json.extraction }}"
+            },
+            {
+              "fieldId": "candidats",
+              "fieldValue": "={{ $('Préparer l\\'enregistrement').item.json.candidats }}"
+            },
+            {
+              "fieldId": "champs_manquants",
+              "fieldValue": "={{ $('Préparer l\\'enregistrement').item.json.champs_manquants }}"
+            },
+            {
+              "fieldId": "statut",
+              "fieldValue": "en_attente"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        6880,
+        3328
+      ],
+      "id": "816f5796-8877-4f7a-a7d7-49a2de78e43d",
+      "name": "Enregistrer le brouillon",
+      "credentials": {
+        "supabaseApi": {
+          "id": "P40Z9AdwC5m9ITuj",
+          "name": "ERA Immo - Estimateur de biens"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const message = ($input.first().json.messages || [])[0] || {};\nconst raw = message.text && message.text.body ? message.text.body : '';\nconst text = raw.trim().toLowerCase().normalize('NFD').replace(/[\\u0300-\\u036f]/g, '').replace(/[.!?]/g, '').trim();\nconst compact = text.replace(/\\s+/g, '');\nlet commande = '';\nlet choix = '';\nif (text === 'ok' || text === 'okay' || text === 'valide' || text === \"c'est bon\" || text === 'c est bon') commande = 'ok';\nif (text === 'annuler' || text === 'annule') commande = 'annuler';\nif (!commande && (compact === 'n' || /^[1-9]\\d*$/.test(compact))) {\n  commande = 'choix';\n  choix = compact === 'n' ? 'N' : String(parseInt(compact, 10));\n}\nreturn [{ json: Object.assign({}, $input.first().json, { commande, choix }) }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -3872,
+        2176
+      ],
+      "id": "add76184-b383-41a4-94f6-e9694331fabe",
+      "name": "Lire la commande"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "f7d1b542-4444-4d40-8f04-000000000011",
+              "leftValue": "={{ $json.commande }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        -3648,
+        2176
+      ],
+      "id": "5b90d285-74c9-4ed1-a296-7b5a7bd8602f",
+      "name": "Commande ?"
+    },
+    {
+      "parameters": {
+        "useCustomSchema": true,
+        "schema": "eravocal",
+        "operation": "get",
+        "tableId": "={{ 'agents' }}",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "={{ 'telephone_whatsapp' }}",
+              "keyValue": "={{ $('WhatsApp Trigger').item.json.messages[0].from }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -3424,
+        2112
+      ],
+      "id": "70d0363a-9dc8-43a9-aaa0-a4dac492971f",
+      "name": "Trouver l'agent pour valider",
+      "alwaysOutputData": true,
+      "credentials": {
+        "supabaseApi": {
+          "id": "P40Z9AdwC5m9ITuj",
+          "name": "ERA Immo - Estimateur de biens"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "f7d1b542-4444-4d40-8f04-000000000012",
+              "leftValue": "={{ $json.id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        -3200,
+        2032
+      ],
+      "id": "5a51f0ad-f6e3-456d-aac1-955612900290",
+      "name": "Agent pour valider ?"
+    },
+    {
+      "parameters": {
+        "useCustomSchema": true,
+        "schema": "eravocal",
+        "operation": "get",
+        "tableId": "={{ 'validations_en_attente' }}",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "={{ 'agent_id' }}",
+              "keyValue": "={{ $('Trouver l\\'agent pour valider').item.json.id }}"
+            },
+            {
+              "keyName": "={{ 'statut' }}",
+              "keyValue": "en_attente"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -2976,
+        2112
+      ],
+      "id": "d84d4c8c-e7dc-4612-9b07-461667396be1",
+      "name": "Charger le brouillon",
+      "alwaysOutputData": true,
+      "credentials": {
+        "supabaseApi": {
+          "id": "P40Z9AdwC5m9ITuj",
+          "name": "ERA Immo - Estimateur de biens"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "function resume(data) {\n  const line = (label, value) => (value ? label + ' : ' + value : null);\n  const lines = [\n    [data.prenom, data.nom].filter(Boolean).join(' ') || 'Nom non précisé',\n    line('Téléphone', data.telephone),\n    line('E-mail', data.email),\n    [data.type_bien, data.secteur].filter(Boolean).join(', '),\n    line('Budget', data.budget),\n    data.financement || null,\n    line('Délai', data.delai),\n    'Score : ' + (data.score || ''),\n  ].filter(Boolean);\n  if (Array.isArray(data.champs_manquants) && data.champs_manquants.length) {\n    lines.push('Manque : ' + data.champs_manquants.join(', '));\n  }\n  return lines.join('\\n');\n}\nconst consigne = \"Rien n'est enregistré pour l'instant. Réponds OK pour valider, ou annuler pour abandonner.\";\nlet commande = $('Lire la commande').first().json.commande || '';\nlet choix = $('Lire la commande').first().json.choix || '';\nif (!commande) {\n  try {\n    const vocal = $('Commande du vocal').first().json;\n    if (vocal && vocal.commande) {\n      commande = vocal.commande;\n      choix = vocal.choix || '';\n    }\n  } catch (e) {}\n}\nconst pending = $input.all().map((item) => item.json).find((row) => row.id);\nif (!pending) {\n  return [{ json: { action: commande === 'choix' ? 'pas_un_choix' : 'aucune' } }];\n}\nconst brouillon = pending.brouillon || {};\nconst manquants = Array.isArray(pending.champs_manquants) && pending.champs_manquants.length ? pending.champs_manquants : (brouillon.champs_manquants || []);\nif (commande === 'annuler') {\n  return [{ json: { action: 'annuler', validation_id: pending.id } }];\n}\nif (commande === 'choix') {\n  if (pending.type !== 'choix_homonyme') {\n    return [{ json: { action: 'pas_un_choix' } }];\n  }\n  if (brouillon.intention === 'consultation') {\n    const candidatsQuestion = Array.isArray(pending.candidats) ? pending.candidats : [];\n    const choisiQuestion = candidatsQuestion.find((candidat) => String(candidat.index) === String(choix));\n    if (choix === 'N' || !choisiQuestion) {\n      return [{ json: { action: choix === 'N' ? 'choix' : 'hors_liste', validation_id: pending.id } }];\n    }\n    return [{ json: { action: 'consulter', validation_id: pending.id, acheteur_id: choisiQuestion.id, question: brouillon.question || '', sujet: brouillon.sujet || '' } }];\n  }\n  if (brouillon.intention === 'rappel_question' || brouillon.intention === 'rappel_ecriture') {\n    const candidatsRappel = Array.isArray(pending.candidats) ? pending.candidats : [];\n    const choisiRappel = candidatsRappel.find((candidat) => String(candidat.index) === String(choix));\n    if (!choisiRappel) {\n      return [{ json: { action: 'rappel_cible', validation_id: pending.id, message: \"Ce numéro n'est pas dans la liste. Répondez par le numéro de la fiche.\" } }];\n    }\n    return [{ json: { action: 'rappel_suite', validation_id: pending.id, acheteur_id: choisiRappel.id, agent_id: pending.agent_id, mode: brouillon.intention, libelle: [choisiRappel.prenom, choisiRappel.nom].filter(Boolean).join(' '), texte: brouillon.texte_rappel || brouillon.text || brouillon.question || '', echeance: brouillon.echeance_rappel || '', contenu: brouillon.contenu_rappel || '', canal: brouillon.canal_rappel || '', message: brouillon.message_rappel || '' } }];\n  }\n  if (brouillon.intention === 'question_cible') {\n    const candidatsQuestionCible = Array.isArray(pending.candidats) ? pending.candidats : [];\n    const choisiQuestionCible = candidatsQuestionCible.find((candidat) => String(candidat.index) === String(choix));\n    if (!choisiQuestionCible) {\n      return [{ json: { action: 'rappel_cible', validation_id: pending.id, message: \"Ce numéro n'est pas dans la liste. Répondez par le numéro de la fiche.\" } }];\n    }\n    return [{ json: { action: 'consulter', validation_id: pending.id, acheteur_id: choisiQuestionCible.id, question: brouillon.question || brouillon.text || '', sujet: brouillon.sujet || '' } }];\n  }\n  if (brouillon.intention === 'modification_cible') {\n    const candidatsCible = Array.isArray(pending.candidats) ? pending.candidats : [];\n    const choisiCible = candidatsCible.find((candidat) => String(candidat.index) === String(choix));\n    if (!choisiCible) {\n      return [{ json: { action: 'rappel_cible', validation_id: pending.id, message: \"Ce numéro n'est pas dans la liste. Répondez par le numéro de la fiche.\" } }];\n    }\n    return [{ json: { action: 'modifier_cible', validation_id: pending.id, acheteur_id: choisiCible.id } }];\n  }\n  const texte = resume(brouillon);\n  if (choix === 'N') {\n    return [{ json: { action: 'nouvelle', validation_id: pending.id, validation_type: 'creation', acheteur_id: null, message: texte + '\\n\\n' + consigne } }];\n  }\n  const candidats = Array.isArray(pending.candidats) ? pending.candidats : [];\n  const choisi = candidats.find((candidat) => String(candidat.index) === String(choix));\n  if (!choisi) {\n    return [{ json: { action: 'hors_liste', validation_id: pending.id } }];\n  }\n  const identite = [choisi.prenom, choisi.nom].filter(Boolean).join(' ');\n  const cible = [identite, choisi.type_bien, choisi.secteur, choisi.budget].filter(Boolean).join(', ');\n  return [{ json: { action: 'maj', validation_id: pending.id, validation_type: 'mise_a_jour', acheteur_id: choisi.id, message: 'Mise à jour de ' + cible + ' :\\n' + texte + '\\n\\n' + consigne } }];\n}\nif (pending.type === 'choix_homonyme') {\n  const intentionListe = (pending.brouillon || {}).intention;\n  if (intentionListe === 'modification_cible' || intentionListe === 'question_cible' || intentionListe === 'rappel_question' || intentionListe === 'rappel_ecriture') {\n    return [{ json: { action: 'rappel_cible', validation_id: pending.id, message: 'Répondez par le numéro de la fiche.' } }];\n  }\n  return [{ json: { action: 'choix', validation_id: pending.id } }];\n}\nif (pending.type === 'rappel') {\n  return [{ json: { action: 'valider_rappel', validation_id: pending.id, agent_id: brouillon.agent_id || pending.agent_id, acheteur_id: brouillon.acheteur_id, texte: brouillon.texte || '', libelle: brouillon.libelle || '', echeance: brouillon.echeance || '', canal: ['appel', 'whatsapp', 'email'].includes(brouillon.canal) ? brouillon.canal : 'appel', message_suggere: brouillon.message_suggere || '' } }];\n}\nif (manquants.length) {\n  return [{ json: { action: 'incomplet', validation_id: pending.id, manquants } }];\n}\nconst decision = { action: 'valider', validation_id: pending.id, agent_id: pending.agent_id, nom: brouillon.nom || '', prenom: brouillon.prenom || '', telephone: brouillon.telephone || '', email: brouillon.email || '', type_bien: brouillon.type_bien || '', secteur: brouillon.secteur || '', budget: brouillon.budget || '', delai_acquisition: brouillon.delai_acquisition || null, financement_statut: brouillon.financement_statut || null, score: brouillon.score, details: { delai: brouillon.delai || '', financement: brouillon.financement || '' } };\nif (pending.type === 'mise_a_jour' && pending.acheteur_id) decision.acheteur_id = pending.acheteur_id;\ndecision.score_force = brouillon.score_force === true;\nreturn [{ json: decision }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -2752,
+        2112
+      ],
+      "id": "be086f54-a41c-43a5-9530-1ea7af5e6228",
+      "name": "Décider la validation"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "f7d1b542-4444-4d40-8f04-000000000013",
+              "leftValue": "={{ $json.action }}",
+              "rightValue": "valider",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        -2304,
+        2208
+      ],
+      "id": "bf33973a-b6f3-4e69-8707-6eca641d53c3",
+      "name": "Valider ?"
+    },
+    {
+      "parameters": {
+        "useCustomSchema": true,
+        "schema": "eravocal",
+        "tableId": "={{ 'acheteurs' }}",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "={{ 'agent_id' }}",
+              "fieldValue": "={{ $('Décider la validation').item.json.agent_id }}"
+            },
+            {
+              "fieldId": "={{ 'nom' }}",
+              "fieldValue": "={{ $('Décider la validation').item.json.nom }}"
+            },
+            {
+              "fieldId": "={{ 'prenom' }}",
+              "fieldValue": "={{ $('Décider la validation').item.json.prenom }}"
+            },
+            {
+              "fieldId": "={{ 'telephone' }}",
+              "fieldValue": "={{ $('Décider la validation').item.json.telephone }}"
+            },
+            {
+              "fieldId": "={{ 'email' }}",
+              "fieldValue": "={{ $('Décider la validation').item.json.email }}"
+            },
+            {
+              "fieldId": "={{ 'type_bien' }}",
+              "fieldValue": "={{ $('Décider la validation').item.json.type_bien }}"
+            },
+            {
+              "fieldId": "={{ 'secteur' }}",
+              "fieldValue": "={{ $('Décider la validation').item.json.secteur }}"
+            },
+            {
+              "fieldId": "={{ 'budget' }}",
+              "fieldValue": "={{ $('Décider la validation').item.json.budget }}"
+            },
+            {
+              "fieldId": "={{ 'delai_acquisition' }}",
+              "fieldValue": "={{ $('Décider la validation').item.json.delai_acquisition }}"
+            },
+            {
+              "fieldId": "={{ 'financement_statut' }}",
+              "fieldValue": "={{ $('Décider la validation').item.json.financement_statut }}"
+            },
+            {
+              "fieldId": "={{ 'score' }}",
+              "fieldValue": "={{ $('Décider la validation').item.json.score }}"
+            },
+            {
+              "fieldId": "={{ 'score_force' }}",
+              "fieldValue": "={{ false }}"
+            },
+            {
+              "fieldId": "={{ 'details' }}",
+              "fieldValue": "={{ $('Décider la validation').item.json.details }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -1856,
+        640
+      ],
+      "id": "214d2a4f-380d-4242-bd0e-d0f82f8db125",
+      "name": "Créer la fiche",
+      "credentials": {
+        "supabaseApi": {
+          "id": "P40Z9AdwC5m9ITuj",
+          "name": "ERA Immo - Estimateur de biens"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "useCustomSchema": true,
+        "schema": "eravocal",
+        "operation": "update",
+        "tableId": "={{ 'validations_en_attente' }}",
+        "matchType": "allFilters",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "={{ 'id' }}",
+              "condition": "eq",
+              "keyValue": "={{ $('Décider la validation').item.json.validation_id }}"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "={{ 'statut' }}",
+              "fieldValue": "validee"
+            },
+            {
+              "fieldId": "={{ 'acheteur_id' }}",
+              "fieldValue": "={{ $json.id }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -1632,
+        544
+      ],
+      "id": "9c353ffe-050a-4d29-8753-3a12eaf4d90e",
+      "name": "Marquer validée",
+      "credentials": {
+        "supabaseApi": {
+          "id": "P40Z9AdwC5m9ITuj",
+          "name": "ERA Immo - Estimateur de biens"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "send",
+        "phoneNumberId": "=1327715120426075",
+        "recipientPhoneNumber": "={{ $('WhatsApp Trigger').item.json.messages[0].from }}",
+        "textBody": "={{ 'Fiche enregistrée : ' + $('Décider la validation').item.json.nom + ', ' + $('Décider la validation').item.json.type_bien + ', ' + $('Décider la validation').item.json.secteur + '. Score : ' + $('Décider la validation').item.json.score + '.' }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.whatsApp",
+      "typeVersion": 1.1,
+      "position": [
+        -1408,
+        544
+      ],
+      "id": "d9772165-f538-4183-85af-45bc51b2c119",
+      "name": "Confirmer l'enregistrement",
+      "webhookId": "229b793a-6dba-4280-99e4-7d4d834a8b31",
+      "credentials": {
+        "whatsAppApi": {
+          "id": "V5Ozbzh5axOaEH7T",
+          "name": "WhatsApp account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "f7d1b542-4444-4d40-8f04-000000000014",
+              "leftValue": "={{ $('Décider la validation').item.json.action }}",
+              "rightValue": "annuler",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        -2080,
+        2400
+      ],
+      "id": "e6496943-bbf0-480c-acb2-2c396e14ce60",
+      "name": "Annuler ?"
+    },
+    {
+      "parameters": {
+        "useCustomSchema": true,
+        "schema": "eravocal",
+        "operation": "update",
+        "tableId": "={{ 'validations_en_attente' }}",
+        "matchType": "allFilters",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "={{ 'id' }}",
+              "condition": "eq",
+              "keyValue": "={{ $('Décider la validation').item.json.validation_id }}"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "={{ 'statut' }}",
+              "fieldValue": "annulee"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -1856,
+        3840
+      ],
+      "id": "aae5ab79-1e3b-4b0b-ba4e-ccd6dbca451c",
+      "name": "Marquer annulée",
+      "credentials": {
+        "supabaseApi": {
+          "id": "P40Z9AdwC5m9ITuj",
+          "name": "ERA Immo - Estimateur de biens"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "send",
+        "phoneNumberId": "=1327715120426075",
+        "recipientPhoneNumber": "={{ $('WhatsApp Trigger').item.json.messages[0].from }}",
+        "textBody": "Brouillon annulé.",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.whatsApp",
+      "typeVersion": 1.1,
+      "position": [
+        -1632,
+        3840
+      ],
+      "id": "c7cd388f-16db-432b-8675-7df47793d8f9",
+      "name": "Confirmer l'annulation",
+      "webhookId": "1ea1b1a0-9b50-41ce-baf6-fd8c1a1768d7",
+      "credentials": {
+        "whatsAppApi": {
+          "id": "V5Ozbzh5axOaEH7T",
+          "name": "WhatsApp account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "f7d1b542-4444-4d40-8f04-000000000015",
+              "leftValue": "={{ $('Décider la validation').item.json.action }}",
+              "rightValue": "incomplet",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        -288,
+        3232
+      ],
+      "id": "60ef4db2-a5ad-4edf-8ea9-8bab56f74895",
+      "name": "Incomplet ?"
+    },
+    {
+      "parameters": {
+        "operation": "send",
+        "phoneNumberId": "=1327715120426075",
+        "recipientPhoneNumber": "={{ $('WhatsApp Trigger').item.json.messages[0].from }}",
+        "textBody": "={{ 'Il manque : ' + $('Décider la validation').item.json.manquants.join(', ') + '. Complète avant de valider.' }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.whatsApp",
+      "typeVersion": 1.1,
+      "position": [
+        -64,
+        3136
+      ],
+      "id": "adab8f88-e4b8-4863-ae44-c2a873410a88",
+      "name": "Demander les champs",
+      "webhookId": "10bff9ca-1ce0-48d1-89b8-406ac7d9481b",
+      "credentials": {
+        "whatsAppApi": {
+          "id": "V5Ozbzh5axOaEH7T",
+          "name": "WhatsApp account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "send",
+        "phoneNumberId": "=1327715120426075",
+        "recipientPhoneNumber": "={{ $('WhatsApp Trigger').item.json.messages[0].from }}",
+        "textBody": "Aucun brouillon en attente.",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.whatsApp",
+      "typeVersion": 1.1,
+      "position": [
+        -64,
+        3328
+      ],
+      "id": "2921f9db-0b6f-4260-aca7-4d6db5fe55ef",
+      "name": "Répondre aucun brouillon",
+      "webhookId": "643e5d5c-462c-4958-a258-56e19cfffe1c",
+      "credentials": {
+        "whatsAppApi": {
+          "id": "V5Ozbzh5axOaEH7T",
+          "name": "WhatsApp account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "useCustomSchema": true,
+        "schema": "eravocal",
+        "operation": "get",
+        "tableId": "={{ 'agents' }}",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "={{ 'telephone_whatsapp' }}",
+              "keyValue": "={{ $('WhatsApp Trigger').item.json.messages[0].from }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        3296,
+        2832
+      ],
+      "id": "f0ce5cae-9de7-42e5-a77c-649adc6459a6",
+      "name": "Trouver l'agent avant correction",
+      "alwaysOutputData": true,
+      "credentials": {
+        "supabaseApi": {
+          "id": "P40Z9AdwC5m9ITuj",
+          "name": "ERA Immo - Estimateur de biens"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "a8e2c653-5555-4e50-9a05-000000000011",
+              "leftValue": "={{ $json.id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        3520,
+        3232
+      ],
+      "id": "afa4f4ad-b681-44ad-8fa3-fe5ad0ade368",
+      "name": "Agent avant correction ?"
+    },
+    {
+      "parameters": {
+        "useCustomSchema": true,
+        "schema": "eravocal",
+        "operation": "get",
+        "tableId": "={{ 'validations_en_attente' }}",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "={{ 'agent_id' }}",
+              "keyValue": "={{ $('Trouver l\\'agent avant correction').item.json.id }}"
+            },
+            {
+              "keyName": "={{ 'statut' }}",
+              "keyValue": "en_attente"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        3744,
+        3232
+      ],
+      "id": "b0647f56-ef65-4617-bd27-83c286e4d92b",
+      "name": "Charger le brouillon avant correction",
+      "alwaysOutputData": true,
+      "credentials": {
+        "supabaseApi": {
+          "id": "P40Z9AdwC5m9ITuj",
+          "name": "ERA Immo - Estimateur de biens"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "function texteSource() {\n  try {\n    const vocal = $('Transcrire').first().json.text;\n    if (vocal) return vocal;\n  } catch (e) {}\n  try {\n    const texte = $('Préparer le texte').first().json.text;\n    if (texte) return texte;\n  } catch (e) {}\n  return '';\n}\nconst text = texteSource();\nlet brouillon = null;\ntry {\n  const row = $('Charger le brouillon avant correction').all().map((item) => item.json).find((entry) => entry.id && entry.brouillon && entry.type !== 'choix_homonyme');\n  if (row) brouillon = row.brouillon;\n} catch (e) {}\nconst contenu = brouillon\n  ? 'Brouillon actuel :\\n' + JSON.stringify(brouillon) + '\\n\\nCorrection :\\n' + text\n  : text;\nreturn [{ json: { text: contenu } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3968,
+        3232
+      ],
+      "id": "65880464-4ff3-4292-9a03-ac943b14f57e",
+      "name": "Préparer le prompt de fusion"
+    },
+    {
+      "parameters": {
+        "jsCode": "let correction = false;\ntry {\n  correction = $('Charger le brouillon avant correction').all().some((item) => item.json && item.json.id && item.json.type !== 'choix_homonyme');\n} catch (e) {}\nreturn [{ json: { correction: correction ? 'oui' : 'non' } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        5312,
+        3328
+      ],
+      "id": "d25b8f55-f985-4d05-ba03-60eed45fe345",
+      "name": "Décider la recherche"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "a9f1c764-6666-4f60-8b06-000000000011",
+              "leftValue": "={{ $json.correction }}",
+              "rightValue": "oui",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        5536,
+        3328
+      ],
+      "id": "3a1a5f4e-b676-4a63-8054-932ab360d315",
+      "name": "Correction en cours ?"
+    },
+    {
+      "parameters": {
+        "useCustomSchema": true,
+        "schema": "eravocal",
+        "operation": "getAll",
+        "tableId": "={{ 'acheteurs' }}",
+        "returnAll": true,
+        "matchType": "allFilters",
+        "filters": {
+          "conditions": []
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        5760,
+        3328
+      ],
+      "id": "71931af7-3838-4add-91f4-d685e40891e6",
+      "name": "Charger les fiches de l'agent",
+      "alwaysOutputData": true,
+      "credentials": {
+        "supabaseApi": {
+          "id": "P40Z9AdwC5m9ITuj",
+          "name": "ERA Immo - Estimateur de biens"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "function norm(value) {\n  return String(value || '').trim().toLowerCase().normalize('NFD').replace(/[\\u0300-\\u036f]/g, '');\n}\nfunction trigrams(value) {\n  const padded = '  ' + value + ' ';\n  const counts = new Map();\n  for (let i = 0; i < padded.length - 2; i++) {\n    const gram = padded.slice(i, i + 3);\n    counts.set(gram, (counts.get(gram) || 0) + 1);\n  }\n  return counts;\n}\nfunction similarity(leftValue, rightValue) {\n  if (!leftValue || !rightValue) return 0;\n  if (leftValue === rightValue) return 1;\n  const left = trigrams(leftValue);\n  const right = trigrams(rightValue);\n  let leftCount = 0;\n  let rightCount = 0;\n  let shared = 0;\n  for (const count of left.values()) leftCount += count;\n  for (const count of right.values()) rightCount += count;\n  for (const [gram, count] of left) {\n    if (right.has(gram)) shared += Math.min(count, right.get(gram));\n  }\n  if (!leftCount || !rightCount) return 0;\n  return (2 * shared) / (leftCount + rightCount);\n}\nconst extraction = $('Formater le résumé').first().json.extraction || {};\nconst nom = norm([extraction.prenom, extraction.nom].filter(Boolean).join(' '));\nconst rows = $input.all().map((item) => item.json).filter((row) => row.id);\nif (!nom) return [{ json: { homonymes: [] } }];\nconst homonymes = rows.map((row) => {\n  const cible = norm(((row.prenom || '') + ' ' + (row.nom || '')).trim());\n  return {\n    id: row.id,\n    prenom: row.prenom || '',\n    nom: row.nom || '',\n    telephone: row.telephone || '',\n    type_bien: row.type_bien || '',\n    secteur: row.secteur || '',\n    budget: row.budget || '',\n    created_at: row.created_at || '',\n    similarite: similarity(cible, nom)\n  };\n}).filter((row) => row.similarite >= 0.3).sort((a, b) => b.similarite - a.similarite || String(b.created_at).localeCompare(String(a.created_at)));\nreturn [{ json: { homonymes } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        5984,
+        3328
+      ],
+      "id": "3f24a634-72dd-4d55-a81d-a4c7cfaa0415",
+      "name": "Chercher les homonymes"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "a9f1c764-6666-4f60-8b06-000000000015",
+              "leftValue": "={{ $('Décider la validation').item.json.action }}",
+              "rightValue": "choix",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "a9f1c764-6666-4f60-8b06-000000000016",
+              "leftValue": "={{ $('Décider la validation').item.json.action }}",
+              "rightValue": "hors_liste",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        -736,
+        2400
+      ],
+      "id": "12e6dbf9-3e00-440a-94cb-16a40bf87959",
+      "name": "Choix en attente ?"
+    },
+    {
+      "parameters": {
+        "operation": "send",
+        "phoneNumberId": "=1327715120426075",
+        "recipientPhoneNumber": "={{ $('WhatsApp Trigger').item.json.messages[0].from }}",
+        "textBody": "={{ $('Décider la validation').item.json.action === 'hors_liste' ? 'Ce numéro n\\'est pas dans la liste. Répondez par un numéro, ou N pour une nouvelle fiche.' : 'Répondez par le numéro de la fiche, ou N pour une nouvelle fiche.' }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.whatsApp",
+      "typeVersion": 1.1,
+      "position": [
+        -512,
+        3328
+      ],
+      "id": "26db9b82-e653-4482-852b-b51156c070d5",
+      "name": "Rappeler le choix",
+      "webhookId": "c1e8a764-6666-4f60-8b06-000000000006",
+      "credentials": {
+        "whatsAppApi": {
+          "id": "V5Ozbzh5axOaEH7T",
+          "name": "WhatsApp account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "b1c0d001-7777-4a70-9c07-000000000011",
+              "leftValue": "={{ $('Décider la validation').item.json.action }}",
+              "rightValue": "nouvelle",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "b1c0d001-7777-4a70-9c07-000000000012",
+              "leftValue": "={{ $('Décider la validation').item.json.action }}",
+              "rightValue": "maj",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        -960,
+        2496
+      ],
+      "id": "edb6a392-0f85-405a-91ad-3afd7d08c284",
+      "name": "Nouvelle ou mise à jour ?"
+    },
+    {
+      "parameters": {
+        "useCustomSchema": true,
+        "schema": "eravocal",
+        "operation": "update",
+        "tableId": "={{ 'validations_en_attente' }}",
+        "matchType": "allFilters",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "={{ 'id' }}",
+              "condition": "eq",
+              "keyValue": "={{ $('Décider la validation').item.json.validation_id }}"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "={{ 'type' }}",
+              "fieldValue": "={{ $('Décider la validation').item.json.validation_type }}"
+            },
+            {
+              "fieldId": "={{ 'acheteur_id' }}",
+              "fieldValue": "={{ $('Décider la validation').item.json.acheteur_id }}"
+            },
+            {
+              "fieldId": "={{ 'candidats' }}",
+              "fieldValue": "={{ null }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -736,
+        3520
+      ],
+      "id": "cbce196b-70df-4b6e-862c-c2cde22eb4c7",
+      "name": "Enregistrer le choix",
+      "credentials": {
+        "supabaseApi": {
+          "id": "P40Z9AdwC5m9ITuj",
+          "name": "ERA Immo - Estimateur de biens"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "send",
+        "phoneNumberId": "=1327715120426075",
+        "recipientPhoneNumber": "={{ $('WhatsApp Trigger').item.json.messages[0].from }}",
+        "textBody": "={{ $('Décider la validation').item.json.message }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.whatsApp",
+      "typeVersion": 1.1,
+      "position": [
+        -512,
+        3520
+      ],
+      "id": "bb295575-bf5d-46e5-94fd-e1ddb641b80f",
+      "name": "Envoyer le résumé du choix",
+      "webhookId": "b1c0d001-7777-4a70-9c07-000000000013",
+      "credentials": {
+        "whatsAppApi": {
+          "id": "V5Ozbzh5axOaEH7T",
+          "name": "WhatsApp account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "b1c0d001-7777-4a70-9c07-000000000014",
+              "leftValue": "={{ $('Décider la validation').item.json.action }}",
+              "rightValue": "pas_un_choix",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        -512,
+        2304
+      ],
+      "id": "a74446dd-b688-41d9-b7ea-349c32208c80",
+      "name": "Pas un choix ?"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "b1c0d001-7777-4a70-9c07-000000000015",
+              "leftValue": "={{ $('Décider la validation').item.json.acheteur_id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        -2080,
+        544
+      ],
+      "id": "ceb21fbb-504e-4017-a8aa-e60fef09b6f1",
+      "name": "Mise à jour ?"
+    },
+    {
+      "parameters": {
+        "useCustomSchema": true,
+        "schema": "eravocal",
+        "operation": "update",
+        "tableId": "acheteurs",
+        "matchType": "allFilters",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "id",
+              "condition": "eq",
+              "keyValue": "={{ $('Décider la validation').item.json.acheteur_id }}"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "nom",
+              "fieldValue": "={{ $('Décider la validation').item.json.nom }}"
+            },
+            {
+              "fieldId": "prenom",
+              "fieldValue": "={{ $('Décider la validation').item.json.prenom }}"
+            },
+            {
+              "fieldId": "telephone",
+              "fieldValue": "={{ $('Décider la validation').item.json.telephone }}"
+            },
+            {
+              "fieldId": "email",
+              "fieldValue": "={{ $('Décider la validation').item.json.email }}"
+            },
+            {
+              "fieldId": "type_bien",
+              "fieldValue": "={{ $('Décider la validation').item.json.type_bien }}"
+            },
+            {
+              "fieldId": "secteur",
+              "fieldValue": "={{ $('Décider la validation').item.json.secteur }}"
+            },
+            {
+              "fieldId": "budget",
+              "fieldValue": "={{ $('Décider la validation').item.json.budget }}"
+            },
+            {
+              "fieldId": "delai_acquisition",
+              "fieldValue": "={{ $('Décider la validation').item.json.delai_acquisition }}"
+            },
+            {
+              "fieldId": "financement_statut",
+              "fieldValue": "={{ $('Décider la validation').item.json.financement_statut }}"
+            },
+            {
+              "fieldId": "score",
+              "fieldValue": "={{ $('Décider la validation').item.json.score }}"
+            },
+            {
+              "fieldId": "score_force",
+              "fieldValue": "={{ $('Décider la validation').item.json.score_force }}"
+            },
+            {
+              "fieldId": "details",
+              "fieldValue": "={{ $('Décider la validation').item.json.details }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -1856,
+        448
+      ],
+      "id": "8c058ff9-9fd4-4524-8b7b-3edd72bbbf79",
+      "name": "Mettre à jour la fiche",
+      "credentials": {
+        "supabaseApi": {
+          "id": "P40Z9AdwC5m9ITuj",
+          "name": "ERA Immo - Estimateur de biens"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "function source() {\n  try {\n    const vocal = $('Transcrire').first().json.text;\n    if (vocal) return vocal;\n  } catch (e) {}\n  try {\n    const texte = $('Préparer le texte').first().json.text;\n    if (texte) return texte;\n  } catch (e) {}\n  return '';\n}\nfunction norm(value) {\n  return String(value || '').trim().toLowerCase().normalize('NFD').replace(/[\\u0300-\\u036f]/g, '');\n}\nfunction libelleDepuis(text, prenom, nom) {\n  const mots = String(text || '').match(/[^\\s,.;:!?]+/g) || [];\n  const p = norm(prenom);\n  const n = norm(nom);\n  for (let i = 0; i < mots.length - 1; i++) {\n    if (norm(mots[i]) === p && norm(mots[i + 1]) === n) return mots[i] + ' ' + mots[i + 1];\n  }\n  return (prenom + ' ' + nom).trim();\n}\nlet raw = $input.first().json.choices[0].message.content;\nif (Array.isArray(raw)) raw = raw.map((part) => part.text || '').join('');\nconst cleaned = String(raw).replace(/^```json\\s*/i, '').replace(/```$/, '').trim();\nconst data = JSON.parse(cleaned);\nconst text = source();\nconst intentions = ['debrief', 'consultation', 'modification', 'question_cible', 'modification_cible', 'rappel_cible', 'synthese'];\nconst modes = ['question', 'modification', 'rappel_question', 'rappel_ecriture'];\nlet intention = intentions.includes(data.intention) ? data.intention : 'debrief';\nlet mode_cible = modes.includes(data.mode_cible) ? data.mode_cible : '';\nlet prenom_cible = String(data.prenom_cible || '').trim();\nlet nom_cible = String(data.nom_cible || '').trim();\nif (!prenom_cible || !nom_cible) {\n  const seul = prenom_cible || nom_cible;\n  const parts = seul.split(/\\s+/).filter(Boolean);\n  if (parts.length >= 2) {\n    prenom_cible = parts[0];\n    nom_cible = parts.slice(1).join(' ');\n  }\n}\nif (!prenom_cible || !nom_cible) {\n  if (intention === 'question_cible' || intention === 'rappel_cible') intention = 'consultation';\n  else if (intention === 'modification_cible') intention = 'modification';\n  prenom_cible = '';\n  nom_cible = '';\n  mode_cible = '';\n} else if (intention === 'question_cible') {\n  mode_cible = 'question';\n} else if (intention === 'modification_cible') {\n  mode_cible = 'modification';\n} else if (intention === 'rappel_cible') {\n  if (mode_cible !== 'rappel_question') mode_cible = 'rappel_ecriture';\n} else {\n  prenom_cible = '';\n  nom_cible = '';\n  mode_cible = '';\n}\nconst sujets = ['budget', 'financement', 'delai', 'score', 'fiche'];\nconst sujet = sujets.includes(data.sujet) ? data.sujet : '';\nconst sujetsSynthese = ['journee', 'nombre_rappels', 'liste_prospects', 'prospects_verts'];\nlet sujet_synthese = sujetsSynthese.includes(String(data.sujet_synthese || '').trim()) ? String(data.sujet_synthese).trim() : '';\nif (intention === 'synthese' && !sujet_synthese) {\n  intention = 'debrief';\n  sujet_synthese = '';\n}\nif (intention === 'synthese') {\n  prenom_cible = '';\n  nom_cible = '';\n  mode_cible = '';\n}\nconst delais = ['immediat', 'moins_d_un_mois', 'un_a_six_mois', 'plus_de_six_mois'];\nconst statuts = ['solide', 'en_cours', 'aucun'];\nconst couleurs = ['vert', 'orange', 'rouge'];\nconst texte = (value) => String(value || '').trim();\nconst delaiAcquisition = delais.includes(texte(data.delai_acquisition)) ? texte(data.delai_acquisition) : '';\nconst financementStatut = statuts.includes(texte(data.financement_statut)) ? texte(data.financement_statut) : '';\nconst scoreImpose = couleurs.includes(texte(data.score_impose)) ? texte(data.score_impose) : '';\nconst scoreForce = (data.score_force === true || data.score_force === 'true') && !!scoreImpose;\nconst dit = {\n  nom: texte(data.nom),\n  prenom: texte(data.prenom),\n  telephone: texte(data.telephone),\n  email: texte(data.email),\n  type_bien: texte(data.type_bien),\n  secteur: texte(data.secteur),\n  budget: texte(data.budget),\n  delai: texte(data.delai),\n  financement: texte(data.financement),\n  delai_acquisition: delaiAcquisition,\n  financement_statut: financementStatut,\n  score_impose: scoreForce ? scoreImpose : '',\n  score_force: scoreForce\n};\nconst nom = prenom_cible ? '' : texte(data.nom_cite);\nconst libelle = prenom_cible ? libelleDepuis(text, prenom_cible, nom_cible) : '';\nconst texte_rappel = texte(data.texte_rappel);\nconst echeance_rappel = /^\\d{4}-\\d{2}-\\d{2}$/.test(texte(data.echeance_rappel)) ? texte(data.echeance_rappel) : '';\nconst contenu_rappel = texte(data.contenu_rappel);\nconst canal_rappel = ['appel', 'whatsapp', 'email'].includes(texte(data.canal_rappel)) ? texte(data.canal_rappel) : '';\nconst message_rappel = texte(data.message_rappel);\nreturn [{ json: { text, intention, nom, prenom_cible, nom_cible, libelle, mode_cible, sujet, sujet_synthese, texte_rappel, echeance_rappel, contenu_rappel, canal_rappel, message_rappel, dit } }];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1504,
+        2128
+      ],
+      "id": "aa47d790-94f9-4db6-b274-36500d09818a",
+      "name": "Qualifier le message"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "c0nsu177-0002-4000-8000-000000000002-c",
+              "leftValue": "={{ $json.intention }}",
+              "rightValue": "consultation",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        1952,
+        2464
+      ],
+      "id": "a9558284-b986-43fc-9e5d-a95c09bdee27",
+      "name": "Consultation ?"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "c0nsu177-0003-4000-8000-000000000003-c",
+              "leftValue": "={{ $('Qualifier le message').item.json.nom }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        2400,
+        2272
+      ],
+      "id": "a57516bd-deb7-430f-b310-0ae4cf1aeb1e",
+      "name": "Nom cité ?"
+    },
+    {
+      "parameters": {
+        "useCustomSchema": true,
+        "schema": "eravocal",
+        "operation": "get",
+        "tableId": "agents",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "telephone_whatsapp",
+              "keyValue": "={{ $('WhatsApp Trigger').item.json.messages[0].from }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        2176,
+        2272
+      ],
+      "id": "72059cb8-bd81-4550-88e0-83d05552c145",
+      "name": "Trouver l'agent consultation",
+      "alwaysOutputData": true,
+      "credentials": {
+        "supabaseApi": {
+          "id": "P40Z9AdwC5m9ITuj",
+          "name": "ERA Immo - Estimateur de biens"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "useCustomSchema": true,
+        "schema": "eravocal",
+        "operation": "getAll",
+        "tableId": "acheteurs",
+        "returnAll": true,
+        "matchType": "allFilters",
+        "filters": {
+          "conditions": []
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        2624,
+        2080
+      ],
+      "id": "72aef1f4-7ede-4c3f-8492-84820517cf9e",
+      "name": "Charger les fiches consultation",
+      "alwaysOutputData": true,
+      "credentials": {
+        "supabaseApi": {
+          "id": "P40Z9AdwC5m9ITuj",
+          "name": "ERA Immo - Estimateur de biens"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "function norm(value) {\n  return String(value || '').trim().toLowerCase().normalize('NFD').replace(/[\\u0300-\\u036f]/g, '');\n}\nfunction trigrams(value) {\n  const padded = '  ' + value + ' ';\n  const counts = new Map();\n  for (let i = 0; i < padded.length - 2; i++) {\n    const gram = padded.slice(i, i + 3);\n    counts.set(gram, (counts.get(gram) || 0) + 1);\n  }\n  return counts;\n}\nfunction similarity(leftValue, rightValue) {\n  if (!leftValue || !rightValue) return 0;\n  if (leftValue === rightValue) return 1;\n  const left = trigrams(leftValue);\n  const right = trigrams(rightValue);\n  let leftCount = 0;\n  let rightCount = 0;\n  let shared = 0;\n  for (const count of left.values()) leftCount += count;\n  for (const count of right.values()) rightCount += count;\n  for (const [gram, count] of left) {\n    if (right.has(gram)) shared += Math.min(count, right.get(gram));\n  }\n  if (!leftCount || !rightCount) return 0;\n  return (2 * shared) / (leftCount + rightCount);\n}\nfunction dateCourte(value) {\n  if (!value) return '';\n  const date = new Date(value);\n  if (Number.isNaN(date.getTime())) return '';\n  return new Intl.DateTimeFormat('fr-FR', { timeZone: 'Europe/Paris', day: '2-digit', month: '2-digit', year: 'numeric' }).format(date);\n}\nconst question = $('Qualifier le message').first().json.text || '';\nconst nom = norm($('Qualifier le message').first().json.nom || '');\nconst rows = $input.all().map((item) => item.json).filter((row) => row.id);\nif (!nom) return [{ json: { action: 'aucune', message: 'Aucune fiche pour ce nom.' } }];\nconst homonymes = rows.map((row) => {\n  const cible = norm(((row.prenom || '') + ' ' + (row.nom || '')).trim());\n  return {\n    id: row.id,\n    prenom: row.prenom || '',\n    nom: row.nom || '',\n    telephone: row.telephone || '',\n    type_bien: row.type_bien || '',\n    secteur: row.secteur || '',\n    budget: row.budget || '',\n    created_at: row.created_at || '',\n    agent_id: row.agent_id,\n    delai_acquisition: row.delai_acquisition || '',\n    financement_statut: row.financement_statut || '',\n    score: row.score || '',\n    similarite: similarity(cible, nom),\n  };\n}).filter((row) => row.similarite >= 0.3).sort((a, b) => b.similarite - a.similarite || String(b.created_at).localeCompare(String(a.created_at)));\nif (!homonymes.length) {\n  return [{ json: { action: 'aucune', question, message: 'Aucune fiche pour ' + nom + '.' } }];\n}\nif (homonymes.length === 1) {\n  return [{ json: { action: 'direct', question, fiche: homonymes[0], acheteur_id: homonymes[0].id } }];\n}\nconst candidats = homonymes.map((candidat, index) => Object.assign({ index: index + 1 }, candidat));\nconst lignes = candidats.map((candidat) => {\n  const identite = [candidat.prenom, candidat.nom].filter(Boolean).join(' ');\n  const recherche = [candidat.type_bien, candidat.secteur].filter(Boolean).join(', ');\n  const tel = candidat.telephone ? String(candidat.telephone).replace(/\\D/g, '').slice(-4) : '';\n  const details = [recherche, candidat.budget, dateCourte(candidat.created_at), tel].filter(Boolean).join(' - ');\n  return candidat.index + '. ' + identite + (details ? ' - ' + details : '');\n});\nconst famille = (candidats.find((candidat) => candidat.nom) || {}).nom || nom;\nconst nombre = candidats.length;\nconst intro = \"J'ai trouvé \" + nombre + (nombre > 1 ? ' prospects' : ' prospect') + ' avec le nom de famille ' + famille + '.';\nconst message = intro + '\\n' + lignes.join('\\n') + '\\nRépondez par le numéro de la fiche.';\nreturn [{ json: { action: 'liste', question, brouillon: { intention: 'consultation', question, sujet: $('Qualifier le message').first().json.sujet || '' }, candidats, message } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2848,
+        2080
+      ],
+      "id": "6672f216-474f-4e4c-a103-58ae561b9d7b",
+      "name": "Décider la consultation"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "c0nsu177-0007-4000-8000-000000000007-c",
+              "leftValue": "={{ $json.action }}",
+              "rightValue": "liste",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        3072,
+        2080
+      ],
+      "id": "e54257f5-ee56-4bf4-bdf3-cbf4efc81b97",
+      "name": "Liste de consultation ?"
+    },
+    {
+      "parameters": {
+        "useCustomSchema": true,
+        "schema": "eravocal",
+        "operation": "update",
+        "tableId": "validations_en_attente",
+        "matchType": "allFilters",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "agent_id",
+              "condition": "eq",
+              "keyValue": "={{ $('Trouver l\\'agent consultation').item.json.id }}"
+            },
+            {
+              "keyName": "statut",
+              "condition": "eq",
+              "keyValue": "en_attente"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "statut",
+              "fieldValue": "remplacee"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        3296,
+        1936
+      ],
+      "id": "512708c5-4768-4e69-8174-01b2d82f2600",
+      "name": "Remplacer avant consultation",
+      "alwaysOutputData": true,
+      "credentials": {
+        "supabaseApi": {
+          "id": "P40Z9AdwC5m9ITuj",
+          "name": "ERA Immo - Estimateur de biens"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "useCustomSchema": true,
+        "schema": "eravocal",
+        "tableId": "validations_en_attente",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "agent_id",
+              "fieldValue": "={{ $('Trouver l\\'agent consultation').item.json.id }}"
+            },
+            {
+              "fieldId": "type",
+              "fieldValue": "choix_homonyme"
+            },
+            {
+              "fieldId": "brouillon",
+              "fieldValue": "={{ $('Décider la consultation').item.json.brouillon }}"
+            },
+            {
+              "fieldId": "candidats",
+              "fieldValue": "={{ $('Décider la consultation').item.json.candidats }}"
+            },
+            {
+              "fieldId": "champs_manquants",
+              "fieldValue": "={{ [] }}"
+            },
+            {
+              "fieldId": "statut",
+              "fieldValue": "en_attente"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        3520,
+        1936
+      ],
+      "id": "c5ed22c9-4a73-4da1-a3a0-2c83673ec550",
+      "name": "Enregistrer la consultation",
+      "credentials": {
+        "supabaseApi": {
+          "id": "P40Z9AdwC5m9ITuj",
+          "name": "ERA Immo - Estimateur de biens"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "send",
+        "phoneNumberId": "=1327715120426075",
+        "recipientPhoneNumber": "={{ $('WhatsApp Trigger').item.json.messages[0].from }}",
+        "textBody": "={{ $('Décider la consultation').item.json.message }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.whatsApp",
+      "typeVersion": 1.1,
+      "position": [
+        3744,
+        1936
+      ],
+      "id": "c880ca4f-2dfa-40dc-b461-ec4d74cb27f3",
+      "name": "Envoyer la liste de consultation",
+      "webhookId": "c0nsu177-0010-4000-8000-000000000010",
+      "credentials": {
+        "whatsAppApi": {
+          "id": "V5Ozbzh5axOaEH7T",
+          "name": "WhatsApp account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "c0nsu177-0011-4000-8000-000000000011-c",
+              "leftValue": "={{ $('Décider la consultation').item.json.action }}",
+              "rightValue": "direct",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        3296,
+        2176
+      ],
+      "id": "a9b332cb-6c08-44ab-87e7-a120d66361c0",
+      "name": "Réponse immédiate ?"
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{ json: { actif: true } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2624,
+        2464
+      ],
+      "id": "afe5047e-ea2d-4574-bccf-01b6d634876e",
+      "name": "Question sans nom"
+    },
+    {
+      "parameters": {
+        "useCustomSchema": true,
+        "schema": "eravocal",
+        "operation": "get",
+        "tableId": "sessions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "agent_id",
+              "keyValue": "={{ $('Trouver l\\'agent consultation').item.json.id }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        2848,
+        2464
+      ],
+      "id": "bbf7e3af-f936-4886-990e-e45b7a402215",
+      "name": "Chercher la session question",
+      "alwaysOutputData": true,
+      "credentials": {
+        "supabaseApi": {
+          "id": "P40Z9AdwC5m9ITuj",
+          "name": "ERA Immo - Estimateur de biens"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "c0nsu177-0014-4000-8000-000000000014-c",
+              "leftValue": "={{ $json.acheteur_actif_id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        3072,
+        2464
+      ],
+      "id": "e1e3b217-93cc-4213-bc79-9275392ee9a4",
+      "name": "Fiche active ?"
+    },
+    {
+      "parameters": {
+        "useCustomSchema": true,
+        "schema": "eravocal",
+        "operation": "get",
+        "tableId": "acheteurs",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "id",
+              "keyValue": "={{ $('Chercher la session question').item.json.acheteur_actif_id }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        3296,
+        2368
+      ],
+      "id": "d22956f2-77ee-4ac0-9162-58d10d844350",
+      "name": "Charger la fiche active",
+      "alwaysOutputData": true,
+      "credentials": {
+        "supabaseApi": {
+          "id": "P40Z9AdwC5m9ITuj",
+          "name": "ERA Immo - Estimateur de biens"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "send",
+        "phoneNumberId": "=1327715120426075",
+        "recipientPhoneNumber": "={{ $('WhatsApp Trigger').item.json.messages[0].from }}",
+        "textBody": "Aucune fiche active. Choisis d'abord un numéro.",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.whatsApp",
+      "typeVersion": 1.1,
+      "position": [
+        3296,
+        2608
+      ],
+      "id": "c1572c6e-99d4-4f9f-a419-b2247483a60e",
+      "name": "Répondre aucune fiche active",
+      "webhookId": "c0nsu177-0016-4000-8000-000000000016",
+      "credentials": {
+        "whatsAppApi": {
+          "id": "V5Ozbzh5axOaEH7T",
+          "name": "WhatsApp account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "c0nsu177-0017-4000-8000-000000000017-c",
+              "leftValue": "={{ $('Décider la validation').item.json.action }}",
+              "rightValue": "consulter",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        -1856,
+        2304
+      ],
+      "id": "fc65a381-f0d7-4d51-9193-f78a50f60ff6",
+      "name": "Consulter ?"
+    },
+    {
+      "parameters": {
+        "useCustomSchema": true,
+        "schema": "eravocal",
+        "operation": "get",
+        "tableId": "acheteurs",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "id",
+              "keyValue": "={{ $('Décider la validation').item.json.acheteur_id }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        3296,
+        3664
+      ],
+      "id": "06ea6134-b0ca-400e-af97-1cbfb8deafae",
+      "name": "Charger la fiche consultée",
+      "alwaysOutputData": true,
+      "credentials": {
+        "supabaseApi": {
+          "id": "P40Z9AdwC5m9ITuj",
+          "name": "ERA Immo - Estimateur de biens"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "function norm(value) {\n  return String(value || '').trim().toLowerCase().normalize('NFD').replace(/[\\u0300-\\u036f]/g, '');\n}\nfunction reponse(fiche, question, sujet) {\n  const identite = [fiche.prenom, fiche.nom].filter(Boolean).join(' ') || 'Cette fiche';\n  const lieu = [fiche.type_bien, fiche.secteur].filter(Boolean).join(', ');\n  const entete = lieu ? identite + ', ' + lieu : identite;\n  const demande = sujet || '';\n  const n = norm(question);\n  if (demande === 'budget' || n.includes('budget')) return entete + '. Budget : ' + (fiche.budget || 'non précisé') + '.';\n  if (demande === 'financement' || n.includes('financement')) return entete + '. Financement : ' + (fiche.financement_statut || 'inconnu') + '.';\n  if (demande === 'delai' || n.includes('delai')) return entete + '. Délai : ' + (fiche.delai_acquisition || 'non précisé') + '.';\n  if (demande === 'score' || n.includes('score')) return entete + '. Score : ' + (fiche.score || 'non précisé') + '.';\n  return [entete, fiche.budget ? 'Budget : ' + fiche.budget : '', fiche.score ? 'Score : ' + fiche.score : ''].filter(Boolean).join('\\n');\n}\nlet fiche = null;\nlet question = '';\nlet cloturer = false;\nlet enregistrer = false;\ntry {\n  const decision = $('Décider la validation').first().json;\n  if (decision && decision.action === 'consulter') {\n    fiche = $json.id ? $json : null;\n    question = decision.question || '';\n    cloturer = true;\n    enregistrer = true;\n  }\n} catch (e) {}\ntry {\n  const direct = $('Décider la consultation').first().json;\n  if (!fiche && direct && direct.action === 'direct') {\n    fiche = direct.fiche;\n    question = direct.question || '';\n    enregistrer = true;\n  }\n} catch (e) {}\ntry {\n  const actif = $('Question sans nom').first().json;\n  if (!fiche && actif && actif.actif) {\n    fiche = $json.id ? $json : null;\n    question = $('Qualifier le message').first().json.text || '';\n    enregistrer = false;\n  }\n} catch (e) {}\nif (!fiche || !fiche.id) {\n  return [{ json: { message: 'Aucune fiche active. Choisis d\\'abord un numéro.', acheteur_id: '', agent_id: '', cloturer: false, enregistrer: false } }];\n}\nif (!question) {\n  try { question = $('Qualifier le message').first().json.text || ''; } catch (e) {}\n}\nlet sujet = '';\ntry {\n  const decision = $('Décider la validation').first().json;\n  if (decision && decision.sujet) sujet = decision.sujet;\n} catch (e) {}\nif (!sujet) {\n  try { sujet = $('Qualifier le message').first().json.sujet || ''; } catch (e) {}\n}\nreturn [{ json: { message: reponse(fiche, question, sujet), acheteur_id: fiche.id, agent_id: fiche.agent_id, cloturer: cloturer ? 'oui' : 'non', enregistrer: enregistrer ? 'oui' : 'non' } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3520,
+        2752
+      ],
+      "id": "7099b792-5f27-46f5-93b0-2a48dde7c3ad",
+      "name": "Rédiger la réponse"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "c0nsu177-0020-4000-8000-000000000020-c",
+              "leftValue": "={{ $('Rédiger la réponse').item.json.enregistrer }}",
+              "rightValue": "oui",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        3744,
+        2752
+      ],
+      "id": "9a0b8784-5a31-4f46-879d-560a2c26cafb",
+      "name": "Enregistrer la session ?"
+    },
+    {
+      "parameters": {
+        "useCustomSchema": true,
+        "schema": "eravocal",
+        "operation": "get",
+        "tableId": "sessions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "agent_id",
+              "keyValue": "={{ $('Rédiger la réponse').item.json.agent_id }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        3968,
+        2208
+      ],
+      "id": "efc59934-4c0a-4914-8284-28c851f71a12",
+      "name": "Chercher la session",
+      "alwaysOutputData": true,
+      "credentials": {
+        "supabaseApi": {
+          "id": "P40Z9AdwC5m9ITuj",
+          "name": "ERA Immo - Estimateur de biens"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "c0nsu177-0022-4000-8000-000000000022-c",
+              "leftValue": "={{ $json.agent_id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        4192,
+        2208
+      ],
+      "id": "8af8eab2-3bdd-4dee-99f6-28dafbf33a96",
+      "name": "Session connue ?"
+    },
+    {
+      "parameters": {
+        "useCustomSchema": true,
+        "schema": "eravocal",
+        "operation": "update",
+        "tableId": "sessions",
+        "matchType": "allFilters",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "agent_id",
+              "condition": "eq",
+              "keyValue": "={{ $('Rédiger la réponse').item.json.agent_id }}"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "acheteur_actif_id",
+              "fieldValue": "={{ $('Rédiger la réponse').item.json.acheteur_id }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        4416,
+        2112
+      ],
+      "id": "c21ad0a4-b300-445c-a581-deb2a893649a",
+      "name": "Mettre à jour la session",
+      "credentials": {
+        "supabaseApi": {
+          "id": "P40Z9AdwC5m9ITuj",
+          "name": "ERA Immo - Estimateur de biens"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "useCustomSchema": true,
+        "schema": "eravocal",
+        "tableId": "sessions",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "agent_id",
+              "fieldValue": "={{ $('Rédiger la réponse').item.json.agent_id }}"
+            },
+            {
+              "fieldId": "acheteur_actif_id",
+              "fieldValue": "={{ $('Rédiger la réponse').item.json.acheteur_id }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        4416,
+        2304
+      ],
+      "id": "c8881706-86e6-44ac-96f7-807622fb0e33",
+      "name": "Créer la session",
+      "credentials": {
+        "supabaseApi": {
+          "id": "P40Z9AdwC5m9ITuj",
+          "name": "ERA Immo - Estimateur de biens"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "c0nsu177-0025-4000-8000-000000000025-c",
+              "leftValue": "={{ $('Rédiger la réponse').item.json.cloturer }}",
+              "rightValue": "oui",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        4640,
+        2208
+      ],
+      "id": "a78402b1-465d-46be-b821-1b48f2e93191",
+      "name": "Clôturer ?"
+    },
+    {
+      "parameters": {
+        "useCustomSchema": true,
+        "schema": "eravocal",
+        "operation": "update",
+        "tableId": "validations_en_attente",
+        "matchType": "allFilters",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "id",
+              "condition": "eq",
+              "keyValue": "={{ $('Décider la validation').item.json.validation_id }}"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "statut",
+              "fieldValue": "remplacee"
+            },
+            {
+              "fieldId": "acheteur_id",
+              "fieldValue": "={{ $('Rédiger la réponse').item.json.acheteur_id }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        4864,
+        1920
+      ],
+      "id": "b41d6f4a-992f-4df5-858f-0aa48a5e44cd",
+      "name": "Clôturer la consultation",
+      "credentials": {
+        "supabaseApi": {
+          "id": "P40Z9AdwC5m9ITuj",
+          "name": "ERA Immo - Estimateur de biens"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "send",
+        "phoneNumberId": "=1327715120426075",
+        "recipientPhoneNumber": "={{ $('WhatsApp Trigger').item.json.messages[0].from }}",
+        "textBody": "={{ $('Rédiger la réponse').item.json.message }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.whatsApp",
+      "typeVersion": 1.1,
+      "position": [
+        5088,
+        2880
+      ],
+      "id": "b09e5dd8-3c5d-4e28-ba76-c583c7ac6458",
+      "name": "Envoyer la réponse",
+      "webhookId": "c0nsu177-0027-4000-8000-000000000027",
+      "credentials": {
+        "whatsAppApi": {
+          "id": "V5Ozbzh5axOaEH7T",
+          "name": "WhatsApp account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "send",
+        "phoneNumberId": "=1327715120426075",
+        "recipientPhoneNumber": "={{ $('WhatsApp Trigger').item.json.messages[0].from }}",
+        "textBody": "={{ $('Décider la consultation').item.json.message }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.whatsApp",
+      "typeVersion": 1.1,
+      "position": [
+        3520,
+        2128
+      ],
+      "id": "6db239cf-5dd1-4fc7-b1e1-fc38722b4dea",
+      "name": "Envoyer aucune fiche",
+      "webhookId": "c0nsu177-0028-4000-8000-000000000028",
+      "credentials": {
+        "whatsAppApi": {
+          "id": "V5Ozbzh5axOaEH7T",
+          "name": "WhatsApp account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "m0dif177-0001-4000-8000-000000000001-c",
+              "leftValue": "={{ $('Qualifier le message').item.json.intention }}",
+              "rightValue": "modification",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        2176,
+        2992
+      ],
+      "id": "af9841c0-2f62-407a-b95e-c61412722f3e",
+      "name": "Modification ?"
+    },
+    {
+      "parameters": {
+        "useCustomSchema": true,
+        "schema": "eravocal",
+        "operation": "get",
+        "tableId": "agents",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "telephone_whatsapp",
+              "keyValue": "={{ $('WhatsApp Trigger').item.json.messages[0].from }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        2400,
+        3088
+      ],
+      "id": "c83ab792-58d4-4246-b78b-6547a3bca765",
+      "name": "Trouver l'agent modification",
+      "alwaysOutputData": true,
+      "credentials": {
+        "supabaseApi": {
+          "id": "P40Z9AdwC5m9ITuj",
+          "name": "ERA Immo - Estimateur de biens"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "useCustomSchema": true,
+        "schema": "eravocal",
+        "operation": "get",
+        "tableId": "validations_en_attente",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "agent_id",
+              "keyValue": "={{ $('Trouver l\\'agent modification').item.json.id }}"
+            },
+            {
+              "keyName": "statut",
+              "keyValue": "en_attente"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        2624,
+        3088
+      ],
+      "id": "58266b19-529e-40f1-bdbe-0fc232de39f8",
+      "name": "Charger le brouillon modification",
+      "alwaysOutputData": true,
+      "credentials": {
+        "supabaseApi": {
+          "id": "P40Z9AdwC5m9ITuj",
+          "name": "ERA Immo - Estimateur de biens"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const row = $input.all().map((item) => item.json).find((entry) => entry.id);\nconst suivi = row && (row.type === 'creation' || row.type === 'mise_a_jour');\nreturn [{ json: { suivi: suivi ? 'oui' : 'non' } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2848,
+        3088
+      ],
+      "id": "aacb8502-5c77-48ec-8169-978fb0f2e289",
+      "name": "Brouillon déjà ouvert"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "m0dif177-0005-4000-8000-000000000005-c",
+              "leftValue": "={{ $json.suivi }}",
+              "rightValue": "oui",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        3072,
+        3088
+      ],
+      "id": "11e86001-fb03-491c-8c57-ded4c2bbc678",
+      "name": "Suivre le brouillon ?"
+    },
+    {
+      "parameters": {
+        "useCustomSchema": true,
+        "schema": "eravocal",
+        "operation": "get",
+        "tableId": "sessions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "agent_id",
+              "keyValue": "={{ $('Trouver l\\'agent modification').item.json.id }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        3296,
+        3136
+      ],
+      "id": "d49818e1-9c2a-4a88-adda-9c874a8adcc7",
+      "name": "Chercher la session modification",
+      "alwaysOutputData": true,
+      "credentials": {
+        "supabaseApi": {
+          "id": "P40Z9AdwC5m9ITuj",
+          "name": "ERA Immo - Estimateur de biens"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "m0dif177-0007-4000-8000-000000000007-c",
+              "leftValue": "={{ $json.acheteur_actif_id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        3520,
+        3520
+      ],
+      "id": "5e8674c4-7afe-483d-8338-8d70ae80255e",
+      "name": "Fiche à modifier ?"
+    },
+    {
+      "parameters": {
+        "useCustomSchema": true,
+        "schema": "eravocal",
+        "operation": "get",
+        "tableId": "acheteurs",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "id",
+              "keyValue": "={{ $('Chercher la session modification').item.json.acheteur_actif_id }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        3744,
+        3520
+      ],
+      "id": "262e9f56-0abb-4236-be79-a37b7836a6d3",
+      "name": "Charger la fiche à modifier",
+      "alwaysOutputData": true,
+      "credentials": {
+        "supabaseApi": {
+          "id": "P40Z9AdwC5m9ITuj",
+          "name": "ERA Immo - Estimateur de biens"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const fiche = $json;\nconst details = fiche.details || {};\nconst actuel = {\n  nom: fiche.nom || '',\n  prenom: fiche.prenom || '',\n  telephone: fiche.telephone || '',\n  email: fiche.email || '',\n  type_bien: fiche.type_bien || '',\n  secteur: fiche.secteur || '',\n  budget: fiche.budget || '',\n  delai: details.delai || '',\n  financement: details.financement || '',\n  delai_acquisition: fiche.delai_acquisition || '',\n  financement_statut: fiche.financement_statut || '',\n  score: fiche.score || ''\n};\nconst identite = [fiche.prenom, fiche.nom].filter(Boolean).join(' ');\nreturn [{ json: { actuel, acheteur_id: fiche.id, agent_id: fiche.agent_id, identite, cible: [identite, fiche.type_bien, fiche.secteur].filter(Boolean).join(', ') } }];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3968,
+        1024
+      ],
+      "id": "651dea04-3e52-47f5-bc9f-3e48842cc39c",
+      "name": "Préparer la modification"
+    },
+    {
+      "parameters": {
+        "jsCode": "function fusionner(base, dit, creation) {\n  const data = Object.assign({}, base || {});\n  const cles = ['nom', 'prenom', 'telephone', 'email', 'type_bien', 'secteur', 'budget', 'delai', 'financement', 'delai_acquisition', 'financement_statut'];\n  for (const cle of cles) {\n    if (dit[cle]) data[cle] = dit[cle];\n  }\n  if (!data.prenom && data.nom && String(data.nom).includes(' ')) {\n    const parts = String(data.nom).split(/\\s+/).filter(Boolean);\n    if (parts.length >= 2) {\n      data.prenom = parts[0];\n      data.nom = parts.slice(1).join(' ');\n    }\n  }\n  if (dit.score_force) {\n    data.score_force = true;\n    data.score_impose = dit.score_impose;\n  } else {\n    data.score_force = false;\n    data.score_impose = '';\n  }\n  if (!data.financement_statut) data.financement_statut = 'inconnu';\n  data.champs_manquants = [];\n  if (creation) {\n    if (!data.nom) data.champs_manquants.push('nom');\n    if (!data.prenom) data.champs_manquants.push('prénom');\n    if (!data.telephone && !data.email) data.champs_manquants.push('téléphone ou e-mail');\n  }\n  return data;\n}\nconst prep = $input.first().json;\nconst dit = $('Qualifier le message').first().json.dit || {};\nreturn [{ json: fusionner(prep.actuel || {}, dit, false) }];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4192,
+        1024
+      ],
+      "id": "148ee995-71ab-4b8b-be3a-bb86fdcbae33",
+      "name": "Extraire la modification"
+    },
+    {
+      "parameters": {
+        "jsCode": "const data = Object.assign({}, $input.first().json);\nconst impose = data.score_impose || '';\nconst force = data.score_force === true && ['vert', 'orange', 'rouge'].includes(impose);\nconst delai = data.delai_acquisition || '';\nconst financement = data.financement_statut || 'inconnu';\nlet score = 'orange';\nif (force) score = impose;\nelse if (delai === 'immediat' || delai === 'moins_d_un_mois') score = 'vert';\nelse if (delai === 'plus_de_six_mois' || financement === 'aucun') score = 'rouge';\ndata.score_force = force;\nconst prep = $('Préparer la modification').first().json;\nconst line = (label, value) => (value ? label + ' : ' + value : null);\nconst lines = [[data.prenom, data.nom].filter(Boolean).join(' ') || 'Nom non précisé', line('Téléphone', data.telephone), line('E-mail', data.email), [data.type_bien, data.secteur].filter(Boolean).join(', '), line('Budget', data.budget), data.financement || null, line('Délai', data.delai), 'Score : ' + score].filter(Boolean);\nconst extraction = Object.assign({}, data, { score });\nconst message = 'Mise à jour de ' + (prep.cible || 'la fiche') + ' :\\n' + lines.join('\\n') + \"\\n\\nRien n'est enregistré pour l'instant. Réponds OK pour valider, ou annuler pour abandonner.\";\nreturn [{ json: { agent_id: prep.agent_id, acheteur_id: prep.acheteur_id, extraction, champs_manquants: data.champs_manquants || [], message } }];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4416,
+        1024
+      ],
+      "id": "d789abde-196a-4626-8fce-7cfe507d5c95",
+      "name": "Appliquer la modification"
+    },
+    {
+      "parameters": {
+        "useCustomSchema": true,
+        "schema": "eravocal",
+        "operation": "update",
+        "tableId": "validations_en_attente",
+        "matchType": "allFilters",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "agent_id",
+              "condition": "eq",
+              "keyValue": "={{ $('Appliquer la modification').item.json.agent_id }}"
+            },
+            {
+              "keyName": "statut",
+              "condition": "eq",
+              "keyValue": "en_attente"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "statut",
+              "fieldValue": "remplacee"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        4640,
+        1024
+      ],
+      "id": "d35cf0d3-87d5-41ac-b200-4e5b41e0911b",
+      "name": "Remplacer avant modification",
+      "alwaysOutputData": true,
+      "credentials": {
+        "supabaseApi": {
+          "id": "P40Z9AdwC5m9ITuj",
+          "name": "ERA Immo - Estimateur de biens"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "useCustomSchema": true,
+        "schema": "eravocal",
+        "tableId": "validations_en_attente",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "agent_id",
+              "fieldValue": "={{ $('Appliquer la modification').item.json.agent_id }}"
+            },
+            {
+              "fieldId": "type",
+              "fieldValue": "mise_a_jour"
+            },
+            {
+              "fieldId": "acheteur_id",
+              "fieldValue": "={{ $('Appliquer la modification').item.json.acheteur_id }}"
+            },
+            {
+              "fieldId": "brouillon",
+              "fieldValue": "={{ $('Appliquer la modification').item.json.extraction }}"
+            },
+            {
+              "fieldId": "champs_manquants",
+              "fieldValue": "={{ $('Appliquer la modification').item.json.champs_manquants }}"
+            },
+            {
+              "fieldId": "statut",
+              "fieldValue": "en_attente"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        4864,
+        1024
+      ],
+      "id": "ea42d4a1-ddd9-4cbf-af4a-e47880b86429",
+      "name": "Enregistrer la modification",
+      "credentials": {
+        "supabaseApi": {
+          "id": "P40Z9AdwC5m9ITuj",
+          "name": "ERA Immo - Estimateur de biens"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "send",
+        "phoneNumberId": "=1327715120426075",
+        "recipientPhoneNumber": "={{ $('WhatsApp Trigger').item.json.messages[0].from }}",
+        "textBody": "={{ $('Appliquer la modification').item.json.message }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.whatsApp",
+      "typeVersion": 1.1,
+      "position": [
+        5088,
+        1024
+      ],
+      "id": "cf35c55e-82be-4dcd-ae15-a5a1065283d1",
+      "name": "Envoyer la modification",
+      "webhookId": "m0dif177-0014-4000-8000-000000000014",
+      "credentials": {
+        "whatsAppApi": {
+          "id": "V5Ozbzh5axOaEH7T",
+          "name": "WhatsApp account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "send",
+        "phoneNumberId": "=1327715120426075",
+        "recipientPhoneNumber": "={{ $('WhatsApp Trigger').item.json.messages[0].from }}",
+        "textBody": "Aucune fiche active. Choisis d'abord un numéro.",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.whatsApp",
+      "typeVersion": 1.1,
+      "position": [
+        3744,
+        3712
+      ],
+      "id": "c0bee4a5-f354-4558-867a-30b8633aa45d",
+      "name": "Aucune fiche à modifier",
+      "webhookId": "m0dif177-0015-4000-8000-000000000015",
+      "credentials": {
+        "whatsAppApi": {
+          "id": "V5Ozbzh5axOaEH7T",
+          "name": "WhatsApp account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const raw = String($json.text || '');\nconst text = raw.trim().toLowerCase().normalize('NFD').replace(/[\\u0300-\\u036f]/g, '').replace(/[\\u2019']/g, ' ').replace(/[.!?,;:]/g, ' ').replace(/\\s+/g, ' ').trim();\nconst bruit = new Set(['euh', 'heu', 'ben', 'bah', 'ah', 'oh', 'hum', 'hmm', 'hein', 'alors', 'et', 'donc', 'oui', 'ouais', 'ouai', 'merci', 'bonjour', 'salut']);\nconst utiles = text.split(' ').filter((mot) => mot && !bruit.has(mot));\nconst phrase = utiles.join(' ');\nlet commande = '';\nlet choix = '';\nif (['ok', 'okay', 'oke', 'okey', 'valide'].includes(phrase) || phrase === 'c est bon' || phrase === 'cest bon') commande = 'ok';\nif (phrase === 'annuler' || phrase === 'annule') commande = 'annuler';\nconst compact = phrase.replace(/\\s+/g, '');\nif (!commande && (compact === 'n' || /^[1-9]\\d*$/.test(compact))) {\n  commande = 'choix';\n  choix = compact === 'n' ? 'N' : String(parseInt(compact, 10));\n}\nreturn [{ json: { commande, choix, text: raw } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        832,
+        1296
+      ],
+      "id": "832a9f8c-bc5f-4d61-89e1-af1aaa88db06",
+      "name": "Commande du vocal"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "f445494f-4a55-4078-a1be-3a5c09748bb6",
+              "leftValue": "={{ $json.commande }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1056,
+        1296
+      ],
+      "id": "c7a7385a-21c8-4871-9208-816cb1b65296",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "c1b1e001-0001-4000-8000-000000000001-c",
+              "leftValue": "={{ $json.prenom_cible }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        1728,
+        2128
+      ],
+      "id": "76254a00-43bc-4252-a7a3-c07185ef7d55",
+      "name": "Cible nommée ?"
+    },
+    {
+      "parameters": {
+        "useCustomSchema": true,
+        "schema": "eravocal",
+        "operation": "get",
+        "tableId": "agents",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "telephone_whatsapp",
+              "keyValue": "={{ $('WhatsApp Trigger').item.json.messages[0].from }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        1952,
+        1504
+      ],
+      "id": "e9a939bb-c219-4fe5-8f91-72c84dfba9f1",
+      "name": "Trouver l'agent cible",
+      "alwaysOutputData": true,
+      "credentials": {
+        "supabaseApi": {
+          "id": "P40Z9AdwC5m9ITuj",
+          "name": "ERA Immo - Estimateur de biens"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "useCustomSchema": true,
+        "schema": "eravocal",
+        "operation": "getAll",
+        "tableId": "acheteurs",
+        "returnAll": true,
+        "matchType": "allFilters",
+        "filters": {
+          "conditions": []
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        2176,
+        1504
+      ],
+      "id": "3389b6f6-6800-491e-93bb-99eb5615266a",
+      "name": "Charger les fiches cible",
+      "alwaysOutputData": true,
+      "credentials": {
+        "supabaseApi": {
+          "id": "P40Z9AdwC5m9ITuj",
+          "name": "ERA Immo - Estimateur de biens"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "function norm(value) {\n  return String(value || '').trim().toLowerCase().normalize('NFD').replace(/[\\u0300-\\u036f]/g, '');\n}\nfunction formaterDate(value) {\n  if (!value) return '';\n  const date = new Date(value);\n  if (Number.isNaN(date.getTime())) return '';\n  return new Intl.DateTimeFormat('fr-FR', { timeZone: 'Europe/Paris', day: '2-digit', month: '2-digit', year: 'numeric' }).format(date);\n}\nfunction reponse(fiche, question, sujet) {\n  const identite = [fiche.prenom, fiche.nom].filter(Boolean).join(' ') || 'Cette fiche';\n  const lieu = [fiche.type_bien, fiche.secteur].filter(Boolean).join(', ');\n  const entete = lieu ? identite + ', ' + lieu : identite;\n  const demande = sujet || '';\n  const n = norm(question);\n  if (demande === 'budget' || n.includes('budget')) return entete + '. Budget : ' + (fiche.budget || 'non précisé') + '.';\n  if (demande === 'financement' || n.includes('financement')) return entete + '. Financement : ' + (fiche.financement_statut || 'inconnu') + '.';\n  if (demande === 'delai' || n.includes('delai')) return entete + '. Délai : ' + (fiche.delai_acquisition || 'non précisé') + '.';\n  if (demande === 'score' || n.includes('score')) return entete + '. Score : ' + (fiche.score || 'non précisé') + '.';\n  return [entete, fiche.budget ? 'Budget : ' + fiche.budget : '', fiche.score ? 'Score : ' + fiche.score : ''].filter(Boolean).join('\\n');\n}\nconst qual = $('Qualifier le message').first().json;\nconst prenom = norm(qual.prenom_cible);\nconst nom = norm(qual.nom_cible);\nconst libelle = qual.libelle || ((prenom + ' ' + nom).trim());\nconst questionCible = qual.mode_cible === 'question';\nconst rappelCible = qual.mode_cible === 'rappel_question' || qual.mode_cible === 'rappel_ecriture';\nconst agent = $('Trouver l\\'agent cible').first().json;\nconst rows = $input.all().map((item) => item.json).filter((row) => row.id);\nconst identite = (row) => {\n  const p = norm(row.prenom);\n  const n = norm(row.nom);\n  if (p && n) return p + ' ' + n;\n  return n;\n};\nconst cherche = (prenom + ' ' + nom).trim();\nconst trouves = rows.filter((row) => identite(row) === cherche);\nif (!trouves.length) {\n  return [{ json: { action: 'aucune', message: 'Aucune fiche pour ' + libelle + '.' } }];\n}\nif (trouves.length === 1 && rappelCible) {\n  return [{ json: { action: 'rappel', mode: qual.mode_cible, acheteur_id: trouves[0].id, agent_id: agent.id, libelle, texte: qual.texte_rappel || qual.text || '', echeance: qual.echeance_rappel || '', contenu: qual.contenu_rappel || '', canal: qual.canal_rappel || '', message: qual.message_rappel || '' } }];\n}\nif (trouves.length === 1 && questionCible) {\n  return [{ json: { action: 'reponse', message: reponse(trouves[0], qual.text || '', qual.sujet || '') } }];\n}\nif (trouves.length === 1) {\n  return [{ json: { action: 'une', acheteur_id: trouves[0].id } }];\n}\nconst candidats = trouves.map((row, index) => ({\n  index: index + 1,\n  id: row.id,\n  prenom: row.prenom || '',\n  nom: row.nom || '',\n  type_bien: row.type_bien || '',\n  secteur: row.secteur || '',\n  budget: row.budget || '',\n  created_at: row.created_at || '',\n  telephone: row.telephone || ''\n}));\nconst lignes = candidats.map((candidat) => {\n  const qui = [candidat.prenom, candidat.nom].filter(Boolean).join(' ') || libelle;\n  const recherche = [candidat.type_bien, candidat.secteur].filter(Boolean).join(', ');\n  const tel = candidat.telephone ? String(candidat.telephone).replace(/\\D/g, '').slice(-4) : '';\n  const details = [recherche, candidat.budget, formaterDate(candidat.created_at), tel].filter(Boolean).join(' - ');\n  return candidat.index + '. ' + qui + (details ? ' - ' + details : '');\n});\nconst message = \"J'ai trouvé \" + candidats.length + ' fiches pour ' + libelle + '.\\n' + lignes.join('\\n') + '\\nRépondez par le numéro de la fiche.';\nconst intention = rappelCible ? qual.mode_cible : (questionCible ? 'question_cible' : 'modification_cible');\nreturn [{ json: { action: 'liste', message, candidats, brouillon: { intention, question: qual.text || '', text: qual.text || '', sujet: qual.sujet || '', texte_rappel: qual.texte_rappel || '', echeance_rappel: qual.echeance_rappel || '', contenu_rappel: qual.contenu_rappel || '', canal_rappel: qual.canal_rappel || '', message_rappel: qual.message_rappel || '' }, agent_id: agent.id } }];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2400,
+        1504
+      ],
+      "id": "fa3e50c6-9efc-4ab9-97a4-eb5ced158bf0",
+      "name": "Décider la cible"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "c1b1e001-0005-4000-8000-000000000005-c",
+              "leftValue": "={{ $json.action }}",
+              "rightValue": "liste",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        2624,
+        1504
+      ],
+      "id": "60acf684-81a9-4d31-ba4c-5a6ef1cf88aa",
+      "name": "Liste de cibles ?"
+    },
+    {
+      "parameters": {
+        "useCustomSchema": true,
+        "schema": "eravocal",
+        "operation": "update",
+        "tableId": "validations_en_attente",
+        "matchType": "allFilters",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "agent_id",
+              "condition": "eq",
+              "keyValue": "={{ $('Trouver l\\'agent cible').item.json.id }}"
+            },
+            {
+              "keyName": "statut",
+              "condition": "eq",
+              "keyValue": "en_attente"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "statut",
+              "fieldValue": "remplacee"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        2848,
+        1312
+      ],
+      "id": "579e3ed6-4fef-400a-b6cf-5b218a601d24",
+      "name": "Remplacer avant cible",
+      "alwaysOutputData": true,
+      "credentials": {
+        "supabaseApi": {
+          "id": "P40Z9AdwC5m9ITuj",
+          "name": "ERA Immo - Estimateur de biens"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "useCustomSchema": true,
+        "schema": "eravocal",
+        "tableId": "validations_en_attente",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "agent_id",
+              "fieldValue": "={{ $('Trouver l\\'agent cible').item.json.id }}"
+            },
+            {
+              "fieldId": "type",
+              "fieldValue": "choix_homonyme"
+            },
+            {
+              "fieldId": "brouillon",
+              "fieldValue": "={{ $('Décider la cible').item.json.brouillon }}"
+            },
+            {
+              "fieldId": "candidats",
+              "fieldValue": "={{ $('Décider la cible').item.json.candidats }}"
+            },
+            {
+              "fieldId": "champs_manquants",
+              "fieldValue": "={{ [] }}"
+            },
+            {
+              "fieldId": "statut",
+              "fieldValue": "en_attente"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        3072,
+        1312
+      ],
+      "id": "ad911469-1fed-4e6f-bde2-5efd4fc7b4b0",
+      "name": "Enregistrer le choix cible",
+      "credentials": {
+        "supabaseApi": {
+          "id": "P40Z9AdwC5m9ITuj",
+          "name": "ERA Immo - Estimateur de biens"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "send",
+        "phoneNumberId": "=1327715120426075",
+        "recipientPhoneNumber": "={{ $('WhatsApp Trigger').item.json.messages[0].from }}",
+        "textBody": "={{ $('Décider la cible').item.json.message }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.whatsApp",
+      "typeVersion": 1.1,
+      "position": [
+        3296,
+        1312
+      ],
+      "id": "0a61205e-22ad-43c2-bfd5-787230784533",
+      "name": "Envoyer la liste cible",
+      "webhookId": "c1b1e001-0008-4000-8000-000000000008",
+      "credentials": {
+        "whatsAppApi": {
+          "id": "V5Ozbzh5axOaEH7T",
+          "name": "WhatsApp account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "c1b1e001-0009-4000-8000-000000000009-c",
+              "leftValue": "={{ $('Décider la cible').item.json.action }}",
+              "rightValue": "une",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        3296,
+        1552
+      ],
+      "id": "f38db7c5-f456-4f0d-9676-16636935429d",
+      "name": "Une cible ?"
+    },
+    {
+      "parameters": {
+        "useCustomSchema": true,
+        "schema": "eravocal",
+        "operation": "get",
+        "tableId": "acheteurs",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "id",
+              "keyValue": "={{ $('Décider la cible').item.json.acheteur_id }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        3520,
+        1456
+      ],
+      "id": "716b4086-dd0e-40a1-9de4-abb0704bc2ee",
+      "name": "Charger la fiche nommée",
+      "alwaysOutputData": true,
+      "credentials": {
+        "supabaseApi": {
+          "id": "P40Z9AdwC5m9ITuj",
+          "name": "ERA Immo - Estimateur de biens"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "send",
+        "phoneNumberId": "=1327715120426075",
+        "recipientPhoneNumber": "={{ $('WhatsApp Trigger').item.json.messages[0].from }}",
+        "textBody": "={{ $('Décider la cible').item.json.message }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.whatsApp",
+      "typeVersion": 1.1,
+      "position": [
+        3520,
+        1648
+      ],
+      "id": "a5a49e46-5e03-4719-822e-070b7ca09538",
+      "name": "Envoyer aucune cible",
+      "webhookId": "c1b1e001-0011-4000-8000-000000000011",
+      "credentials": {
+        "whatsAppApi": {
+          "id": "V5Ozbzh5axOaEH7T",
+          "name": "WhatsApp account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "c1b1e001-0012-4000-8000-000000000012-c",
+              "leftValue": "={{ $('Décider la validation').item.json.action }}",
+              "rightValue": "modifier_cible",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        -1632,
+        2224
+      ],
+      "id": "7fecec1f-67bf-4395-8f56-33a481b560b8",
+      "name": "Modifier la cible ?"
+    },
+    {
+      "parameters": {
+        "useCustomSchema": true,
+        "schema": "eravocal",
+        "operation": "get",
+        "tableId": "acheteurs",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "id",
+              "keyValue": "={{ $('Décider la validation').item.json.acheteur_id }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        3744,
+        816
+      ],
+      "id": "a8ecfb76-8598-48ab-959d-fc275899311d",
+      "name": "Charger la fiche choisie",
+      "alwaysOutputData": true,
+      "credentials": {
+        "supabaseApi": {
+          "id": "P40Z9AdwC5m9ITuj",
+          "name": "ERA Immo - Estimateur de biens"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "c1b1e001-0014-4000-8000-000000000014-c",
+              "leftValue": "={{ $('Décider la validation').item.json.action }}",
+              "rightValue": "rappel_cible",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        -1184,
+        2400
+      ],
+      "id": "bea91007-dd9d-4a65-b8d3-0f70e265109e",
+      "name": "Rappel cible ?"
+    },
+    {
+      "parameters": {
+        "operation": "send",
+        "phoneNumberId": "=1327715120426075",
+        "recipientPhoneNumber": "={{ $('WhatsApp Trigger').item.json.messages[0].from }}",
+        "textBody": "={{ $('Décider la validation').item.json.message }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.whatsApp",
+      "typeVersion": 1.1,
+      "position": [
+        -960,
+        1200
+      ],
+      "id": "b7d9f0b0-8de4-41b4-b4a6-11e12b1d0a61",
+      "name": "Envoyer le rappel cible",
+      "webhookId": "c1b1e001-0015-4000-8000-000000000015",
+      "credentials": {
+        "whatsAppApi": {
+          "id": "V5Ozbzh5axOaEH7T",
+          "name": "WhatsApp account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "c1b1e001-0017-4000-8000-000000000017-c",
+              "leftValue": "={{ $('Décider la cible').item.json.action }}",
+              "rightValue": "reponse",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        3072,
+        1648
+      ],
+      "id": "a99e4c0c-636e-4c76-a601-3067558db92b",
+      "name": "Réponse cible ?"
+    },
+    {
+      "parameters": {
+        "operation": "send",
+        "phoneNumberId": "=1327715120426075",
+        "recipientPhoneNumber": "={{ $('WhatsApp Trigger').item.json.messages[0].from }}",
+        "textBody": "={{ $('Décider la cible').item.json.message }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.whatsApp",
+      "typeVersion": 1.1,
+      "position": [
+        3296,
+        1744
+      ],
+      "id": "e925636d-878b-4d22-af46-002093a5427f",
+      "name": "Envoyer la réponse cible",
+      "webhookId": "c1b1e001-0016-4000-8000-000000000016",
+      "credentials": {
+        "whatsAppApi": {
+          "id": "V5Ozbzh5axOaEH7T",
+          "name": "WhatsApp account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "r4pp3e01-0001-4000-8000-000000000001-c",
+              "leftValue": "={{ $('Décider la cible').item.json.action }}",
+              "rightValue": "rappel",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        2848,
+        1600
+      ],
+      "id": "1cc0f4b5-0bff-4c1d-8d65-0b99e69ea00f",
+      "name": "Rappel demandé ?"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "r4pp3e01-0002-4000-8000-000000000002-c",
+              "leftValue": "={{ $('Décider la validation').item.json.action }}",
+              "rightValue": "rappel_suite",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        -1408,
+        2320
+      ],
+      "id": "4afbaac8-f7ee-4858-b28f-db73532a491b",
+      "name": "Suite rappel ?"
+    },
+    {
+      "parameters": {
+        "jsCode": "let acheteur_id = '';\nlet agent_id = '';\nlet mode = '';\nlet texte = '';\nlet libelle = '';\nlet echeance = '';\nlet contenu = '';\nlet canal = '';\nlet message = '';\ntry {\n  const direct = $('Décider la cible').first().json;\n  if (direct && direct.action === 'rappel') {\n    acheteur_id = direct.acheteur_id || '';\n    agent_id = direct.agent_id || '';\n    mode = direct.mode || '';\n    texte = direct.texte || '';\n    libelle = direct.libelle || '';\n    echeance = direct.echeance || '';\n    contenu = direct.contenu || '';\n    canal = direct.canal || '';\n    message = direct.message || '';\n  }\n} catch (e) {}\ntry {\n  const suite = $('Décider la validation').first().json;\n  if (suite && suite.action === 'rappel_suite') {\n    acheteur_id = suite.acheteur_id || acheteur_id;\n    agent_id = suite.agent_id || agent_id;\n    mode = suite.mode || mode;\n    texte = suite.texte || texte;\n    libelle = suite.libelle || libelle;\n    echeance = suite.echeance || echeance;\n    contenu = suite.contenu || contenu;\n    canal = suite.canal || canal;\n    message = suite.message || message;\n  }\n} catch (e) {}\nreturn [{ json: { acheteur_id, agent_id, mode, texte, libelle, echeance, contenu, canal, message } }];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3072,
+        1056
+      ],
+      "id": "5ac02cb6-c09b-430d-84c3-307aa0ab7258",
+      "name": "Unifier le rappel"
+    },
+    {
+      "parameters": {
+        "useCustomSchema": true,
+        "schema": "eravocal",
+        "operation": "getAll",
+        "tableId": "rappels",
+        "returnAll": true,
+        "matchType": "allFilters",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "acheteur_id",
+              "condition": "eq",
+              "keyValue": "={{ $json.acheteur_id }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        3296,
+        1056
+      ],
+      "id": "8732da42-470e-47e0-8d78-80f0c349880f",
+      "name": "Charger le rappel",
+      "alwaysOutputData": true,
+      "credentials": {
+        "supabaseApi": {
+          "id": "P40Z9AdwC5m9ITuj",
+          "name": "ERA Immo - Estimateur de biens"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const CANAUX = { appel: 'appel', whatsapp: 'WhatsApp', email: 'e-mail' };\nfunction jour(iso) {\n  if (!iso) return '';\n  const date = new Date(iso + 'T12:00:00Z');\n  if (Number.isNaN(date.getTime())) return iso;\n  return new Intl.DateTimeFormat('fr-FR', { timeZone: 'Europe/Paris', weekday: 'long', day: 'numeric', month: 'long' }).format(date);\n}\nconst demande = $('Unifier le rappel').first().json;\nconst aFaire = $input.all()\n  .map((item) => item.json)\n  .filter((row) => row.id && row.texte && (row.statut || 'a_faire') === 'a_faire')\n  .sort((a, b) => String(a.echeance || '').localeCompare(String(b.echeance || '')));\nconst libelle = demande.libelle || 'cette fiche';\nconst consigne = \"Rien n'est enregistré pour l'instant. Réponds OK pour valider, ou annuler pour abandonner.\";\nif (demande.mode === 'rappel_question') {\n  const message = aFaire.length\n    ? ('Tâches à faire pour ' + libelle + ' :\\n' + aFaire.map((row) => '- ' + jour(row.echeance) + ' : ' + row.texte).join('\\n'))\n    : ('Aucune tâche à faire pour ' + libelle + '.');\n  return [{ json: { action: 'reponse', message } }];\n}\nconst manque = [];\nif (!demande.echeance) manque.push('le jour');\nif (!demande.contenu) manque.push(\"ce qu'il faut faire\");\nif (manque.length) {\n  const message = 'Il me manque ' + manque.join(' et ') + ' pour créer la tâche de ' + libelle + '. Renvoyez la demande complète, par exemple : Pour ' + libelle + \", rappel jeudi à 10h pour faire le point sur l'offre.\";\n  return [{ json: { action: 'reponse', message } }];\n}\nconst canal = CANAUX[demande.canal] ? demande.canal : 'appel';\nconst corps = 'Nouvelle tâche pour ' + libelle + ' :\\n' + jour(demande.echeance) + ' - ' + demande.contenu + ' (' + CANAUX[canal] + ')';\nreturn [{ json: { action: 'brouillon', message: corps + '\\n\\n' + consigne, brouillon: { agent_id: demande.agent_id, acheteur_id: demande.acheteur_id, libelle, echeance: demande.echeance, texte: demande.contenu, canal, message_suggere: demande.message || '' } } }];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3520,
+        1056
+      ],
+      "id": "495b0ae3-2e29-4b8a-9292-415839322c74",
+      "name": "Rédiger le rappel"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "r4pp3e01-0006-4000-8000-000000000006-c",
+              "leftValue": "={{ $json.action }}",
+              "rightValue": "reponse",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        3744,
+        1056
+      ],
+      "id": "47e0c483-8ab0-459a-ad6b-bb9c6f0e5bd1",
+      "name": "Question sur le rappel ?"
+    },
+    {
+      "parameters": {
+        "operation": "send",
+        "phoneNumberId": "=1327715120426075",
+        "recipientPhoneNumber": "={{ $('WhatsApp Trigger').item.json.messages[0].from }}",
+        "textBody": "={{ $('Rédiger le rappel').item.json.message }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.whatsApp",
+      "typeVersion": 1.1,
+      "position": [
+        3968,
+        1216
+      ],
+      "id": "e234ae39-e73e-406f-abc3-8faba8e9b049",
+      "name": "Envoyer la réponse rappel",
+      "webhookId": "r4pp3e01-0007-4000-8000-000000000007",
+      "credentials": {
+        "whatsAppApi": {
+          "id": "V5Ozbzh5axOaEH7T",
+          "name": "WhatsApp account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "useCustomSchema": true,
+        "schema": "eravocal",
+        "operation": "update",
+        "tableId": "validations_en_attente",
+        "matchType": "allFilters",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "agent_id",
+              "condition": "eq",
+              "keyValue": "={{ $('Unifier le rappel').item.json.agent_id }}"
+            },
+            {
+              "keyName": "statut",
+              "condition": "eq",
+              "keyValue": "en_attente"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "statut",
+              "fieldValue": "remplacee"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        3968,
+        1584
+      ],
+      "id": "4a38eb8f-510b-459a-850d-ab50da08e2e7",
+      "name": "Remplacer avant rappel",
+      "alwaysOutputData": true,
+      "credentials": {
+        "supabaseApi": {
+          "id": "P40Z9AdwC5m9ITuj",
+          "name": "ERA Immo - Estimateur de biens"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "useCustomSchema": true,
+        "schema": "eravocal",
+        "tableId": "validations_en_attente",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "agent_id",
+              "fieldValue": "={{ $('Rédiger le rappel').item.json.brouillon.agent_id }}"
+            },
+            {
+              "fieldId": "type",
+              "fieldValue": "rappel"
+            },
+            {
+              "fieldId": "acheteur_id",
+              "fieldValue": "={{ $('Rédiger le rappel').item.json.brouillon.acheteur_id }}"
+            },
+            {
+              "fieldId": "brouillon",
+              "fieldValue": "={{ $('Rédiger le rappel').item.json.brouillon }}"
+            },
+            {
+              "fieldId": "champs_manquants",
+              "fieldValue": "={{ [] }}"
+            },
+            {
+              "fieldId": "statut",
+              "fieldValue": "en_attente"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        4192,
+        1584
+      ],
+      "id": "088c6af9-634f-47a8-8b4c-dfc1b8de4dff",
+      "name": "Enregistrer le brouillon rappel",
+      "credentials": {
+        "supabaseApi": {
+          "id": "P40Z9AdwC5m9ITuj",
+          "name": "ERA Immo - Estimateur de biens"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "send",
+        "phoneNumberId": "=1327715120426075",
+        "recipientPhoneNumber": "={{ $('WhatsApp Trigger').item.json.messages[0].from }}",
+        "textBody": "={{ $('Rédiger le rappel').item.json.message }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.whatsApp",
+      "typeVersion": 1.1,
+      "position": [
+        4416,
+        1584
+      ],
+      "id": "1a2dbf65-e762-4bf3-b861-5d15f4066ad3",
+      "name": "Envoyer le brouillon rappel",
+      "webhookId": "r4pp3e01-0010-4000-8000-000000000010",
+      "credentials": {
+        "whatsAppApi": {
+          "id": "V5Ozbzh5axOaEH7T",
+          "name": "WhatsApp account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "r4pp3e01-0011-4000-8000-000000000011-c",
+              "leftValue": "={{ $json.action }}",
+              "rightValue": "valider_rappel",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        -2528,
+        2112
+      ],
+      "id": "a310a09a-d2d9-4a01-9a43-6f34bdff8480",
+      "name": "Valider le rappel ?"
+    },
+    {
+      "parameters": {
+        "useCustomSchema": true,
+        "schema": "eravocal",
+        "tableId": "rappels",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "agent_id",
+              "fieldValue": "={{ $('Décider la validation').item.json.agent_id }}"
+            },
+            {
+              "fieldId": "acheteur_id",
+              "fieldValue": "={{ $('Décider la validation').item.json.acheteur_id }}"
+            },
+            {
+              "fieldId": "texte",
+              "fieldValue": "={{ $('Décider la validation').item.json.texte }}"
+            },
+            {
+              "fieldId": "echeance",
+              "fieldValue": "={{ $('Décider la validation').item.json.echeance || $now.setZone('Europe/Paris').toISODate() }}"
+            },
+            {
+              "fieldId": "canal",
+              "fieldValue": "={{ $('Décider la validation').item.json.canal }}"
+            },
+            {
+              "fieldId": "message_suggere",
+              "fieldValue": "={{ $('Décider la validation').item.json.message_suggere }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -2304,
+        256
+      ],
+      "id": "342a250c-ea9c-4355-aa0c-0425fa3fee6d",
+      "name": "Créer le rappel",
+      "credentials": {
+        "supabaseApi": {
+          "id": "P40Z9AdwC5m9ITuj",
+          "name": "ERA Immo - Estimateur de biens"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "useCustomSchema": true,
+        "schema": "eravocal",
+        "operation": "update",
+        "tableId": "validations_en_attente",
+        "matchType": "allFilters",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "id",
+              "condition": "eq",
+              "keyValue": "={{ $('Décider la validation').item.json.validation_id }}"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "statut",
+              "fieldValue": "validee"
+            },
+            {
+              "fieldId": "acheteur_id",
+              "fieldValue": "={{ $('Décider la validation').item.json.acheteur_id }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -2080,
+        256
+      ],
+      "id": "e0eb733d-ca2d-4cb0-bb46-4f24321436bb",
+      "name": "Marquer le rappel validé",
+      "credentials": {
+        "supabaseApi": {
+          "id": "P40Z9AdwC5m9ITuj",
+          "name": "ERA Immo - Estimateur de biens"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "send",
+        "phoneNumberId": "=1327715120426075",
+        "recipientPhoneNumber": "={{ $('WhatsApp Trigger').item.json.messages[0].from }}",
+        "textBody": "={{ 'Tâche enregistrée pour ' + $('Décider la validation').item.json.libelle + ' : ' + ($('Décider la validation').item.json.echeance ? DateTime.fromISO($('Décider la validation').item.json.echeance).setLocale('fr').toFormat('cccc d LLLL') + ' - ' : '') + $('Décider la validation').item.json.texte + '.' }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.whatsApp",
+      "typeVersion": 1.1,
+      "position": [
+        -1856,
+        256
+      ],
+      "id": "f4e69b37-74de-4091-8411-98a6a480a49d",
+      "name": "Confirmer le rappel",
+      "webhookId": "r4pp3e01-0018-4000-8000-000000000018",
+      "credentials": {
+        "whatsAppApi": {
+          "id": "V5Ozbzh5axOaEH7T",
+          "name": "WhatsApp account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://openrouter.ai/api/v1/chat/completions",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({\"model\": \"openai/gpt-4.1-mini\", \"temperature\": 0, \"response_format\": {\"type\": \"json_object\"}, \"messages\": [{\"role\": \"system\", \"content\": \"Nous sommes le \" + $now.setZone('Europe/Paris').setLocale('fr').toFormat('cccc d LLLL yyyy') + \" (\" + $now.setZone('Europe/Paris').toISODate() + \"). Tu qualifies un message d'agent immobilier, en français, vocal transcrit ou texte. Réponds uniquement avec un objet JSON. N'invente rien : chaîne vide si ce n'est pas dit. intention vaut exactement l'une de ces valeurs : question_cible si une question vise une personne dont le prénom et le nom sont dits (Pour Léo Martin, quel est son budget ? / Où en est le financement de Léo Martin ?) ; modification_cible si un changement vise une personne dont le prénom et le nom sont dits (Pour Léo Martin, il veut un T4. / Passe Léo Martin en vert. / Mets le budget de Léo Martin à 450 000.) ; rappel_cible si un rappel vise une personne dont le prénom et le nom sont dits (Pour Léo Martin, créer un rappel pour mardi 29 septembre à 10h. / Rappelle-moi d'envoyer les annonces à Léo Martin jeudi. / Est-ce que Léo Martin a un rappel ? / Quelles sont les tâches de Léo Martin ?) ; consultation si c'est une question sans prénom et nom ensemble (Quel est son budget ? / Le budget de Martin ?) ; modification si c'est un changement sans prénom et nom ensemble (Il veut un T4. / Passe-le en vert. / Budget 400 000, il a vu sa banque, il veut acheter d'ici un mois.) ; synthese si la question porte sur l'ensemble du portefeuille, sans personne visée (Qu'est-ce que je dois faire aujourd'hui ? / Mes rappels du jour / Combien y a-t-il de rappels ? / Affiche-moi mes prospects / Qui sont mes verts ?) ; debrief si c'est une nouvelle fiche ou une description (Léo Martin, T3 à Toulouse centre, budget 380 000 euros, apport déjà constitué, banque pas encore vue, projet à 6 mois.). mode_cible vaut question, modification, rappel_question, rappel_ecriture, ou une chaîne vide. Si intention est question_cible, mode_cible vaut question. Si intention est modification_cible, mode_cible vaut modification. Si intention est rappel_cible et que le message demande si un rappel existe, mode_cible vaut rappel_question, sinon rappel_ecriture. Sinon mode_cible est une chaîne vide. prenom_cible et nom_cible sont le prénom et le nom de la personne visée, avec les majuscules et accents du message. Les deux, ou aucun. nom_cite est le nom d'une consultation quand les deux parties ne sont pas dites, sinon une chaîne vide. sujet vaut budget, financement, delai, score ou fiche pour une question, sinon une chaîne vide. sujet_synthese vaut journee, nombre_rappels, liste_prospects ou prospects_verts quand intention est synthese, sinon une chaîne vide. Qu'est-ce que je dois faire aujourd'hui et mes rappels du jour valent journee. Combien y a-t-il de rappels vaut nombre_rappels. Affiche-moi mes prospects et la liste des prospects valent liste_prospects. Qui sont mes verts vaut prospects_verts. Pour une synthese, prenom_cible, nom_cible, nom_cite et les champs de fiche restent vides. texte_rappel est, pour un rappel à écrire, seulement le moment ou la phrase à retenir, sans le nom. Exemple : mardi 29 septembre à 10h. Chaîne vide si le message demande seulement si un rappel existe. echeance_rappel est, pour un rappel à écrire, le jour de la tâche au format AAAA-MM-JJ, calculé depuis la date du jour : demain, dans 3 jours, un jour de la semaine désigne le prochain jour de ce nom, la semaine prochaine désigne le lundi suivant. Chaîne vide si aucun jour n'est dit. contenu_rappel est ce qu'il faut faire, formulé comme une tâche courte à l'infinitif, sans le nom de la personne, en gardant l'heure si elle est dite (Rappeler vers 10h pour faire le point sur l'offre / Envoyer les nouvelles annonces). Si le message demande un rappel avec seulement un moment, contenu_rappel vaut Rappeler suivi de l'heure si elle est dite (Rappeler à 10h). Chaîne vide si ce n'est pas un rappel à écrire. canal_rappel vaut appel, whatsapp ou email selon le moyen dit ou évident (rappeler ou appeler donne appel, envoyer un message WhatsApp donne whatsapp, envoyer un e-mail donne email), sinon une chaîne vide. message_rappel est, si contenu_rappel n'est pas vide et que la tâche consiste à écrire à la personne ou à la recontacter, un message court, poli et sans signature que l'agent pourrait lui envoyer, en la vouvoyant et en l'appelant par son prénom. Sinon une chaîne vide. Champs de fiche, uniquement ce qui est dit, sinon chaîne vide : nom, prenom, telephone, email, type_bien, secteur, budget, delai, financement. nom est le nom de famille. prenom est le prénom. Pour une nouvelle fiche, sépare-les : Léo Martin donne prenom Léo et nom Martin. telephone est le numéro dit. email est l'adresse e-mail dite. Laisse nom, prenom, telephone et email vides quand ils servent seulement à désigner la personne visée. delai est la formulation du message, par exemple 6 mois ou un mois. financement est la formulation du message. delai_acquisition vaut immediat, moins_d_un_mois, un_a_six_mois, plus_de_six_mois, ou une chaîne vide. Un délai immédiat vaut immediat. D'ici un mois, dans un mois ou moins d'un mois vaut moins_d_un_mois. Un délai de 2 ou 3 mois vaut un_a_six_mois. Un délai de 6 mois ou plus vaut plus_de_six_mois. Chaîne vide si le délai n'est pas dit. financement_statut vaut solide si l'apport est constitué et que la banque a été vue, ou si l'accord est obtenu. Il vaut en_cours si l'apport existe mais que la banque n'a pas encore été vue. Il vaut aucun s'il n'y a pas de démarche. Chaîne vide si le financement n'est pas dit. Si on impose la couleur vert, orange ou rouge, score_impose vaut cette couleur et score_force vaut true. Sinon score_force vaut false et score_impose est une chaîne vide.\"}, {\"role\": \"user\", \"content\": $json.text}]}) }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1280,
+        2128
+      ],
+      "id": "1060168c-071f-41b0-9b48-278e6d1ac0ac",
+      "name": "Lire l'intention",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "6bIjYgv58bFvfX9B",
+          "name": "OpenRouter API \"Era Vocal API\" - MJ"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "110c4f89-09c3-4f66-8b23-ec2ec0fbb441",
+              "leftValue": "={{ $json.intention }}",
+              "rightValue": "synthese",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        1728,
+        4048
+      ],
+      "id": "95ea3076-211d-42bf-8f9f-13dd739e36b0",
+      "name": "Synthèse ?"
+    },
+    {
+      "parameters": {
+        "useCustomSchema": true,
+        "schema": "eravocal",
+        "operation": "get",
+        "tableId": "agents",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "telephone_whatsapp",
+              "keyValue": "={{ $('WhatsApp Trigger').item.json.messages[0].from }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        1952,
+        4048
+      ],
+      "id": "9dc7ba98-c46f-4fa5-aeff-fe2c5ea7d38f",
+      "name": "Trouver l'agent synthèse",
+      "alwaysOutputData": true,
+      "credentials": {
+        "supabaseApi": {
+          "id": "P40Z9AdwC5m9ITuj",
+          "name": "ERA Immo - Estimateur de biens"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "ed70e162-1b6f-4444-8664-b2361c7b8661",
+              "leftValue": "={{ $json.id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        2176,
+        4048
+      ],
+      "id": "a2a9b953-d751-4bc4-bdda-7eaabcfcc3c9",
+      "name": "Agent synthèse ?"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "9ec8bcb7-1fda-4142-b249-fccd8ec7f474",
+              "leftValue": "={{ $('Qualifier le message').item.json.sujet_synthese }}",
+              "rightValue": "liste_prospects",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "1ed9dcb8-c974-4f0e-aff8-818314cc1195",
+              "leftValue": "={{ $('Qualifier le message').item.json.sujet_synthese }}",
+              "rightValue": "prospects_verts",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        2400,
+        4048
+      ],
+      "id": "21dfbe3a-c41e-49f4-aae5-180c8b64ab02",
+      "name": "Portefeuille ?"
+    },
+    {
+      "parameters": {
+        "useCustomSchema": true,
+        "schema": "eravocal",
+        "operation": "getAll",
+        "tableId": "acheteurs",
+        "returnAll": true,
+        "matchType": "allFilters",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "agent_id",
+              "condition": "eq",
+              "keyValue": "={{ $('Trouver l\\'agent synthèse').item.json.id }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        2624,
+        3904
+      ],
+      "id": "b126fde7-3227-4a85-b746-1795fbffe921",
+      "name": "Charger les fiches synthèse",
+      "alwaysOutputData": true,
+      "credentials": {
+        "supabaseApi": {
+          "id": "P40Z9AdwC5m9ITuj",
+          "name": "ERA Immo - Estimateur de biens"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const sujet = $('Qualifier le message').first().json.sujet_synthese;\nconst rows = $input.all().map((item) => item.json).filter((row) => row.id);\nconst liste = sujet === 'prospects_verts' ? rows.filter((row) => row.score === 'vert') : rows.slice();\nconst ordre = { vert: 0, orange: 1, rouge: 2 };\nliste.sort((a, b) => (ordre[a.score] ?? 9) - (ordre[b.score] ?? 9) || String(a.nom || '').localeCompare(String(b.nom || ''), 'fr') || String(a.prenom || '').localeCompare(String(b.prenom || ''), 'fr'));\nif (!liste.length) {\n  const message = sujet === 'prospects_verts' ? 'Aucun prospect en vert.' : 'Aucun prospect enregistré.';\n  return [{ json: { message } }];\n}\nconst max = 20;\nconst shown = liste.slice(0, max);\nconst lignes = shown.map((row, index) => {\n  const identite = [row.prenom, row.nom].filter(Boolean).join(' ') || 'Sans nom';\n  const details = [row.secteur, row.budget, row.score].filter(Boolean).join(' - ');\n  return (index + 1) + '. ' + identite + (details ? ' - ' + details : '');\n});\nlet message = lignes.join('\\n');\nif (liste.length > max) message += '\\net ' + (liste.length - max) + ' autres';\nreturn [{ json: { message } }];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2848,
+        3904
+      ],
+      "id": "9780c955-ded1-4765-9165-8059345fee94",
+      "name": "Rédiger la liste"
+    },
+    {
+      "parameters": {
+        "useCustomSchema": true,
+        "schema": "eravocal",
+        "operation": "getAll",
+        "tableId": "rappels",
+        "returnAll": true,
+        "matchType": "allFilters",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "agent_id",
+              "condition": "eq",
+              "keyValue": "={{ $('Trouver l\\'agent synthèse').item.json.id }}"
+            },
+            {
+              "keyName": "statut",
+              "condition": "eq",
+              "keyValue": "a_faire"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        2624,
+        4192
+      ],
+      "id": "c499db6c-1026-4245-871d-e1990a8c6f07",
+      "name": "Charger les rappels synthèse",
+      "alwaysOutputData": true,
+      "credentials": {
+        "supabaseApi": {
+          "id": "P40Z9AdwC5m9ITuj",
+          "name": "ERA Immo - Estimateur de biens"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "useCustomSchema": true,
+        "schema": "eravocal",
+        "operation": "getAll",
+        "tableId": "acheteurs",
+        "returnAll": true,
+        "matchType": "allFilters",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "agent_id",
+              "condition": "eq",
+              "keyValue": "={{ $('Trouver l\\'agent synthèse').item.json.id }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        2848,
+        4192
+      ],
+      "id": "8dbde5b2-068a-43df-8557-22fb6b9d3691",
+      "name": "Charger les acheteurs synthèse",
+      "alwaysOutputData": true,
+      "credentials": {
+        "supabaseApi": {
+          "id": "P40Z9AdwC5m9ITuj",
+          "name": "ERA Immo - Estimateur de biens"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const sujet = $('Qualifier le message').first().json.sujet_synthese;\nconst rappels = $('Charger les rappels synthèse').all().map((item) => item.json).filter((row) => row.id && (row.statut || 'a_faire') === 'a_faire');\nconst fiches = $input.all().map((item) => item.json).filter((row) => row.id);\nconst parId = new Map(fiches.map((fiche) => [fiche.id, fiche]));\nconst aujourdhui = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Paris', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date());\nfunction jour(iso) {\n  if (!iso) return 'sans jour';\n  const date = new Date(iso + 'T12:00:00Z');\n  if (Number.isNaN(date.getTime())) return iso;\n  return new Intl.DateTimeFormat('fr-FR', { timeZone: 'Europe/Paris', weekday: 'long', day: 'numeric', month: 'long' }).format(date);\n}\nfunction canal(value) {\n  if (value === 'whatsapp') return 'WhatsApp';\n  if (value === 'email') return 'e-mail';\n  if (value === 'appel') return 'appel';\n  return '';\n}\nif (sujet === 'nombre_rappels') {\n  const n = rappels.length;\n  const message = n === 0 ? 'Aucun rappel.' : (n === 1 ? 'Vous avez 1 rappel.' : 'Vous avez ' + n + ' rappels.');\n  return [{ json: { message } }];\n}\nconst duJour = rappels.filter((row) => !row.echeance || row.echeance <= aujourdhui);\nduJour.sort((a, b) => String(a.echeance || '9999-99-99').localeCompare(String(b.echeance || '9999-99-99')));\nif (!duJour.length) return [{ json: { message: \"Rien à faire aujourd'hui.\" } }];\nconst max = 20;\nconst shown = duJour.slice(0, max);\nconst lignes = shown.map((row) => {\n  const fiche = parId.get(row.acheteur_id);\n  const qui = fiche ? ([fiche.prenom, fiche.nom].filter(Boolean).join(' ') || 'Sans nom') : 'Fiche inconnue';\n  const quand = jour(row.echeance);\n  const retard = row.echeance && row.echeance < aujourdhui ? 'En retard, ' : '';\n  const voie = canal(row.canal);\n  return qui + ' : ' + retard + quand + ', ' + (row.texte || '') + (voie ? ' (' + voie + ')' : '');\n});\nlet message = 'À faire :\\n' + lignes.join('\\n');\nif (duJour.length > max) message += '\\net ' + (duJour.length - max) + ' autres';\nreturn [{ json: { message } }];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3072,
+        4192
+      ],
+      "id": "840b34b9-2961-40d5-9a58-5c8015aeaf63",
+      "name": "Rédiger la journée"
+    },
+    {
+      "parameters": {
+        "operation": "send",
+        "phoneNumberId": "=1327715120426075",
+        "recipientPhoneNumber": "={{ $('WhatsApp Trigger').item.json.messages[0].from }}",
+        "textBody": "={{ $json.message }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.whatsApp",
+      "typeVersion": 1.1,
+      "position": [
+        3520,
+        4048
+      ],
+      "id": "181c0bb2-78b7-4f92-af1e-765276461e87",
+      "name": "Envoyer la synthèse",
+      "webhookId": "7ea24898-ac7c-4e64-a8ca-26a92062fd34",
+      "credentials": {
+        "whatsAppApi": {
+          "id": "V5Ozbzh5axOaEH7T",
+          "name": "WhatsApp account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "WhatsApp Trigger": {
+      "main": [
+        [
+          {
+            "node": "Message reçu ?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message reçu ?": {
+      "main": [
+        [
+          {
+            "node": "Lire la commande",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Vocal ?": {
+      "main": [
+        [
+          {
+            "node": "Obtenir l'URL du média",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Préparer le texte",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Obtenir l'URL du média": {
+      "main": [
+        [
+          {
+            "node": "Télécharger le vocal",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Télécharger le vocal": {
+      "main": [
+        [
+          {
+            "node": "Encoder en base64",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Encoder en base64": {
+      "main": [
+        [
+          {
+            "node": "Transcrire",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Transcrire": {
+      "main": [
+        [
+          {
+            "node": "Commande du vocal",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extraire la fiche": {
+      "main": [
+        [
+          {
+            "node": "Calculer le score",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Préparer le texte": {
+      "main": [
+        [
+          {
+            "node": "Lire l'intention",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Calculer le score": {
+      "main": [
+        [
+          {
+            "node": "Formater le résumé",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Formater le résumé": {
+      "main": [
+        [
+          {
+            "node": "Trouver l'agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Trouver l'agent": {
+      "main": [
+        [
+          {
+            "node": "Agent connu ?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Agent connu ?": {
+      "main": [
+        [
+          {
+            "node": "Décider la recherche",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Répondre numéro inconnu",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Remplacer l'ancien brouillon": {
+      "main": [
+        [
+          {
+            "node": "Préparer l'enregistrement",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Préparer l'enregistrement": {
+      "main": [
+        [
+          {
+            "node": "Enregistrer le débrief",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Enregistrer le débrief": {
+      "main": [
+        [
+          {
+            "node": "Enregistrer le brouillon",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Enregistrer le brouillon": {
+      "main": [
+        [
+          {
+            "node": "Envoyer la transcription",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Lire la commande": {
+      "main": [
+        [
+          {
+            "node": "Commande ?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Commande ?": {
+      "main": [
+        [
+          {
+            "node": "Trouver l'agent pour valider",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Vocal ?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Trouver l'agent pour valider": {
+      "main": [
+        [
+          {
+            "node": "Agent pour valider ?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Agent pour valider ?": {
+      "main": [
+        [
+          {
+            "node": "Charger le brouillon",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Répondre numéro inconnu",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Charger le brouillon": {
+      "main": [
+        [
+          {
+            "node": "Décider la validation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Décider la validation": {
+      "main": [
+        [
+          {
+            "node": "Valider le rappel ?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Valider ?": {
+      "main": [
+        [
+          {
+            "node": "Mise à jour ?",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Annuler ?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Créer la fiche": {
+      "main": [
+        [
+          {
+            "node": "Marquer validée",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Marquer validée": {
+      "main": [
+        [
+          {
+            "node": "Confirmer l'enregistrement",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Annuler ?": {
+      "main": [
+        [
+          {
+            "node": "Marquer annulée",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Consulter ?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Marquer annulée": {
+      "main": [
+        [
+          {
+            "node": "Confirmer l'annulation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Incomplet ?": {
+      "main": [
+        [
+          {
+            "node": "Demander les champs",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Répondre aucun brouillon",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Trouver l'agent avant correction": {
+      "main": [
+        [
+          {
+            "node": "Agent avant correction ?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Agent avant correction ?": {
+      "main": [
+        [
+          {
+            "node": "Charger le brouillon avant correction",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Préparer le prompt de fusion",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Charger le brouillon avant correction": {
+      "main": [
+        [
+          {
+            "node": "Préparer le prompt de fusion",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Préparer le prompt de fusion": {
+      "main": [
+        [
+          {
+            "node": "Extraire la fiche",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Décider la recherche": {
+      "main": [
+        [
+          {
+            "node": "Correction en cours ?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Correction en cours ?": {
+      "main": [
+        [
+          {
+            "node": "Remplacer l'ancien brouillon",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Charger les fiches de l'agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Charger les fiches de l'agent": {
+      "main": [
+        [
+          {
+            "node": "Chercher les homonymes",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Chercher les homonymes": {
+      "main": [
+        [
+          {
+            "node": "Remplacer l'ancien brouillon",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Choix en attente ?": {
+      "main": [
+        [
+          {
+            "node": "Rappeler le choix",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Pas un choix ?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Nouvelle ou mise à jour ?": {
+      "main": [
+        [
+          {
+            "node": "Enregistrer le choix",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Choix en attente ?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Enregistrer le choix": {
+      "main": [
+        [
+          {
+            "node": "Envoyer le résumé du choix",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Pas un choix ?": {
+      "main": [
+        [
+          {
+            "node": "Vocal ?",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Incomplet ?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mise à jour ?": {
+      "main": [
+        [
+          {
+            "node": "Mettre à jour la fiche",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Créer la fiche",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mettre à jour la fiche": {
+      "main": [
+        [
+          {
+            "node": "Marquer validée",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Qualifier le message": {
+      "main": [
+        [
+          {
+            "node": "Synthèse ?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Consultation ?": {
+      "main": [
+        [
+          {
+            "node": "Trouver l'agent consultation",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Modification ?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Nom cité ?": {
+      "main": [
+        [
+          {
+            "node": "Charger les fiches consultation",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Question sans nom",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Trouver l'agent consultation": {
+      "main": [
+        [
+          {
+            "node": "Nom cité ?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Charger les fiches consultation": {
+      "main": [
+        [
+          {
+            "node": "Décider la consultation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Décider la consultation": {
+      "main": [
+        [
+          {
+            "node": "Liste de consultation ?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Liste de consultation ?": {
+      "main": [
+        [
+          {
+            "node": "Remplacer avant consultation",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Réponse immédiate ?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Remplacer avant consultation": {
+      "main": [
+        [
+          {
+            "node": "Enregistrer la consultation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Enregistrer la consultation": {
+      "main": [
+        [
+          {
+            "node": "Envoyer la liste de consultation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Réponse immédiate ?": {
+      "main": [
+        [
+          {
+            "node": "Rédiger la réponse",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Envoyer aucune fiche",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Question sans nom": {
+      "main": [
+        [
+          {
+            "node": "Chercher la session question",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Chercher la session question": {
+      "main": [
+        [
+          {
+            "node": "Fiche active ?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fiche active ?": {
+      "main": [
+        [
+          {
+            "node": "Charger la fiche active",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Répondre aucune fiche active",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Charger la fiche active": {
+      "main": [
+        [
+          {
+            "node": "Rédiger la réponse",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Consulter ?": {
+      "main": [
+        [
+          {
+            "node": "Charger la fiche consultée",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Modifier la cible ?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Charger la fiche consultée": {
+      "main": [
+        [
+          {
+            "node": "Rédiger la réponse",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Rédiger la réponse": {
+      "main": [
+        [
+          {
+            "node": "Enregistrer la session ?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Enregistrer la session ?": {
+      "main": [
+        [
+          {
+            "node": "Chercher la session",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Envoyer la réponse",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Chercher la session": {
+      "main": [
+        [
+          {
+            "node": "Session connue ?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Session connue ?": {
+      "main": [
+        [
+          {
+            "node": "Mettre à jour la session",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Créer la session",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mettre à jour la session": {
+      "main": [
+        [
+          {
+            "node": "Clôturer ?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Créer la session": {
+      "main": [
+        [
+          {
+            "node": "Clôturer ?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Clôturer ?": {
+      "main": [
+        [
+          {
+            "node": "Clôturer la consultation",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Envoyer la réponse",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Clôturer la consultation": {
+      "main": [
+        [
+          {
+            "node": "Envoyer la réponse",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Modification ?": {
+      "main": [
+        [
+          {
+            "node": "Trouver l'agent modification",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Trouver l'agent avant correction",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Trouver l'agent modification": {
+      "main": [
+        [
+          {
+            "node": "Charger le brouillon modification",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Charger le brouillon modification": {
+      "main": [
+        [
+          {
+            "node": "Brouillon déjà ouvert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Brouillon déjà ouvert": {
+      "main": [
+        [
+          {
+            "node": "Suivre le brouillon ?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Suivre le brouillon ?": {
+      "main": [
+        [
+          {
+            "node": "Trouver l'agent avant correction",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Chercher la session modification",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Chercher la session modification": {
+      "main": [
+        [
+          {
+            "node": "Fiche à modifier ?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fiche à modifier ?": {
+      "main": [
+        [
+          {
+            "node": "Charger la fiche à modifier",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Aucune fiche à modifier",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Charger la fiche à modifier": {
+      "main": [
+        [
+          {
+            "node": "Préparer la modification",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Préparer la modification": {
+      "main": [
+        [
+          {
+            "node": "Extraire la modification",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extraire la modification": {
+      "main": [
+        [
+          {
+            "node": "Appliquer la modification",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Appliquer la modification": {
+      "main": [
+        [
+          {
+            "node": "Remplacer avant modification",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Remplacer avant modification": {
+      "main": [
+        [
+          {
+            "node": "Enregistrer la modification",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Enregistrer la modification": {
+      "main": [
+        [
+          {
+            "node": "Envoyer la modification",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Commande du vocal": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Trouver l'agent pour valider",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Lire l'intention",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Cible nommée ?": {
+      "main": [
+        [
+          {
+            "node": "Trouver l'agent cible",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Consultation ?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Trouver l'agent cible": {
+      "main": [
+        [
+          {
+            "node": "Charger les fiches cible",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Charger les fiches cible": {
+      "main": [
+        [
+          {
+            "node": "Décider la cible",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Décider la cible": {
+      "main": [
+        [
+          {
+            "node": "Liste de cibles ?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Liste de cibles ?": {
+      "main": [
+        [
+          {
+            "node": "Remplacer avant cible",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Rappel demandé ?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Remplacer avant cible": {
+      "main": [
+        [
+          {
+            "node": "Enregistrer le choix cible",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Enregistrer le choix cible": {
+      "main": [
+        [
+          {
+            "node": "Envoyer la liste cible",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Une cible ?": {
+      "main": [
+        [
+          {
+            "node": "Charger la fiche nommée",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Envoyer aucune cible",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Charger la fiche nommée": {
+      "main": [
+        [
+          {
+            "node": "Préparer la modification",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Modifier la cible ?": {
+      "main": [
+        [
+          {
+            "node": "Charger la fiche choisie",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Suite rappel ?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Charger la fiche choisie": {
+      "main": [
+        [
+          {
+            "node": "Préparer la modification",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Rappel cible ?": {
+      "main": [
+        [
+          {
+            "node": "Envoyer le rappel cible",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Nouvelle ou mise à jour ?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Réponse cible ?": {
+      "main": [
+        [
+          {
+            "node": "Envoyer la réponse cible",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Une cible ?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Rappel demandé ?": {
+      "main": [
+        [
+          {
+            "node": "Unifier le rappel",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Réponse cible ?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Suite rappel ?": {
+      "main": [
+        [
+          {
+            "node": "Unifier le rappel",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Rappel cible ?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Unifier le rappel": {
+      "main": [
+        [
+          {
+            "node": "Charger le rappel",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Charger le rappel": {
+      "main": [
+        [
+          {
+            "node": "Rédiger le rappel",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Rédiger le rappel": {
+      "main": [
+        [
+          {
+            "node": "Question sur le rappel ?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Question sur le rappel ?": {
+      "main": [
+        [
+          {
+            "node": "Envoyer la réponse rappel",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Remplacer avant rappel",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Remplacer avant rappel": {
+      "main": [
+        [
+          {
+            "node": "Enregistrer le brouillon rappel",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Enregistrer le brouillon rappel": {
+      "main": [
+        [
+          {
+            "node": "Envoyer le brouillon rappel",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Valider le rappel ?": {
+      "main": [
+        [
+          {
+            "node": "Créer le rappel",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Valider ?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Créer le rappel": {
+      "main": [
+        [
+          {
+            "node": "Marquer le rappel validé",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Marquer le rappel validé": {
+      "main": [
+        [
+          {
+            "node": "Confirmer le rappel",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Lire l'intention": {
+      "main": [
+        [
+          {
+            "node": "Qualifier le message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Synthèse ?": {
+      "main": [
+        [
+          {
+            "node": "Trouver l'agent synthèse",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Cible nommée ?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Trouver l'agent synthèse": {
+      "main": [
+        [
+          {
+            "node": "Agent synthèse ?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Agent synthèse ?": {
+      "main": [
+        [
+          {
+            "node": "Portefeuille ?",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Répondre numéro inconnu",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Portefeuille ?": {
+      "main": [
+        [
+          {
+            "node": "Charger les fiches synthèse",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Charger les rappels synthèse",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Charger les fiches synthèse": {
+      "main": [
+        [
+          {
+            "node": "Rédiger la liste",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Rédiger la liste": {
+      "main": [
+        [
+          {
+            "node": "Envoyer la synthèse",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Charger les rappels synthèse": {
+      "main": [
+        [
+          {
+            "node": "Charger les acheteurs synthèse",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Charger les acheteurs synthèse": {
+      "main": [
+        [
+          {
+            "node": "Rédiger la journée",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Rédiger la journée": {
+      "main": [
+        [
+          {
+            "node": "Envoyer la synthèse",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "c35146103cd121b53fb9acd2e059239ba8c3dc42685aed8a56d8287677cacccc"
+  }
+}
