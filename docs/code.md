@@ -25,7 +25,7 @@ Formatage : `pnpm format` (oxfmt). Toolchain dans `.mise.toml`.
 
 ## Limites à respecter
 
-- L'app lit `eravocal.acheteurs` et `eravocal.rappels`. Seule écriture : terminer, annuler ou modifier une tâche (`rappels`, colonnes autorisées à `anon`). Pas de création ni de suppression, pas d'auth, pas d'envoi WhatsApp réel.
+- L'app lit `eravocal.acheteurs` et `eravocal.rappels`. Écritures : terminer, annuler ou modifier une tâche (`rappels`), et modifier les freins et motivations d'un prospect (`acheteurs.freins`, `acheteurs.motivations`), colonnes autorisées à `anon`. Pas de création ni de suppression, pas d'auth, pas d'envoi WhatsApp réel.
 - Toute évolution du schéma passe par une migration dans `supabase/migrations/`, puis régénération de `src/lib/database.types.ts`.
 - Ne pas transformer une feuille placeholder (`SimpleEditSheet`) en formulaire complet sans demande : le brief de fiche veut une édition par section, le code ne l'a pas encore.
 - Ne pas aligner de force l'analyse WhatsApp sur la fiche Sophie : les deux jeux de chiffres illustrent deux moments (fiche actuelle et vocal plus récent).

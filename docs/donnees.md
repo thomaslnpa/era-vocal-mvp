@@ -6,7 +6,7 @@ Deux sources, réelles et démo, pour les prospects comme pour les tâches. Tout
 
 Fusionnés par `useProspects()` :
 
-- Réel : table `eravocal.acheteurs` (Supabase, lecture seule avec la clé anon), mise à jour en temps réel (Realtime). `acheteurToProspect` convertit une ligne en `Prospect` : `score` rouge/orange/vert vers `ROUGE`/`ORANGE`/`VERT` (valeurs de la base), champs absents laissés vides (affichés `-`), pas d'historique propre.
+- Réel : table `eravocal.acheteurs` (Supabase, lecture avec la clé anon, écriture limitée à `freins` et `motivations`), mise à jour en temps réel (Realtime). `acheteurToProspect` convertit une ligne en `Prospect` : `score` rouge/orange/vert vers `ROUGE`/`ORANGE`/`VERT` (valeurs de la base), champs absents laissés vides (affichés `-`), pas d'historique propre.
 - Démo : `PROSPECTS` (5 fiches fictives, `isDemo: true`, pastille « Démo »). Seules ces fiches affichent les valeurs en dur de la fiche détail (`d()` dans `DetailScreen`).
 
 Client : `src/lib/supabase.ts`, types générés : `src/lib/database.types.ts` (`supabase gen types typescript --linked --schema eravocal`). Droits `anon` : voir `supabase/migrations/`.
@@ -17,7 +17,7 @@ Client : `src/lib/supabase.ts`, types générés : `src/lib/database.types.ts` (
 - `qualification` : `ROUGE` | `ORANGE` | `VERT`
 - `typeBien`, `typologie`, `secteur`, `budget`, `horizon` (chaînes affichées, pas des nombres)
 - `financement`, `apport`, `criteres` (liste de chaînes)
-- `motivation`, `frein`
+- `motivations`, `freins` : listes de phrases courtes. Réel : colonnes `text[]` de `acheteurs` (migration `20261005160000_eravocal_freins_motivations.sql`), alimentées par l'agent WhatsApp après validation et modifiables sur la fiche (`modifierListes` de `useProspects`, mise à jour optimiste puis `update`). Démo : état local, perdu au rechargement.
 - `historique` : `{ date, type, resume }`, type `vocal` | `note` | `tache`
 
 Cinq fiches de démo : Sophie Martin (ORANGE), Julien Morel (ROUGE), Émilie Laurent (VERT), Camille Bernard (ORANGE), Thomas Garcia (ROUGE).
@@ -58,9 +58,13 @@ Droits `anon` (démo, pas pour la production) : lecture, et mise à jour de `sta
 
 ### Création par n8n
 
-Le workflow (`EraVocal/workflow-n8n`, copie dans `.figma/workflow-n8n.json`) extrait du vocal ou du texte le prospect, le jour (`echeance_rappel`, calculé depuis la date du jour), le contenu, le canal et un message suggéré. Sans jour ou sans contenu, il demande de renvoyer la demande complète et n'écrit rien. Sinon il soumet un brouillon dans `validations_en_attente` ; sur « OK », il insère toujours une nouvelle ligne dans `rappels`.
+Le workflow (`EraVocal/workflow-n8n`, copie dans `.figma/workflow-n8n.json`) extrait du vocal ou du texte le prospect, le jour (`echeance_rappel`, calculé depuis la date du jour), le contenu, le canal, un message suggéré et un contexte (`contexte_rappel`, la raison de la tâche). Sans contexte dans le message, il reprend le premier frein de la fiche, sinon sa première motivation. Sans jour ou sans contenu, il demande de renvoyer la demande complète et n'écrit rien. Sinon il soumet un brouillon dans `validations_en_attente` ; sur « OK », il insère toujours une nouvelle ligne dans `rappels`.
 
-Limites : pas de complément en deux messages, et « décale le rappel » crée une nouvelle tâche. Le report se fait depuis l'app.
+### Freins et motivations par n8n
+
+Le prompt extrait `freins_ajoutes`, `freins_leves`, `motivations_ajoutees` et `motivations_levees`. Ils sont fusionnés avec la fiche (retrait des éléments levés sans tenir compte des accents ni de la casse, ajout sans doublon), affichés dans le résumé à valider, puis écrits par « Créer la fiche » ou « Mettre à jour la fiche ». Pour une mise à jour choisie parmi des homonymes, la fusion se fait au moment du choix, à partir des listes de la fiche candidate.
+
+Limites : un message n'a qu'une intention. Un frein dit dans une demande de tâche devient le contexte de la tâche, sans être ajouté à la fiche. Pas de complément en deux messages, et « décale le rappel » crée une nouvelle tâche. Le report se fait depuis l'app.
 
 ## État d'application
 

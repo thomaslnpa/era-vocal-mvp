@@ -12,10 +12,10 @@
         "type": "n8n-nodes-base.whatsAppTrigger",
         "typeVersion": 1,
         "position": [
-          -12256,
-          4000
+          -4320,
+          2176
         ],
-        "id": "997e0d63-f240-489e-aeba-a2c75911f209",
+        "id": "26fd1e6b-7b82-422c-a625-4e9ed7d2cfd7",
         "name": "WhatsApp Trigger",
         "webhookId": "fad21884-e143-4b72-a1a3-15b3f679fde0",
         "credentials": {
@@ -53,10 +53,10 @@
         "type": "n8n-nodes-base.if",
         "typeVersion": 2,
         "position": [
-          -12032,
-          4000
+          -4096,
+          2176
         ],
-        "id": "eea9663a-b5ca-4b30-9d64-56ee71f0468c",
+        "id": "96e9c4a2-0a45-4917-a26b-2b8ee4bc2054",
         "name": "Message reçu ?"
       },
       {
@@ -86,10 +86,10 @@
         "type": "n8n-nodes-base.if",
         "typeVersion": 2,
         "position": [
-          -11360,
-          3040
+          -288,
+          2128
         ],
-        "id": "635d65b9-b02f-4870-997d-bf20c6781767",
+        "id": "eba61f82-dc71-4b7a-83bd-e0d0567ecc4c",
         "name": "Vocal ?"
       },
       {
@@ -102,10 +102,10 @@
         "type": "n8n-nodes-base.httpRequest",
         "typeVersion": 4.4,
         "position": [
-          -11136,
-          944
+          -64,
+          1296
         ],
-        "id": "41e76df4-d4a1-42ad-acf7-e11a9796e08b",
+        "id": "b95fb50b-86df-4360-8952-6365b2d0dd6d",
         "name": "Obtenir l'URL du média",
         "credentials": {
           "whatsAppApi": {
@@ -130,10 +130,10 @@
         "type": "n8n-nodes-base.httpRequest",
         "typeVersion": 4.4,
         "position": [
-          -10912,
-          944
+          160,
+          1296
         ],
-        "id": "4889315d-bbfd-4f20-b801-ed28e56fcedf",
+        "id": "40e57de3-1ab9-40dd-95d6-2c931e5c2cfc",
         "name": "Télécharger le vocal",
         "credentials": {
           "whatsAppApi": {
@@ -149,10 +149,10 @@
         "type": "n8n-nodes-base.code",
         "typeVersion": 2,
         "position": [
-          -10688,
-          944
+          384,
+          1296
         ],
-        "id": "562098f0-d684-42dc-aed3-c620af38878c",
+        "id": "4e5dc8fa-bbb4-4b3f-8910-2ffc96b34235",
         "name": "Encoder en base64"
       },
       {
@@ -169,10 +169,10 @@
         "type": "n8n-nodes-base.httpRequest",
         "typeVersion": 4.4,
         "position": [
-          -10464,
-          944
+          608,
+          1296
         ],
-        "id": "2b2b784a-42b9-49a4-8c10-78a4c86eb153",
+        "id": "086483b3-cfcb-49ed-b8e6-09915c66c2e3",
         "name": "Transcrire",
         "credentials": {
           "httpHeaderAuth": {
@@ -183,15 +183,15 @@
       },
       {
         "parameters": {
-          "jsCode": "function fusionner(base, dit, creation) {\n  const data = Object.assign({}, base || {});\n  const cles = ['nom', 'prenom', 'telephone', 'email', 'type_bien', 'secteur', 'budget', 'delai', 'financement', 'delai_acquisition', 'financement_statut'];\n  for (const cle of cles) {\n    if (dit[cle]) data[cle] = dit[cle];\n  }\n  if (!data.prenom && data.nom && String(data.nom).includes(' ')) {\n    const parts = String(data.nom).split(/\\s+/).filter(Boolean);\n    if (parts.length >= 2) {\n      data.prenom = parts[0];\n      data.nom = parts.slice(1).join(' ');\n    }\n  }\n  if (dit.score_force) {\n    data.score_force = true;\n    data.score_impose = dit.score_impose;\n  } else {\n    data.score_force = false;\n    data.score_impose = '';\n  }\n  if (!data.financement_statut) data.financement_statut = 'inconnu';\n  data.champs_manquants = [];\n  if (creation) {\n    if (!data.nom) data.champs_manquants.push('nom');\n    if (!data.prenom) data.champs_manquants.push('prénom');\n    if (!data.telephone && !data.email) data.champs_manquants.push('téléphone ou e-mail');\n  }\n  return data;\n}\nconst dit = $('Qualifier le message').first().json.dit || {};\nlet base = {};\nlet creation = true;\ntry {\n  const row = $('Charger le brouillon avant correction').all().map((item) => item.json).find((entry) => entry.id && entry.brouillon && entry.type !== 'choix_homonyme');\n  if (row) {\n    base = row.brouillon;\n    if (row.type === 'mise_a_jour') creation = false;\n  }\n} catch (e) {}\nreturn [{ json: fusionner(base, dit, creation) }];\n"
+          "jsCode": "function fusionner(base, dit, creation) {\n  const data = Object.assign({}, base || {});\n  const cles = ['nom', 'prenom', 'telephone', 'email', 'type_bien', 'secteur', 'budget', 'delai', 'financement', 'delai_acquisition', 'financement_statut'];\n  for (const cle of cles) {\n    if (dit[cle]) data[cle] = dit[cle];\n  }\n  if (!data.prenom && data.nom && String(data.nom).includes(' ')) {\n    const parts = String(data.nom).split(/\\s+/).filter(Boolean);\n    if (parts.length >= 2) {\n      data.prenom = parts[0];\n      data.nom = parts.slice(1).join(' ');\n    }\n  }\n  if (dit.score_force) {\n    data.score_force = true;\n    data.score_impose = dit.score_impose;\n  } else {\n    data.score_force = false;\n    data.score_impose = '';\n  }\n  const cleListe = (value) => String(value || '').trim().toLowerCase().normalize('NFD').replace(/[\\u0300-\\u036f]/g, '');\n  const fusionListe = (actuelle, ajouts, retraits) => {\n    const leves = (retraits || []).map(cleListe);\n    const resultat = (Array.isArray(actuelle) ? actuelle : []).filter((item) => !leves.includes(cleListe(item)));\n    for (const item of ajouts || []) {\n      if (!resultat.some((existant) => cleListe(existant) === cleListe(item))) resultat.push(item);\n    }\n    return resultat;\n  };\n  data.freins = fusionListe(data.freins, dit.freins_ajoutes, dit.freins_leves);\n  data.motivations = fusionListe(data.motivations, dit.motivations_ajoutees, dit.motivations_levees);\n  data.freins_leves = fusionListe(data.freins_leves, dit.freins_leves, dit.freins_ajoutes);\n  data.motivations_levees = fusionListe(data.motivations_levees, dit.motivations_levees, dit.motivations_ajoutees);\n  if (!data.financement_statut) data.financement_statut = 'inconnu';\n  data.champs_manquants = [];\n  if (creation) {\n    if (!data.nom) data.champs_manquants.push('nom');\n    if (!data.prenom) data.champs_manquants.push('prénom');\n    if (!data.telephone && !data.email) data.champs_manquants.push('téléphone ou e-mail');\n  }\n  return data;\n}\nconst dit = $('Qualifier le message').first().json.dit || {};\nlet base = {};\nlet creation = true;\ntry {\n  const row = $('Charger le brouillon avant correction').all().map((item) => item.json).find((entry) => entry.id && entry.brouillon && entry.type !== 'choix_homonyme');\n  if (row) {\n    base = row.brouillon;\n    if (row.type === 'mise_a_jour') creation = false;\n  }\n} catch (e) {}\nreturn [{ json: fusionner(base, dit, creation) }];\n"
         },
         "type": "n8n-nodes-base.code",
         "typeVersion": 2,
         "position": [
-          -7104,
-          1712
+          4192,
+          3232
         ],
-        "id": "bb1a8a57-1bff-4434-8e45-cdde991cecf6",
+        "id": "1b1e888d-bdcb-4ed4-98e7-0917f8a4291f",
         "name": "Extraire la fiche"
       },
       {
@@ -201,10 +201,10 @@
         "type": "n8n-nodes-base.code",
         "typeVersion": 2,
         "position": [
-          -10016,
-          4000
+          1056,
+          2992
         ],
-        "id": "1b813f54-710e-47eb-84b0-dcd47408f168",
+        "id": "2d237b9e-7f79-4ba2-b48d-022b960619a9",
         "name": "Préparer le texte"
       },
       {
@@ -214,23 +214,23 @@
         "type": "n8n-nodes-base.code",
         "typeVersion": 2,
         "position": [
-          -6880,
-          1712
+          4416,
+          3232
         ],
-        "id": "2e1f3107-225a-45ac-8a98-f5fd25d01abb",
+        "id": "9bd71839-3bbf-4444-ae5a-d2fc1e2500f5",
         "name": "Calculer le score"
       },
       {
         "parameters": {
-          "jsCode": "const data = $input.first().json.extraction;\nconst score = $input.first().json.score;\nconst line = (label, value) => (value ? label + ' : ' + value : null);\nconst lines = [\n  [data.prenom, data.nom].filter(Boolean).join(' ') || 'Nom non précisé',\n  line('Téléphone', data.telephone),\n  line('E-mail', data.email),\n  [data.type_bien, data.secteur].filter(Boolean).join(', '),\n  line('Budget', data.budget),\n  data.financement || null,\n  line('Délai', data.delai),\n  'Score : ' + score,\n].filter(Boolean);\nif (Array.isArray(data.champs_manquants) && data.champs_manquants.length) {\n  lines.push('Manque : ' + data.champs_manquants.join(', '));\n}\nreturn [{ json: { resume: lines.join('\\n'), extraction: data, score } }];"
+          "jsCode": "const data = $input.first().json.extraction;\nconst score = $input.first().json.score;\nconst line = (label, value) => (value ? label + ' : ' + value : null);\nconst lines = [\n  [data.prenom, data.nom].filter(Boolean).join(' ') || 'Nom non précisé',\n  line('Téléphone', data.telephone),\n  line('E-mail', data.email),\n  [data.type_bien, data.secteur].filter(Boolean).join(', '),\n  line('Budget', data.budget),\n  data.financement || null,\n  line('Délai', data.delai),\n  line('Freins', (data.freins || []).join(', ')), line('Motivations', (data.motivations || []).join(', ')),\n  'Score : ' + score,\n].filter(Boolean);\nif (Array.isArray(data.champs_manquants) && data.champs_manquants.length) {\n  lines.push('Manque : ' + data.champs_manquants.join(', '));\n}\nreturn [{ json: { resume: lines.join('\\n'), extraction: data, score } }];"
         },
         "type": "n8n-nodes-base.code",
         "typeVersion": 2,
         "position": [
-          -6656,
-          1712
+          4640,
+          3232
         ],
-        "id": "6868228f-a527-4b2d-a43c-143cf18ca351",
+        "id": "31c0624e-7a1c-4acd-a944-f1f5d4d08d5e",
         "name": "Formater le résumé"
       },
       {
@@ -244,10 +244,10 @@
         "type": "n8n-nodes-base.whatsApp",
         "typeVersion": 1.1,
         "position": [
-          -4192,
-          1664
+          7104,
+          3328
         ],
-        "id": "2bcbbcb0-3228-4d25-9b58-df13ff5bdb53",
+        "id": "2e5c214e-7645-42b2-b93e-4ee3e73a89ee",
         "name": "Envoyer la transcription",
         "webhookId": "4d2a8878-145c-4129-b3f0-3efd60d3daa4",
         "credentials": {
@@ -275,10 +275,10 @@
         "type": "n8n-nodes-base.supabase",
         "typeVersion": 1,
         "position": [
-          -6432,
-          1712
+          4864,
+          3232
         ],
-        "id": "bceb1b0a-0710-4a12-ae63-fec170a95085",
+        "id": "9b290708-30bf-4db0-a8b9-510f1768b841",
         "name": "Trouver l'agent",
         "alwaysOutputData": true,
         "credentials": {
@@ -315,10 +315,10 @@
         "type": "n8n-nodes-base.if",
         "typeVersion": 2,
         "position": [
-          -6208,
-          1712
+          5088,
+          3232
         ],
-        "id": "d3e1c669-89ca-478a-aa5d-1f34b87bebc2",
+        "id": "3795b0c9-b654-445b-b2e7-3d4ceee914d2",
         "name": "Agent connu ?"
       },
       {
@@ -332,10 +332,10 @@
         "type": "n8n-nodes-base.whatsApp",
         "typeVersion": 1.1,
         "position": [
-          -5984,
-          2224
+          5312,
+          160
         ],
-        "id": "c56410a2-6b58-4ad9-bc21-356e4c78ac33",
+        "id": "7c30fb1a-d5e0-4700-84f0-a66312d61759",
         "name": "Répondre numéro inconnu",
         "webhookId": "0c78a749-70fe-4706-b62d-9fd337ea138d",
         "credentials": {
@@ -378,10 +378,10 @@
         "type": "n8n-nodes-base.supabase",
         "typeVersion": 1,
         "position": [
-          -5088,
-          1664
+          6208,
+          3328
         ],
-        "id": "b07336ca-eca7-40db-ad49-e43235c24faa",
+        "id": "ccaa84c0-a82d-44b9-9a20-26e456c1cb4d",
         "name": "Remplacer l'ancien brouillon",
         "alwaysOutputData": true,
         "credentials": {
@@ -398,10 +398,10 @@
         "type": "n8n-nodes-base.code",
         "typeVersion": 2,
         "position": [
-          -4864,
-          1664
+          6432,
+          3328
         ],
-        "id": "852dd031-596c-4c92-81b5-2a5348272314",
+        "id": "2317cc04-31bb-4d50-9efa-84b245c0fdee",
         "name": "Préparer l'enregistrement"
       },
       {
@@ -433,10 +433,10 @@
         "type": "n8n-nodes-base.supabase",
         "typeVersion": 1,
         "position": [
-          -4640,
-          1664
+          6656,
+          3328
         ],
-        "id": "b131f17a-d5d5-4f6d-8f17-d19a6f675800",
+        "id": "ff38df80-c393-40b5-960c-9dea592c9c87",
         "name": "Enregistrer le débrief",
         "credentials": {
           "supabaseApi": {
@@ -486,10 +486,10 @@
         "type": "n8n-nodes-base.supabase",
         "typeVersion": 1,
         "position": [
-          -4416,
-          1664
+          6880,
+          3328
         ],
-        "id": "07879077-d3b4-4c41-946f-e7db13204725",
+        "id": "816f5796-8877-4f7a-a7d7-49a2de78e43d",
         "name": "Enregistrer le brouillon",
         "credentials": {
           "supabaseApi": {
@@ -505,10 +505,10 @@
         "type": "n8n-nodes-base.code",
         "typeVersion": 2,
         "position": [
-          -11808,
-          4000
+          -3872,
+          2176
         ],
-        "id": "976f8440-c555-4308-83ad-2976f419cb57",
+        "id": "add76184-b383-41a4-94f6-e9694331fabe",
         "name": "Lire la commande"
       },
       {
@@ -538,10 +538,10 @@
         "type": "n8n-nodes-base.if",
         "typeVersion": 2,
         "position": [
-          -11584,
-          4000
+          -3648,
+          2176
         ],
-        "id": "746e8773-2c26-49b9-bbfc-20bdf4484114",
+        "id": "5b90d285-74c9-4ed1-a296-7b5a7bd8602f",
         "name": "Commande ?"
       },
       {
@@ -562,10 +562,10 @@
         "type": "n8n-nodes-base.supabase",
         "typeVersion": 1,
         "position": [
-          -9792,
-          3008
+          -3424,
+          2112
         ],
-        "id": "b52aa0f9-2088-42f6-9b4f-3c6c5218ae1f",
+        "id": "70d0363a-9dc8-43a9-aaa0-a4dac492971f",
         "name": "Trouver l'agent pour valider",
         "alwaysOutputData": true,
         "credentials": {
@@ -602,10 +602,10 @@
         "type": "n8n-nodes-base.if",
         "typeVersion": 2,
         "position": [
-          -9568,
-          3008
+          -3200,
+          2032
         ],
-        "id": "46d0c395-e7b5-4fbc-ad65-c923b68824af",
+        "id": "5a51f0ad-f6e3-456d-aac1-955612900290",
         "name": "Agent pour valider ?"
       },
       {
@@ -630,10 +630,10 @@
         "type": "n8n-nodes-base.supabase",
         "typeVersion": 1,
         "position": [
-          -9344,
-          3088
+          -2976,
+          2112
         ],
-        "id": "f02f55f7-85e4-4821-b81e-6c768c02b94b",
+        "id": "d84d4c8c-e7dc-4612-9b07-461667396be1",
         "name": "Charger le brouillon",
         "alwaysOutputData": true,
         "credentials": {
@@ -645,15 +645,15 @@
       },
       {
         "parameters": {
-          "jsCode": "function resume(data) {\n  const line = (label, value) => (value ? label + ' : ' + value : null);\n  const lines = [\n    [data.prenom, data.nom].filter(Boolean).join(' ') || 'Nom non précisé',\n    line('Téléphone', data.telephone),\n    line('E-mail', data.email),\n    [data.type_bien, data.secteur].filter(Boolean).join(', '),\n    line('Budget', data.budget),\n    data.financement || null,\n    line('Délai', data.delai),\n    'Score : ' + (data.score || ''),\n  ].filter(Boolean);\n  if (Array.isArray(data.champs_manquants) && data.champs_manquants.length) {\n    lines.push('Manque : ' + data.champs_manquants.join(', '));\n  }\n  return lines.join('\\n');\n}\nconst consigne = \"Rien n'est enregistré pour l'instant. Réponds OK pour valider, ou annuler pour abandonner.\";\nlet commande = $('Lire la commande').first().json.commande || '';\nlet choix = $('Lire la commande').first().json.choix || '';\nif (!commande) {\n  try {\n    const vocal = $('Commande du vocal').first().json;\n    if (vocal && vocal.commande) {\n      commande = vocal.commande;\n      choix = vocal.choix || '';\n    }\n  } catch (e) {}\n}\nconst pending = $input.all().map((item) => item.json).find((row) => row.id);\nif (!pending) {\n  return [{ json: { action: commande === 'choix' ? 'pas_un_choix' : 'aucune' } }];\n}\nconst brouillon = pending.brouillon || {};\nconst manquants = Array.isArray(pending.champs_manquants) && pending.champs_manquants.length ? pending.champs_manquants : (brouillon.champs_manquants || []);\nif (commande === 'annuler') {\n  return [{ json: { action: 'annuler', validation_id: pending.id } }];\n}\nif (commande === 'choix') {\n  if (pending.type !== 'choix_homonyme') {\n    return [{ json: { action: 'pas_un_choix' } }];\n  }\n  if (brouillon.intention === 'consultation') {\n    const candidatsQuestion = Array.isArray(pending.candidats) ? pending.candidats : [];\n    const choisiQuestion = candidatsQuestion.find((candidat) => String(candidat.index) === String(choix));\n    if (choix === 'N' || !choisiQuestion) {\n      return [{ json: { action: choix === 'N' ? 'choix' : 'hors_liste', validation_id: pending.id } }];\n    }\n    return [{ json: { action: 'consulter', validation_id: pending.id, acheteur_id: choisiQuestion.id, question: brouillon.question || '', sujet: brouillon.sujet || '' } }];\n  }\n  if (brouillon.intention === 'rappel_question' || brouillon.intention === 'rappel_ecriture') {\n    const candidatsRappel = Array.isArray(pending.candidats) ? pending.candidats : [];\n    const choisiRappel = candidatsRappel.find((candidat) => String(candidat.index) === String(choix));\n    if (!choisiRappel) {\n      return [{ json: { action: 'rappel_cible', validation_id: pending.id, message: \"Ce numéro n'est pas dans la liste. Répondez par le numéro de la fiche.\" } }];\n    }\n    return [{ json: { action: 'rappel_suite', validation_id: pending.id, acheteur_id: choisiRappel.id, agent_id: pending.agent_id, mode: brouillon.intention, libelle: [choisiRappel.prenom, choisiRappel.nom].filter(Boolean).join(' '), texte: brouillon.texte_rappel || brouillon.text || brouillon.question || '', echeance: brouillon.echeance_rappel || '', contenu: brouillon.contenu_rappel || '', canal: brouillon.canal_rappel || '', message: brouillon.message_rappel || '' } }];\n  }\n  if (brouillon.intention === 'question_cible') {\n    const candidatsQuestionCible = Array.isArray(pending.candidats) ? pending.candidats : [];\n    const choisiQuestionCible = candidatsQuestionCible.find((candidat) => String(candidat.index) === String(choix));\n    if (!choisiQuestionCible) {\n      return [{ json: { action: 'rappel_cible', validation_id: pending.id, message: \"Ce numéro n'est pas dans la liste. Répondez par le numéro de la fiche.\" } }];\n    }\n    return [{ json: { action: 'consulter', validation_id: pending.id, acheteur_id: choisiQuestionCible.id, question: brouillon.question || brouillon.text || '', sujet: brouillon.sujet || '' } }];\n  }\n  if (brouillon.intention === 'modification_cible') {\n    const candidatsCible = Array.isArray(pending.candidats) ? pending.candidats : [];\n    const choisiCible = candidatsCible.find((candidat) => String(candidat.index) === String(choix));\n    if (!choisiCible) {\n      return [{ json: { action: 'rappel_cible', validation_id: pending.id, message: \"Ce numéro n'est pas dans la liste. Répondez par le numéro de la fiche.\" } }];\n    }\n    return [{ json: { action: 'modifier_cible', validation_id: pending.id, acheteur_id: choisiCible.id } }];\n  }\n  const texte = resume(brouillon);\n  if (choix === 'N') {\n    return [{ json: { action: 'nouvelle', validation_id: pending.id, validation_type: 'creation', acheteur_id: null, message: texte + '\\n\\n' + consigne } }];\n  }\n  const candidats = Array.isArray(pending.candidats) ? pending.candidats : [];\n  const choisi = candidats.find((candidat) => String(candidat.index) === String(choix));\n  if (!choisi) {\n    return [{ json: { action: 'hors_liste', validation_id: pending.id } }];\n  }\n  const identite = [choisi.prenom, choisi.nom].filter(Boolean).join(' ');\n  const cible = [identite, choisi.type_bien, choisi.secteur, choisi.budget].filter(Boolean).join(', ');\n  return [{ json: { action: 'maj', validation_id: pending.id, validation_type: 'mise_a_jour', acheteur_id: choisi.id, message: 'Mise à jour de ' + cible + ' :\\n' + texte + '\\n\\n' + consigne } }];\n}\nif (pending.type === 'choix_homonyme') {\n  const intentionListe = (pending.brouillon || {}).intention;\n  if (intentionListe === 'modification_cible' || intentionListe === 'question_cible' || intentionListe === 'rappel_question' || intentionListe === 'rappel_ecriture') {\n    return [{ json: { action: 'rappel_cible', validation_id: pending.id, message: 'Répondez par le numéro de la fiche.' } }];\n  }\n  return [{ json: { action: 'choix', validation_id: pending.id } }];\n}\nif (pending.type === 'rappel') {\n  return [{ json: { action: 'valider_rappel', validation_id: pending.id, agent_id: brouillon.agent_id || pending.agent_id, acheteur_id: brouillon.acheteur_id, texte: brouillon.texte || '', libelle: brouillon.libelle || '', echeance: brouillon.echeance || '', canal: ['appel', 'whatsapp', 'email'].includes(brouillon.canal) ? brouillon.canal : 'appel', message_suggere: brouillon.message_suggere || '' } }];\n}\nif (manquants.length) {\n  return [{ json: { action: 'incomplet', validation_id: pending.id, manquants } }];\n}\nconst decision = { action: 'valider', validation_id: pending.id, agent_id: pending.agent_id, nom: brouillon.nom || '', prenom: brouillon.prenom || '', telephone: brouillon.telephone || '', email: brouillon.email || '', type_bien: brouillon.type_bien || '', secteur: brouillon.secteur || '', budget: brouillon.budget || '', delai_acquisition: brouillon.delai_acquisition || null, financement_statut: brouillon.financement_statut || null, score: brouillon.score, details: { delai: brouillon.delai || '', financement: brouillon.financement || '' } };\nif (pending.type === 'mise_a_jour' && pending.acheteur_id) decision.acheteur_id = pending.acheteur_id;\ndecision.score_force = brouillon.score_force === true;\nreturn [{ json: decision }];"
+          "jsCode": "function resume(data) {\n  const line = (label, value) => (value ? label + ' : ' + value : null);\n  const lines = [\n    [data.prenom, data.nom].filter(Boolean).join(' ') || 'Nom non précisé',\n    line('Téléphone', data.telephone),\n    line('E-mail', data.email),\n    [data.type_bien, data.secteur].filter(Boolean).join(', '),\n    line('Budget', data.budget),\n    data.financement || null,\n    line('Délai', data.delai),\n    line('Freins', (data.freins || []).join(', ')), line('Motivations', (data.motivations || []).join(', ')),\n    'Score : ' + (data.score || ''),\n  ].filter(Boolean);\n  if (Array.isArray(data.champs_manquants) && data.champs_manquants.length) {\n    lines.push('Manque : ' + data.champs_manquants.join(', '));\n  }\n  return lines.join('\\n');\n}\nconst cleListe = (value) => String(value || '').trim().toLowerCase().normalize('NFD').replace(/[\\u0300-\\u036f]/g, '');\nfunction fusionListe(actuelle, ajouts, retraits) {\n  const leves = (retraits || []).map(cleListe);\n  const resultat = (Array.isArray(actuelle) ? actuelle : []).filter((item) => !leves.includes(cleListe(item)));\n  for (const item of ajouts || []) {\n    if (!resultat.some((existant) => cleListe(existant) === cleListe(item))) resultat.push(item);\n  }\n  return resultat;\n}\nconst consigne = \"Rien n'est enregistré pour l'instant. Réponds OK pour valider, ou annuler pour abandonner.\";\nlet commande = $('Lire la commande').first().json.commande || '';\nlet choix = $('Lire la commande').first().json.choix || '';\nif (!commande) {\n  try {\n    const vocal = $('Commande du vocal').first().json;\n    if (vocal && vocal.commande) {\n      commande = vocal.commande;\n      choix = vocal.choix || '';\n    }\n  } catch (e) {}\n}\nconst pending = $input.all().map((item) => item.json).find((row) => row.id);\nif (!pending) {\n  return [{ json: { action: commande === 'choix' ? 'pas_un_choix' : 'aucune' } }];\n}\nconst brouillon = pending.brouillon || {};\nconst manquants = Array.isArray(pending.champs_manquants) && pending.champs_manquants.length ? pending.champs_manquants : (brouillon.champs_manquants || []);\nif (commande === 'annuler') {\n  return [{ json: { action: 'annuler', validation_id: pending.id } }];\n}\nif (commande === 'choix') {\n  if (pending.type !== 'choix_homonyme') {\n    return [{ json: { action: 'pas_un_choix' } }];\n  }\n  if (brouillon.intention === 'consultation') {\n    const candidatsQuestion = Array.isArray(pending.candidats) ? pending.candidats : [];\n    const choisiQuestion = candidatsQuestion.find((candidat) => String(candidat.index) === String(choix));\n    if (choix === 'N' || !choisiQuestion) {\n      return [{ json: { action: choix === 'N' ? 'choix' : 'hors_liste', validation_id: pending.id } }];\n    }\n    return [{ json: { action: 'consulter', validation_id: pending.id, acheteur_id: choisiQuestion.id, question: brouillon.question || '', sujet: brouillon.sujet || '' } }];\n  }\n  if (brouillon.intention === 'rappel_question' || brouillon.intention === 'rappel_ecriture') {\n    const candidatsRappel = Array.isArray(pending.candidats) ? pending.candidats : [];\n    const choisiRappel = candidatsRappel.find((candidat) => String(candidat.index) === String(choix));\n    if (!choisiRappel) {\n      return [{ json: { action: 'rappel_cible', validation_id: pending.id, message: \"Ce numéro n'est pas dans la liste. Répondez par le numéro de la fiche.\" } }];\n    }\n    return [{ json: { action: 'rappel_suite', validation_id: pending.id, acheteur_id: choisiRappel.id, agent_id: pending.agent_id, mode: brouillon.intention, libelle: [choisiRappel.prenom, choisiRappel.nom].filter(Boolean).join(' '), texte: brouillon.texte_rappel || brouillon.text || brouillon.question || '', echeance: brouillon.echeance_rappel || '', contenu: brouillon.contenu_rappel || '', canal: brouillon.canal_rappel || '', message: brouillon.message_rappel || '', contexte: brouillon.contexte_rappel || '' } }];\n  }\n  if (brouillon.intention === 'question_cible') {\n    const candidatsQuestionCible = Array.isArray(pending.candidats) ? pending.candidats : [];\n    const choisiQuestionCible = candidatsQuestionCible.find((candidat) => String(candidat.index) === String(choix));\n    if (!choisiQuestionCible) {\n      return [{ json: { action: 'rappel_cible', validation_id: pending.id, message: \"Ce numéro n'est pas dans la liste. Répondez par le numéro de la fiche.\" } }];\n    }\n    return [{ json: { action: 'consulter', validation_id: pending.id, acheteur_id: choisiQuestionCible.id, question: brouillon.question || brouillon.text || '', sujet: brouillon.sujet || '' } }];\n  }\n  if (brouillon.intention === 'modification_cible') {\n    const candidatsCible = Array.isArray(pending.candidats) ? pending.candidats : [];\n    const choisiCible = candidatsCible.find((candidat) => String(candidat.index) === String(choix));\n    if (!choisiCible) {\n      return [{ json: { action: 'rappel_cible', validation_id: pending.id, message: \"Ce numéro n'est pas dans la liste. Répondez par le numéro de la fiche.\" } }];\n    }\n    return [{ json: { action: 'modifier_cible', validation_id: pending.id, acheteur_id: choisiCible.id } }];\n  }\n  const texte = resume(brouillon);\n  if (choix === 'N') {\n    return [{ json: { action: 'nouvelle', validation_id: pending.id, validation_type: 'creation', acheteur_id: null, brouillon, message: texte + '\\n\\n' + consigne } }];\n  }\n  const candidats = Array.isArray(pending.candidats) ? pending.candidats : [];\n  const choisi = candidats.find((candidat) => String(candidat.index) === String(choix));\n  if (!choisi) {\n    return [{ json: { action: 'hors_liste', validation_id: pending.id } }];\n  }\n  const fusionne = Object.assign({}, brouillon, {\n    freins: fusionListe(choisi.freins, brouillon.freins, brouillon.freins_leves),\n    motivations: fusionListe(choisi.motivations, brouillon.motivations, brouillon.motivations_levees),\n    freins_leves: [],\n    motivations_levees: [],\n  });\n  const identite = [choisi.prenom, choisi.nom].filter(Boolean).join(' ');\n  const cible = [identite, choisi.type_bien, choisi.secteur, choisi.budget].filter(Boolean).join(', ');\n  return [{ json: { action: 'maj', validation_id: pending.id, validation_type: 'mise_a_jour', acheteur_id: choisi.id, brouillon: fusionne, message: 'Mise à jour de ' + cible + ' :\\n' + resume(fusionne) + '\\n\\n' + consigne } }];\n}\nif (pending.type === 'choix_homonyme') {\n  const intentionListe = (pending.brouillon || {}).intention;\n  if (intentionListe === 'modification_cible' || intentionListe === 'question_cible' || intentionListe === 'rappel_question' || intentionListe === 'rappel_ecriture') {\n    return [{ json: { action: 'rappel_cible', validation_id: pending.id, message: 'Répondez par le numéro de la fiche.' } }];\n  }\n  return [{ json: { action: 'choix', validation_id: pending.id } }];\n}\nif (pending.type === 'rappel') {\n  return [{ json: { action: 'valider_rappel', validation_id: pending.id, agent_id: brouillon.agent_id || pending.agent_id, acheteur_id: brouillon.acheteur_id, texte: brouillon.texte || '', libelle: brouillon.libelle || '', echeance: brouillon.echeance || '', canal: ['appel', 'whatsapp', 'email'].includes(brouillon.canal) ? brouillon.canal : 'appel', message_suggere: brouillon.message_suggere || '', contexte: brouillon.contexte || '' } }];\n}\nif (manquants.length) {\n  return [{ json: { action: 'incomplet', validation_id: pending.id, manquants } }];\n}\nconst decision = { action: 'valider', validation_id: pending.id, agent_id: pending.agent_id, nom: brouillon.nom || '', prenom: brouillon.prenom || '', telephone: brouillon.telephone || '', email: brouillon.email || '', type_bien: brouillon.type_bien || '', secteur: brouillon.secteur || '', budget: brouillon.budget || '', delai_acquisition: brouillon.delai_acquisition || null, financement_statut: brouillon.financement_statut || null, score: brouillon.score, details: { delai: brouillon.delai || '', financement: brouillon.financement || '' }, freins: Array.isArray(brouillon.freins) ? brouillon.freins : [], motivations: Array.isArray(brouillon.motivations) ? brouillon.motivations : [] };\nif (pending.type === 'mise_a_jour' && pending.acheteur_id) decision.acheteur_id = pending.acheteur_id;\ndecision.score_force = brouillon.score_force === true;\nreturn [{ json: decision }];"
         },
         "type": "n8n-nodes-base.code",
         "typeVersion": 2,
         "position": [
-          -9120,
-          3088
+          -2752,
+          2112
         ],
-        "id": "2b9909a7-7ae1-410d-9016-92021c4f4778",
+        "id": "be086f54-a41c-43a5-9530-1ea7af5e6228",
         "name": "Décider la validation"
       },
       {
@@ -683,10 +683,10 @@
         "type": "n8n-nodes-base.if",
         "typeVersion": 2,
         "position": [
-          -8672,
-          3280
+          -2304,
+          2208
         ],
-        "id": "2d523a95-907a-4985-ab5c-05e99403a746",
+        "id": "bf33973a-b6f3-4e69-8707-6eca641d53c3",
         "name": "Valider ?"
       },
       {
@@ -747,6 +747,14 @@
               {
                 "fieldId": "={{ 'details' }}",
                 "fieldValue": "={{ $('Décider la validation').item.json.details }}"
+              },
+              {
+                "fieldId": "={{ 'freins' }}",
+                "fieldValue": "={{ $('Décider la validation').item.json.freins }}"
+              },
+              {
+                "fieldId": "={{ 'motivations' }}",
+                "fieldValue": "={{ $('Décider la validation').item.json.motivations }}"
               }
             ]
           }
@@ -754,10 +762,10 @@
         "type": "n8n-nodes-base.supabase",
         "typeVersion": 1,
         "position": [
-          -8224,
-          2992
+          -1856,
+          640
         ],
-        "id": "349bdfbe-d580-4840-bd92-28c3e714e9ec",
+        "id": "214d2a4f-380d-4242-bd0e-d0f82f8db125",
         "name": "Créer la fiche",
         "credentials": {
           "supabaseApi": {
@@ -798,10 +806,10 @@
         "type": "n8n-nodes-base.supabase",
         "typeVersion": 1,
         "position": [
-          -8000,
-          2864
+          -1632,
+          544
         ],
-        "id": "23f8a324-c530-4768-b1b6-f4c247525caf",
+        "id": "9c353ffe-050a-4d29-8753-3a12eaf4d90e",
         "name": "Marquer validée",
         "credentials": {
           "supabaseApi": {
@@ -821,10 +829,10 @@
         "type": "n8n-nodes-base.whatsApp",
         "typeVersion": 1.1,
         "position": [
-          -7776,
-          2864
+          -1408,
+          544
         ],
-        "id": "3ab981e6-6589-4472-aa9c-b6fee54bbadd",
+        "id": "d9772165-f538-4183-85af-45bc51b2c119",
         "name": "Confirmer l'enregistrement",
         "webhookId": "229b793a-6dba-4280-99e4-7d4d834a8b31",
         "credentials": {
@@ -861,10 +869,10 @@
         "type": "n8n-nodes-base.if",
         "typeVersion": 2,
         "position": [
-          -8448,
-          3472
+          -2080,
+          2400
         ],
-        "id": "63296689-c62b-4065-9aa2-ee1981af4b62",
+        "id": "e6496943-bbf0-480c-acb2-2c396e14ce60",
         "name": "Annuler ?"
       },
       {
@@ -895,10 +903,10 @@
         "type": "n8n-nodes-base.supabase",
         "typeVersion": 1,
         "position": [
-          -8224,
-          3904
+          -1856,
+          3840
         ],
-        "id": "21b0c480-8cdb-4a6a-a91e-6a97df61b2f7",
+        "id": "aae5ab79-1e3b-4b0b-ba4e-ccd6dbca451c",
         "name": "Marquer annulée",
         "credentials": {
           "supabaseApi": {
@@ -918,10 +926,10 @@
         "type": "n8n-nodes-base.whatsApp",
         "typeVersion": 1.1,
         "position": [
-          -8000,
-          3904
+          -1632,
+          3840
         ],
-        "id": "67663df2-4b5c-4d5c-8e88-77ff779cb6a7",
+        "id": "c7cd388f-16db-432b-8675-7df47793d8f9",
         "name": "Confirmer l'annulation",
         "webhookId": "1ea1b1a0-9b50-41ce-baf6-fd8c1a1768d7",
         "credentials": {
@@ -958,10 +966,10 @@
         "type": "n8n-nodes-base.if",
         "typeVersion": 2,
         "position": [
-          -6656,
-          3680
+          -288,
+          3232
         ],
-        "id": "18f321c3-a43b-4a52-bfd4-7048c4d82bc7",
+        "id": "60ef4db2-a5ad-4edf-8ea9-8bab56f74895",
         "name": "Incomplet ?"
       },
       {
@@ -975,10 +983,10 @@
         "type": "n8n-nodes-base.whatsApp",
         "typeVersion": 1.1,
         "position": [
-          -6432,
-          3008
+          -64,
+          3136
         ],
-        "id": "2f8463d9-f196-4f5a-8f25-d245f9b76236",
+        "id": "adab8f88-e4b8-4863-ae44-c2a873410a88",
         "name": "Demander les champs",
         "webhookId": "10bff9ca-1ce0-48d1-89b8-406ac7d9481b",
         "credentials": {
@@ -999,10 +1007,10 @@
         "type": "n8n-nodes-base.whatsApp",
         "typeVersion": 1.1,
         "position": [
-          -6432,
-          3856
+          -64,
+          3328
         ],
-        "id": "758331d2-cf95-4388-9a01-787697ac12ce",
+        "id": "2921f9db-0b6f-4260-aca7-4d6db5fe55ef",
         "name": "Répondre aucun brouillon",
         "webhookId": "643e5d5c-462c-4958-a258-56e19cfffe1c",
         "credentials": {
@@ -1030,10 +1038,10 @@
         "type": "n8n-nodes-base.supabase",
         "typeVersion": 1,
         "position": [
-          -8000,
-          1712
+          3296,
+          2832
         ],
-        "id": "13d438cd-3e8d-43f4-944a-1173bff00e40",
+        "id": "f0ce5cae-9de7-42e5-a77c-649adc6459a6",
         "name": "Trouver l'agent avant correction",
         "alwaysOutputData": true,
         "credentials": {
@@ -1070,10 +1078,10 @@
         "type": "n8n-nodes-base.if",
         "typeVersion": 2,
         "position": [
-          -7776,
-          1712
+          3520,
+          3232
         ],
-        "id": "9dc1adc2-df7b-42d0-9e2b-941c413831a8",
+        "id": "afa4f4ad-b681-44ad-8fa3-fe5ad0ade368",
         "name": "Agent avant correction ?"
       },
       {
@@ -1098,10 +1106,10 @@
         "type": "n8n-nodes-base.supabase",
         "typeVersion": 1,
         "position": [
-          -7552,
-          1600
+          3744,
+          3232
         ],
-        "id": "35175f4b-d6d1-457d-a6bf-49bfc2b62dec",
+        "id": "b0647f56-ef65-4617-bd27-83c286e4d92b",
         "name": "Charger le brouillon avant correction",
         "alwaysOutputData": true,
         "credentials": {
@@ -1118,10 +1126,10 @@
         "type": "n8n-nodes-base.code",
         "typeVersion": 2,
         "position": [
-          -7328,
-          1712
+          3968,
+          3232
         ],
-        "id": "3f5d8a39-91ba-4b06-8d29-a7ec6ff0f895",
+        "id": "65880464-4ff3-4292-9a03-ac943b14f57e",
         "name": "Préparer le prompt de fusion"
       },
       {
@@ -1131,10 +1139,10 @@
         "type": "n8n-nodes-base.code",
         "typeVersion": 2,
         "position": [
-          -5984,
-          1664
+          5312,
+          3328
         ],
-        "id": "eeaef98e-196e-4416-bc5e-3ed7ced04640",
+        "id": "d25b8f55-f985-4d05-ba03-60eed45fe345",
         "name": "Décider la recherche"
       },
       {
@@ -1164,10 +1172,10 @@
         "type": "n8n-nodes-base.if",
         "typeVersion": 2,
         "position": [
-          -5760,
-          1664
+          5536,
+          3328
         ],
-        "id": "7a88e749-4acf-44ce-bd33-8755317a7b55",
+        "id": "3a1a5f4e-b676-4a63-8054-932ab360d315",
         "name": "Correction en cours ?"
       },
       {
@@ -1185,10 +1193,10 @@
         "type": "n8n-nodes-base.supabase",
         "typeVersion": 1,
         "position": [
-          -5536,
-          1600
+          5760,
+          3328
         ],
-        "id": "653ec84a-443a-4f95-9c31-bfedc5527e36",
+        "id": "71931af7-3838-4add-91f4-d685e40891e6",
         "name": "Charger les fiches de l'agent",
         "alwaysOutputData": true,
         "credentials": {
@@ -1200,15 +1208,15 @@
       },
       {
         "parameters": {
-          "jsCode": "function norm(value) {\n  return String(value || '').trim().toLowerCase().normalize('NFD').replace(/[\\u0300-\\u036f]/g, '');\n}\nfunction trigrams(value) {\n  const padded = '  ' + value + ' ';\n  const counts = new Map();\n  for (let i = 0; i < padded.length - 2; i++) {\n    const gram = padded.slice(i, i + 3);\n    counts.set(gram, (counts.get(gram) || 0) + 1);\n  }\n  return counts;\n}\nfunction similarity(leftValue, rightValue) {\n  if (!leftValue || !rightValue) return 0;\n  if (leftValue === rightValue) return 1;\n  const left = trigrams(leftValue);\n  const right = trigrams(rightValue);\n  let leftCount = 0;\n  let rightCount = 0;\n  let shared = 0;\n  for (const count of left.values()) leftCount += count;\n  for (const count of right.values()) rightCount += count;\n  for (const [gram, count] of left) {\n    if (right.has(gram)) shared += Math.min(count, right.get(gram));\n  }\n  if (!leftCount || !rightCount) return 0;\n  return (2 * shared) / (leftCount + rightCount);\n}\nconst extraction = $('Formater le résumé').first().json.extraction || {};\nconst nom = norm([extraction.prenom, extraction.nom].filter(Boolean).join(' '));\nconst rows = $input.all().map((item) => item.json).filter((row) => row.id);\nif (!nom) return [{ json: { homonymes: [] } }];\nconst homonymes = rows.map((row) => {\n  const cible = norm(((row.prenom || '') + ' ' + (row.nom || '')).trim());\n  return {\n    id: row.id,\n    prenom: row.prenom || '',\n    nom: row.nom || '',\n    telephone: row.telephone || '',\n    type_bien: row.type_bien || '',\n    secteur: row.secteur || '',\n    budget: row.budget || '',\n    created_at: row.created_at || '',\n    similarite: similarity(cible, nom)\n  };\n}).filter((row) => row.similarite >= 0.3).sort((a, b) => b.similarite - a.similarite || String(b.created_at).localeCompare(String(a.created_at)));\nreturn [{ json: { homonymes } }];"
+          "jsCode": "function norm(value) {\n  return String(value || '').trim().toLowerCase().normalize('NFD').replace(/[\\u0300-\\u036f]/g, '');\n}\nfunction trigrams(value) {\n  const padded = '  ' + value + ' ';\n  const counts = new Map();\n  for (let i = 0; i < padded.length - 2; i++) {\n    const gram = padded.slice(i, i + 3);\n    counts.set(gram, (counts.get(gram) || 0) + 1);\n  }\n  return counts;\n}\nfunction similarity(leftValue, rightValue) {\n  if (!leftValue || !rightValue) return 0;\n  if (leftValue === rightValue) return 1;\n  const left = trigrams(leftValue);\n  const right = trigrams(rightValue);\n  let leftCount = 0;\n  let rightCount = 0;\n  let shared = 0;\n  for (const count of left.values()) leftCount += count;\n  for (const count of right.values()) rightCount += count;\n  for (const [gram, count] of left) {\n    if (right.has(gram)) shared += Math.min(count, right.get(gram));\n  }\n  if (!leftCount || !rightCount) return 0;\n  return (2 * shared) / (leftCount + rightCount);\n}\nconst extraction = $('Formater le résumé').first().json.extraction || {};\nconst nom = norm([extraction.prenom, extraction.nom].filter(Boolean).join(' '));\nconst rows = $input.all().map((item) => item.json).filter((row) => row.id);\nif (!nom) return [{ json: { homonymes: [] } }];\nconst homonymes = rows.map((row) => {\n  const cible = norm(((row.prenom || '') + ' ' + (row.nom || '')).trim());\n  return {\n    id: row.id,\n    prenom: row.prenom || '',\n    nom: row.nom || '',\n    telephone: row.telephone || '',\n    type_bien: row.type_bien || '',\n    secteur: row.secteur || '',\n    budget: row.budget || '',\n    created_at: row.created_at || '',\n    freins: Array.isArray(row.freins) ? row.freins : [],\n    motivations: Array.isArray(row.motivations) ? row.motivations : [],\n    similarite: similarity(cible, nom)\n  };\n}).filter((row) => row.similarite >= 0.3).sort((a, b) => b.similarite - a.similarite || String(b.created_at).localeCompare(String(a.created_at)));\nreturn [{ json: { homonymes } }];"
         },
         "type": "n8n-nodes-base.code",
         "typeVersion": 2,
         "position": [
-          -5312,
-          1600
+          5984,
+          3328
         ],
-        "id": "4d2e436b-272b-4fb0-8697-d5fbe7ca1194",
+        "id": "3f24a634-72dd-4d55-a81d-a4c7cfaa0415",
         "name": "Chercher les homonymes"
       },
       {
@@ -1247,10 +1255,10 @@
         "type": "n8n-nodes-base.if",
         "typeVersion": 2,
         "position": [
-          -7104,
-          3200
+          -736,
+          2400
         ],
-        "id": "c9423f07-a746-46d1-9799-17ab60b6cfc5",
+        "id": "12e6dbf9-3e00-440a-94cb-16a40bf87959",
         "name": "Choix en attente ?"
       },
       {
@@ -1264,10 +1272,10 @@
         "type": "n8n-nodes-base.whatsApp",
         "typeVersion": 1.1,
         "position": [
-          -6880,
-          3872
+          -512,
+          3328
         ],
-        "id": "f279f727-bafa-4bbf-9a07-5cd788c4b9dc",
+        "id": "26db9b82-e653-4482-852b-b51156c070d5",
         "name": "Rappeler le choix",
         "webhookId": "c1e8a764-6666-4f60-8b06-000000000006",
         "credentials": {
@@ -1313,10 +1321,10 @@
         "type": "n8n-nodes-base.if",
         "typeVersion": 2,
         "position": [
-          -7328,
-          3520
+          -960,
+          2496
         ],
-        "id": "aea305d7-7ee3-43c2-a199-63aecffce9c8",
+        "id": "edb6a392-0f85-405a-91ad-3afd7d08c284",
         "name": "Nouvelle ou mise à jour ?"
       },
       {
@@ -1348,6 +1356,10 @@
               {
                 "fieldId": "={{ 'candidats' }}",
                 "fieldValue": "={{ null }}"
+              },
+              {
+                "fieldId": "={{ 'brouillon' }}",
+                "fieldValue": "={{ $('Décider la validation').item.json.brouillon }}"
               }
             ]
           }
@@ -1355,10 +1367,10 @@
         "type": "n8n-nodes-base.supabase",
         "typeVersion": 1,
         "position": [
-          -7104,
-          3712
+          -736,
+          3520
         ],
-        "id": "3c557a6f-5fc7-4586-87eb-0f7ca7efe1f1",
+        "id": "cbce196b-70df-4b6e-862c-c2cde22eb4c7",
         "name": "Enregistrer le choix",
         "credentials": {
           "supabaseApi": {
@@ -1378,10 +1390,10 @@
         "type": "n8n-nodes-base.whatsApp",
         "typeVersion": 1.1,
         "position": [
-          -6880,
-          4064
+          -512,
+          3520
         ],
-        "id": "e6de7f23-0156-4e22-8919-6b2bdbafdd17",
+        "id": "bb295575-bf5d-46e5-94fd-e1ddb641b80f",
         "name": "Envoyer le résumé du choix",
         "webhookId": "b1c0d001-7777-4a70-9c07-000000000013",
         "credentials": {
@@ -1418,10 +1430,10 @@
         "type": "n8n-nodes-base.if",
         "typeVersion": 2,
         "position": [
-          -6880,
-          3680
+          -512,
+          2304
         ],
-        "id": "f419801d-702e-4cb3-8232-3481ac48aa13",
+        "id": "a74446dd-b688-41d9-b7ea-349c32208c80",
         "name": "Pas un choix ?"
       },
       {
@@ -1451,10 +1463,10 @@
         "type": "n8n-nodes-base.if",
         "typeVersion": 2,
         "position": [
-          -8448,
-          2864
+          -2080,
+          544
         ],
-        "id": "76ece49e-4d5f-4c7b-b486-4ef884ad7a43",
+        "id": "ceb21fbb-504e-4017-a8aa-e60fef09b6f1",
         "name": "Mise à jour ?"
       },
       {
@@ -1522,6 +1534,14 @@
               {
                 "fieldId": "details",
                 "fieldValue": "={{ $('Décider la validation').item.json.details }}"
+              },
+              {
+                "fieldId": "freins",
+                "fieldValue": "={{ $('Décider la validation').item.json.freins }}"
+              },
+              {
+                "fieldId": "motivations",
+                "fieldValue": "={{ $('Décider la validation').item.json.motivations }}"
               }
             ]
           }
@@ -1529,10 +1549,10 @@
         "type": "n8n-nodes-base.supabase",
         "typeVersion": 1,
         "position": [
-          -8224,
-          2800
+          -1856,
+          448
         ],
-        "id": "ae88142e-eb4b-45fb-acbb-0e570d059614",
+        "id": "8c058ff9-9fd4-4524-8b7b-3edd72bbbf79",
         "name": "Mettre à jour la fiche",
         "credentials": {
           "supabaseApi": {
@@ -1543,15 +1563,15 @@
       },
       {
         "parameters": {
-          "jsCode": "function source() {\n  try {\n    const vocal = $('Transcrire').first().json.text;\n    if (vocal) return vocal;\n  } catch (e) {}\n  try {\n    const texte = $('Préparer le texte').first().json.text;\n    if (texte) return texte;\n  } catch (e) {}\n  return '';\n}\nfunction norm(value) {\n  return String(value || '').trim().toLowerCase().normalize('NFD').replace(/[\\u0300-\\u036f]/g, '');\n}\nfunction libelleDepuis(text, prenom, nom) {\n  const mots = String(text || '').match(/[^\\s,.;:!?]+/g) || [];\n  const p = norm(prenom);\n  const n = norm(nom);\n  for (let i = 0; i < mots.length - 1; i++) {\n    if (norm(mots[i]) === p && norm(mots[i + 1]) === n) return mots[i] + ' ' + mots[i + 1];\n  }\n  return (prenom + ' ' + nom).trim();\n}\nlet raw = $input.first().json.choices[0].message.content;\nif (Array.isArray(raw)) raw = raw.map((part) => part.text || '').join('');\nconst cleaned = String(raw).replace(/^```json\\s*/i, '').replace(/```$/, '').trim();\nconst data = JSON.parse(cleaned);\nconst text = source();\nconst intentions = ['debrief', 'consultation', 'modification', 'question_cible', 'modification_cible', 'rappel_cible'];\nconst modes = ['question', 'modification', 'rappel_question', 'rappel_ecriture'];\nlet intention = intentions.includes(data.intention) ? data.intention : 'debrief';\nlet mode_cible = modes.includes(data.mode_cible) ? data.mode_cible : '';\nlet prenom_cible = String(data.prenom_cible || '').trim();\nlet nom_cible = String(data.nom_cible || '').trim();\nif (!prenom_cible || !nom_cible) {\n  const seul = prenom_cible || nom_cible;\n  const parts = seul.split(/\\s+/).filter(Boolean);\n  if (parts.length >= 2) {\n    prenom_cible = parts[0];\n    nom_cible = parts.slice(1).join(' ');\n  }\n}\nif (!prenom_cible || !nom_cible) {\n  if (intention === 'question_cible' || intention === 'rappel_cible') intention = 'consultation';\n  else if (intention === 'modification_cible') intention = 'modification';\n  prenom_cible = '';\n  nom_cible = '';\n  mode_cible = '';\n} else if (intention === 'question_cible') {\n  mode_cible = 'question';\n} else if (intention === 'modification_cible') {\n  mode_cible = 'modification';\n} else if (intention === 'rappel_cible') {\n  if (mode_cible !== 'rappel_question') mode_cible = 'rappel_ecriture';\n} else {\n  prenom_cible = '';\n  nom_cible = '';\n  mode_cible = '';\n}\nconst sujets = ['budget', 'financement', 'delai', 'score', 'fiche'];\nconst sujet = sujets.includes(data.sujet) ? data.sujet : '';\nconst delais = ['immediat', 'moins_d_un_mois', 'un_a_six_mois', 'plus_de_six_mois'];\nconst statuts = ['solide', 'en_cours', 'aucun'];\nconst couleurs = ['vert', 'orange', 'rouge'];\nconst texte = (value) => String(value || '').trim();\nconst delaiAcquisition = delais.includes(texte(data.delai_acquisition)) ? texte(data.delai_acquisition) : '';\nconst financementStatut = statuts.includes(texte(data.financement_statut)) ? texte(data.financement_statut) : '';\nconst scoreImpose = couleurs.includes(texte(data.score_impose)) ? texte(data.score_impose) : '';\nconst scoreForce = (data.score_force === true || data.score_force === 'true') && !!scoreImpose;\nconst dit = {\n  nom: texte(data.nom),\n  prenom: texte(data.prenom),\n  telephone: texte(data.telephone),\n  email: texte(data.email),\n  type_bien: texte(data.type_bien),\n  secteur: texte(data.secteur),\n  budget: texte(data.budget),\n  delai: texte(data.delai),\n  financement: texte(data.financement),\n  delai_acquisition: delaiAcquisition,\n  financement_statut: financementStatut,\n  score_impose: scoreForce ? scoreImpose : '',\n  score_force: scoreForce\n};\nconst nom = prenom_cible ? '' : texte(data.nom_cite);\nconst libelle = prenom_cible ? libelleDepuis(text, prenom_cible, nom_cible) : '';\nconst texte_rappel = texte(data.texte_rappel);\nconst echeance_rappel = /^\\d{4}-\\d{2}-\\d{2}$/.test(texte(data.echeance_rappel)) ? texte(data.echeance_rappel) : '';\nconst contenu_rappel = texte(data.contenu_rappel);\nconst canal_rappel = ['appel', 'whatsapp', 'email'].includes(texte(data.canal_rappel)) ? texte(data.canal_rappel) : '';\nconst message_rappel = texte(data.message_rappel);\nreturn [{ json: { text, intention, nom, prenom_cible, nom_cible, libelle, mode_cible, sujet, texte_rappel, echeance_rappel, contenu_rappel, canal_rappel, message_rappel, dit } }];\n"
+          "jsCode": "function source() {\n  try {\n    const vocal = $('Transcrire').first().json.text;\n    if (vocal) return vocal;\n  } catch (e) {}\n  try {\n    const texte = $('Préparer le texte').first().json.text;\n    if (texte) return texte;\n  } catch (e) {}\n  return '';\n}\nfunction norm(value) {\n  return String(value || '').trim().toLowerCase().normalize('NFD').replace(/[\\u0300-\\u036f]/g, '');\n}\nfunction libelleDepuis(text, prenom, nom) {\n  const mots = String(text || '').match(/[^\\s,.;:!?]+/g) || [];\n  const p = norm(prenom);\n  const n = norm(nom);\n  for (let i = 0; i < mots.length - 1; i++) {\n    if (norm(mots[i]) === p && norm(mots[i + 1]) === n) return mots[i] + ' ' + mots[i + 1];\n  }\n  return (prenom + ' ' + nom).trim();\n}\nlet raw = $input.first().json.choices[0].message.content;\nif (Array.isArray(raw)) raw = raw.map((part) => part.text || '').join('');\nconst cleaned = String(raw).replace(/^```json\\s*/i, '').replace(/```$/, '').trim();\nconst data = JSON.parse(cleaned);\nconst text = source();\nconst intentions = ['debrief', 'consultation', 'modification', 'question_cible', 'modification_cible', 'rappel_cible'];\nconst modes = ['question', 'modification', 'rappel_question', 'rappel_ecriture'];\nlet intention = intentions.includes(data.intention) ? data.intention : 'debrief';\nlet mode_cible = modes.includes(data.mode_cible) ? data.mode_cible : '';\nlet prenom_cible = String(data.prenom_cible || '').trim();\nlet nom_cible = String(data.nom_cible || '').trim();\nif (!prenom_cible || !nom_cible) {\n  const seul = prenom_cible || nom_cible;\n  const parts = seul.split(/\\s+/).filter(Boolean);\n  if (parts.length >= 2) {\n    prenom_cible = parts[0];\n    nom_cible = parts.slice(1).join(' ');\n  }\n}\nif (!prenom_cible || !nom_cible) {\n  if (intention === 'question_cible' || intention === 'rappel_cible') intention = 'consultation';\n  else if (intention === 'modification_cible') intention = 'modification';\n  prenom_cible = '';\n  nom_cible = '';\n  mode_cible = '';\n} else if (intention === 'question_cible') {\n  mode_cible = 'question';\n} else if (intention === 'modification_cible') {\n  mode_cible = 'modification';\n} else if (intention === 'rappel_cible') {\n  if (mode_cible !== 'rappel_question') mode_cible = 'rappel_ecriture';\n} else {\n  prenom_cible = '';\n  nom_cible = '';\n  mode_cible = '';\n}\nconst sujets = ['budget', 'financement', 'delai', 'score', 'fiche'];\nconst sujet = sujets.includes(data.sujet) ? data.sujet : '';\nconst delais = ['immediat', 'moins_d_un_mois', 'un_a_six_mois', 'plus_de_six_mois'];\nconst statuts = ['solide', 'en_cours', 'aucun'];\nconst couleurs = ['vert', 'orange', 'rouge'];\nconst texte = (value) => String(value || '').trim();\nconst liste = (value) => (Array.isArray(value) ? value.map(texte).filter(Boolean) : []);\nconst delaiAcquisition = delais.includes(texte(data.delai_acquisition)) ? texte(data.delai_acquisition) : '';\nconst financementStatut = statuts.includes(texte(data.financement_statut)) ? texte(data.financement_statut) : '';\nconst scoreImpose = couleurs.includes(texte(data.score_impose)) ? texte(data.score_impose) : '';\nconst scoreForce = (data.score_force === true || data.score_force === 'true') && !!scoreImpose;\nconst dit = {\n  nom: texte(data.nom),\n  prenom: texte(data.prenom),\n  telephone: texte(data.telephone),\n  email: texte(data.email),\n  type_bien: texte(data.type_bien),\n  secteur: texte(data.secteur),\n  budget: texte(data.budget),\n  delai: texte(data.delai),\n  financement: texte(data.financement),\n  delai_acquisition: delaiAcquisition,\n  financement_statut: financementStatut,\n  score_impose: scoreForce ? scoreImpose : '',\n  score_force: scoreForce,\n  freins_ajoutes: liste(data.freins_ajoutes),\n  freins_leves: liste(data.freins_leves),\n  motivations_ajoutees: liste(data.motivations_ajoutees),\n  motivations_levees: liste(data.motivations_levees)\n};\nconst nom = prenom_cible ? '' : texte(data.nom_cite);\nconst libelle = prenom_cible ? libelleDepuis(text, prenom_cible, nom_cible) : '';\nconst texte_rappel = texte(data.texte_rappel);\nconst echeance_rappel = /^\\d{4}-\\d{2}-\\d{2}$/.test(texte(data.echeance_rappel)) ? texte(data.echeance_rappel) : '';\nconst contenu_rappel = texte(data.contenu_rappel);\nconst canal_rappel = ['appel', 'whatsapp', 'email'].includes(texte(data.canal_rappel)) ? texte(data.canal_rappel) : '';\nconst message_rappel = texte(data.message_rappel);\nconst contexte_rappel = texte(data.contexte_rappel);\nreturn [{ json: { text, intention, nom, prenom_cible, nom_cible, libelle, mode_cible, sujet, texte_rappel, echeance_rappel, contenu_rappel, canal_rappel, message_rappel, contexte_rappel, dit } }];\n"
         },
         "type": "n8n-nodes-base.code",
         "typeVersion": 2,
         "position": [
-          -9792,
-          1040
+          1504,
+          2128
         ],
-        "id": "37303f5c-c99c-488c-8485-69a3b524803e",
+        "id": "aa47d790-94f9-4db6-b274-36500d09818a",
         "name": "Qualifier le message"
       },
       {
@@ -1581,10 +1601,10 @@
         "type": "n8n-nodes-base.if",
         "typeVersion": 2,
         "position": [
-          -9344,
-          1424
+          1952,
+          2464
         ],
-        "id": "7d558a3f-0b50-44fa-bad2-445577df3fa9",
+        "id": "a9558284-b986-43fc-9e5d-a95c09bdee27",
         "name": "Consultation ?"
       },
       {
@@ -1614,10 +1634,10 @@
         "type": "n8n-nodes-base.if",
         "typeVersion": 2,
         "position": [
-          -8896,
-          1136
+          2400,
+          2272
         ],
-        "id": "20a4f65c-fb9b-4715-a1f9-f0fd4552bffb",
+        "id": "a57516bd-deb7-430f-b310-0ae4cf1aeb1e",
         "name": "Nom cité ?"
       },
       {
@@ -1638,10 +1658,10 @@
         "type": "n8n-nodes-base.supabase",
         "typeVersion": 1,
         "position": [
-          -9120,
-          1136
+          2176,
+          2272
         ],
-        "id": "4ded929c-db79-4957-862a-d2bb2d5332b7",
+        "id": "72059cb8-bd81-4550-88e0-83d05552c145",
         "name": "Trouver l'agent consultation",
         "alwaysOutputData": true,
         "credentials": {
@@ -1666,10 +1686,10 @@
         "type": "n8n-nodes-base.supabase",
         "typeVersion": 1,
         "position": [
-          -8672,
-          944
+          2624,
+          2080
         ],
-        "id": "f7c2c9ab-7812-45b0-accd-dc510a621464",
+        "id": "72aef1f4-7ede-4c3f-8492-84820517cf9e",
         "name": "Charger les fiches consultation",
         "alwaysOutputData": true,
         "credentials": {
@@ -1686,10 +1706,10 @@
         "type": "n8n-nodes-base.code",
         "typeVersion": 2,
         "position": [
-          -8448,
-          944
+          2848,
+          2080
         ],
-        "id": "2e54bcba-71cc-4855-976b-aad6d814b708",
+        "id": "6672f216-474f-4e4c-a103-58ae561b9d7b",
         "name": "Décider la consultation"
       },
       {
@@ -1719,10 +1739,10 @@
         "type": "n8n-nodes-base.if",
         "typeVersion": 2,
         "position": [
-          -8224,
-          944
+          3072,
+          2080
         ],
-        "id": "2585ae78-3f65-4a8e-b5e4-a488c8c64a73",
+        "id": "e54257f5-ee56-4bf4-bdf3-cbf4efc81b97",
         "name": "Liste de consultation ?"
       },
       {
@@ -1758,10 +1778,10 @@
         "type": "n8n-nodes-base.supabase",
         "typeVersion": 1,
         "position": [
-          -8000,
-          832
+          3296,
+          1936
         ],
-        "id": "bc43afac-486f-4ebf-806f-a07ac440997a",
+        "id": "512708c5-4768-4e69-8174-01b2d82f2600",
         "name": "Remplacer avant consultation",
         "alwaysOutputData": true,
         "credentials": {
@@ -1808,10 +1828,10 @@
         "type": "n8n-nodes-base.supabase",
         "typeVersion": 1,
         "position": [
-          -7776,
-          832
+          3520,
+          1936
         ],
-        "id": "70924093-57ee-4195-882f-6f7148b8b1ce",
+        "id": "c5ed22c9-4a73-4da1-a3a0-2c83673ec550",
         "name": "Enregistrer la consultation",
         "credentials": {
           "supabaseApi": {
@@ -1831,10 +1851,10 @@
         "type": "n8n-nodes-base.whatsApp",
         "typeVersion": 1.1,
         "position": [
-          -7552,
-          832
+          3744,
+          1936
         ],
-        "id": "cdc6341d-7720-4311-95f9-59fa44d44f23",
+        "id": "c880ca4f-2dfa-40dc-b461-ec4d74cb27f3",
         "name": "Envoyer la liste de consultation",
         "webhookId": "c0nsu177-0010-4000-8000-000000000010",
         "credentials": {
@@ -1871,10 +1891,10 @@
         "type": "n8n-nodes-base.if",
         "typeVersion": 2,
         "position": [
-          -8000,
-          1040
+          3296,
+          2176
         ],
-        "id": "4e2207fe-3098-4349-98de-9d513ce03233",
+        "id": "a9b332cb-6c08-44ab-87e7-a120d66361c0",
         "name": "Réponse immédiate ?"
       },
       {
@@ -1884,10 +1904,10 @@
         "type": "n8n-nodes-base.code",
         "typeVersion": 2,
         "position": [
-          -8672,
-          1376
+          2624,
+          2464
         ],
-        "id": "dcfc509a-d548-4d82-a465-017d70f99729",
+        "id": "afe5047e-ea2d-4574-bccf-01b6d634876e",
         "name": "Question sans nom"
       },
       {
@@ -1908,10 +1928,10 @@
         "type": "n8n-nodes-base.supabase",
         "typeVersion": 1,
         "position": [
-          -8448,
-          1376
+          2848,
+          2464
         ],
-        "id": "751346dd-c488-4d8e-bf61-90a6e6dbaaca",
+        "id": "bbf7e3af-f936-4886-990e-e45b7a402215",
         "name": "Chercher la session question",
         "alwaysOutputData": true,
         "credentials": {
@@ -1948,10 +1968,10 @@
         "type": "n8n-nodes-base.if",
         "typeVersion": 2,
         "position": [
-          -8224,
-          1376
+          3072,
+          2464
         ],
-        "id": "ae8e09ff-0255-446b-a9f7-2a85e75e7e73",
+        "id": "e1e3b217-93cc-4213-bc79-9275392ee9a4",
         "name": "Fiche active ?"
       },
       {
@@ -1972,10 +1992,10 @@
         "type": "n8n-nodes-base.supabase",
         "typeVersion": 1,
         "position": [
-          -8000,
-          1264
+          3296,
+          2368
         ],
-        "id": "e370832e-0ec7-4280-bd0c-c1b2aa65f94d",
+        "id": "d22956f2-77ee-4ac0-9162-58d10d844350",
         "name": "Charger la fiche active",
         "alwaysOutputData": true,
         "credentials": {
@@ -1996,10 +2016,10 @@
         "type": "n8n-nodes-base.whatsApp",
         "typeVersion": 1.1,
         "position": [
-          -8000,
-          1504
+          3296,
+          2608
         ],
-        "id": "4f7671fe-5be3-43b9-b425-714fba83e6dd",
+        "id": "c1572c6e-99d4-4f9f-a419-b2247483a60e",
         "name": "Répondre aucune fiche active",
         "webhookId": "c0nsu177-0016-4000-8000-000000000016",
         "credentials": {
@@ -2036,10 +2056,10 @@
         "type": "n8n-nodes-base.if",
         "typeVersion": 2,
         "position": [
-          -8224,
-          3376
+          -1856,
+          2304
         ],
-        "id": "7258a319-e2df-40c5-afd9-67c64440cf71",
+        "id": "fc65a381-f0d7-4d51-9193-f78a50f60ff6",
         "name": "Consulter ?"
       },
       {
@@ -2060,10 +2080,10 @@
         "type": "n8n-nodes-base.supabase",
         "typeVersion": 1,
         "position": [
-          -8000,
-          3712
+          3296,
+          3664
         ],
-        "id": "0716c09e-1906-438b-9c1d-e8a4a4a6c4f7",
+        "id": "06ea6134-b0ca-400e-af97-1cbfb8deafae",
         "name": "Charger la fiche consultée",
         "alwaysOutputData": true,
         "credentials": {
@@ -2080,10 +2100,10 @@
         "type": "n8n-nodes-base.code",
         "typeVersion": 2,
         "position": [
-          -7776,
-          1232
+          3520,
+          2752
         ],
-        "id": "e6156ce9-dae2-41bf-9e8f-37548509600b",
+        "id": "7099b792-5f27-46f5-93b0-2a48dde7c3ad",
         "name": "Rédiger la réponse"
       },
       {
@@ -2113,10 +2133,10 @@
         "type": "n8n-nodes-base.if",
         "typeVersion": 2,
         "position": [
-          -7552,
-          1232
+          3744,
+          2752
         ],
-        "id": "35b5db00-9b2a-4350-9351-fc5c87af8972",
+        "id": "9a0b8784-5a31-4f46-879d-560a2c26cafb",
         "name": "Enregistrer la session ?"
       },
       {
@@ -2137,10 +2157,10 @@
         "type": "n8n-nodes-base.supabase",
         "typeVersion": 1,
         "position": [
-          -7328,
-          1120
+          3968,
+          2208
         ],
-        "id": "6e80acdb-69d5-431f-bf84-98ef5e13ab24",
+        "id": "efc59934-4c0a-4914-8284-28c851f71a12",
         "name": "Chercher la session",
         "alwaysOutputData": true,
         "credentials": {
@@ -2177,10 +2197,10 @@
         "type": "n8n-nodes-base.if",
         "typeVersion": 2,
         "position": [
-          -7104,
-          1120
+          4192,
+          2208
         ],
-        "id": "aab4481f-a64c-411c-b166-830fb35ec4f2",
+        "id": "8af8eab2-3bdd-4dee-99f6-28dafbf33a96",
         "name": "Session connue ?"
       },
       {
@@ -2211,10 +2231,10 @@
         "type": "n8n-nodes-base.supabase",
         "typeVersion": 1,
         "position": [
-          -6880,
-          1024
+          4416,
+          2112
         ],
-        "id": "1b0597e0-327a-4f01-af04-c85991653b4c",
+        "id": "c21ad0a4-b300-445c-a581-deb2a893649a",
         "name": "Mettre à jour la session",
         "credentials": {
           "supabaseApi": {
@@ -2244,10 +2264,10 @@
         "type": "n8n-nodes-base.supabase",
         "typeVersion": 1,
         "position": [
-          -6880,
-          1216
+          4416,
+          2304
         ],
-        "id": "f2155b1f-e367-4ea8-b7b4-69bf5dc2f06c",
+        "id": "c8881706-86e6-44ac-96f7-807622fb0e33",
         "name": "Créer la session",
         "credentials": {
           "supabaseApi": {
@@ -2283,10 +2303,10 @@
         "type": "n8n-nodes-base.if",
         "typeVersion": 2,
         "position": [
-          -6656,
-          1120
+          4640,
+          2208
         ],
-        "id": "50e94ba7-dae4-4463-936b-0df95bb980a7",
+        "id": "a78402b1-465d-46be-b821-1b48f2e93191",
         "name": "Clôturer ?"
       },
       {
@@ -2321,10 +2341,10 @@
         "type": "n8n-nodes-base.supabase",
         "typeVersion": 1,
         "position": [
-          -6432,
-          1024
+          4864,
+          1920
         ],
-        "id": "4ac531d6-3ff6-41fc-9fa9-9f265a1b2b5e",
+        "id": "b41d6f4a-992f-4df5-858f-0aa48a5e44cd",
         "name": "Clôturer la consultation",
         "credentials": {
           "supabaseApi": {
@@ -2344,10 +2364,10 @@
         "type": "n8n-nodes-base.whatsApp",
         "typeVersion": 1.1,
         "position": [
-          -6208,
-          1232
+          5088,
+          2880
         ],
-        "id": "e3adbd2b-a111-418e-9971-eb70da7927b0",
+        "id": "b09e5dd8-3c5d-4e28-ba76-c583c7ac6458",
         "name": "Envoyer la réponse",
         "webhookId": "c0nsu177-0027-4000-8000-000000000027",
         "credentials": {
@@ -2368,10 +2388,10 @@
         "type": "n8n-nodes-base.whatsApp",
         "typeVersion": 1.1,
         "position": [
-          -7776,
-          1024
+          3520,
+          2128
         ],
-        "id": "55c5918a-49f2-4b98-b191-cac5f7e57e9f",
+        "id": "6db239cf-5dd1-4fc7-b1e1-fc38722b4dea",
         "name": "Envoyer aucune fiche",
         "webhookId": "c0nsu177-0028-4000-8000-000000000028",
         "credentials": {
@@ -2408,10 +2428,10 @@
         "type": "n8n-nodes-base.if",
         "typeVersion": 2,
         "position": [
-          -9120,
-          1856
+          2176,
+          2992
         ],
-        "id": "0605358e-c2d9-4fe5-8d7a-1e4f93dec0ab",
+        "id": "af9841c0-2f62-407a-b95e-c61412722f3e",
         "name": "Modification ?"
       },
       {
@@ -2432,10 +2452,10 @@
         "type": "n8n-nodes-base.supabase",
         "typeVersion": 1,
         "position": [
-          -8896,
-          1952
+          2400,
+          3088
         ],
-        "id": "8aa9aefa-5b06-49ca-83c4-a32f4963d15b",
+        "id": "c83ab792-58d4-4246-b78b-6547a3bca765",
         "name": "Trouver l'agent modification",
         "alwaysOutputData": true,
         "credentials": {
@@ -2467,10 +2487,10 @@
         "type": "n8n-nodes-base.supabase",
         "typeVersion": 1,
         "position": [
-          -8672,
-          1952
+          2624,
+          3088
         ],
-        "id": "ca46670a-0608-4764-a0a4-117e950ca889",
+        "id": "58266b19-529e-40f1-bdbe-0fc232de39f8",
         "name": "Charger le brouillon modification",
         "alwaysOutputData": true,
         "credentials": {
@@ -2487,10 +2507,10 @@
         "type": "n8n-nodes-base.code",
         "typeVersion": 2,
         "position": [
-          -8448,
-          1952
+          2848,
+          3088
         ],
-        "id": "57f130d6-f538-4e91-8f35-495c6eb7a66d",
+        "id": "aacb8502-5c77-48ec-8169-978fb0f2e289",
         "name": "Brouillon déjà ouvert"
       },
       {
@@ -2520,10 +2540,10 @@
         "type": "n8n-nodes-base.if",
         "typeVersion": 2,
         "position": [
-          -8224,
-          1952
+          3072,
+          3088
         ],
-        "id": "4eedbaa4-3f9a-4249-bfc2-2741a5f193bc",
+        "id": "11e86001-fb03-491c-8c57-ded4c2bbc678",
         "name": "Suivre le brouillon ?"
       },
       {
@@ -2544,10 +2564,10 @@
         "type": "n8n-nodes-base.supabase",
         "typeVersion": 1,
         "position": [
-          -8000,
-          2000
+          3296,
+          3136
         ],
-        "id": "2cb9e1e7-5793-45f4-b6d2-b81fadfe689b",
+        "id": "d49818e1-9c2a-4a88-adda-9c874a8adcc7",
         "name": "Chercher la session modification",
         "alwaysOutputData": true,
         "credentials": {
@@ -2584,10 +2604,10 @@
         "type": "n8n-nodes-base.if",
         "typeVersion": 2,
         "position": [
-          -7776,
-          2000
+          3520,
+          3520
         ],
-        "id": "f8679b95-7580-4d06-aa7c-30267bf38177",
+        "id": "5e8674c4-7afe-483d-8338-8d70ae80255e",
         "name": "Fiche à modifier ?"
       },
       {
@@ -2608,10 +2628,10 @@
         "type": "n8n-nodes-base.supabase",
         "typeVersion": 1,
         "position": [
-          -7552,
-          1936
+          3744,
+          3520
         ],
-        "id": "9aef2e27-fe05-4876-8192-d9c7a25e4f66",
+        "id": "262e9f56-0abb-4236-be79-a37b7836a6d3",
         "name": "Charger la fiche à modifier",
         "alwaysOutputData": true,
         "credentials": {
@@ -2623,41 +2643,41 @@
       },
       {
         "parameters": {
-          "jsCode": "const fiche = $json;\nconst details = fiche.details || {};\nconst actuel = {\n  nom: fiche.nom || '',\n  prenom: fiche.prenom || '',\n  telephone: fiche.telephone || '',\n  email: fiche.email || '',\n  type_bien: fiche.type_bien || '',\n  secteur: fiche.secteur || '',\n  budget: fiche.budget || '',\n  delai: details.delai || '',\n  financement: details.financement || '',\n  delai_acquisition: fiche.delai_acquisition || '',\n  financement_statut: fiche.financement_statut || '',\n  score: fiche.score || ''\n};\nconst identite = [fiche.prenom, fiche.nom].filter(Boolean).join(' ');\nreturn [{ json: { actuel, acheteur_id: fiche.id, agent_id: fiche.agent_id, identite, cible: [identite, fiche.type_bien, fiche.secteur].filter(Boolean).join(', ') } }];\n"
+          "jsCode": "const fiche = $json;\nconst details = fiche.details || {};\nconst actuel = {\n  nom: fiche.nom || '',\n  prenom: fiche.prenom || '',\n  telephone: fiche.telephone || '',\n  email: fiche.email || '',\n  type_bien: fiche.type_bien || '',\n  secteur: fiche.secteur || '',\n  budget: fiche.budget || '',\n  delai: details.delai || '',\n  financement: details.financement || '',\n  delai_acquisition: fiche.delai_acquisition || '',\n  financement_statut: fiche.financement_statut || '',\n  score: fiche.score || '',\n  freins: Array.isArray(fiche.freins) ? fiche.freins : [],\n  motivations: Array.isArray(fiche.motivations) ? fiche.motivations : []\n};\nconst identite = [fiche.prenom, fiche.nom].filter(Boolean).join(' ');\nreturn [{ json: { actuel, acheteur_id: fiche.id, agent_id: fiche.agent_id, identite, cible: [identite, fiche.type_bien, fiche.secteur].filter(Boolean).join(', ') } }];\n"
         },
         "type": "n8n-nodes-base.code",
         "typeVersion": 2,
         "position": [
-          -7328,
-          256
+          3968,
+          1024
         ],
-        "id": "7d601f1d-231a-45ee-a61e-28704b154ee9",
+        "id": "651dea04-3e52-47f5-bc9f-3e48842cc39c",
         "name": "Préparer la modification"
       },
       {
         "parameters": {
-          "jsCode": "function fusionner(base, dit, creation) {\n  const data = Object.assign({}, base || {});\n  const cles = ['nom', 'prenom', 'telephone', 'email', 'type_bien', 'secteur', 'budget', 'delai', 'financement', 'delai_acquisition', 'financement_statut'];\n  for (const cle of cles) {\n    if (dit[cle]) data[cle] = dit[cle];\n  }\n  if (!data.prenom && data.nom && String(data.nom).includes(' ')) {\n    const parts = String(data.nom).split(/\\s+/).filter(Boolean);\n    if (parts.length >= 2) {\n      data.prenom = parts[0];\n      data.nom = parts.slice(1).join(' ');\n    }\n  }\n  if (dit.score_force) {\n    data.score_force = true;\n    data.score_impose = dit.score_impose;\n  } else {\n    data.score_force = false;\n    data.score_impose = '';\n  }\n  if (!data.financement_statut) data.financement_statut = 'inconnu';\n  data.champs_manquants = [];\n  if (creation) {\n    if (!data.nom) data.champs_manquants.push('nom');\n    if (!data.prenom) data.champs_manquants.push('prénom');\n    if (!data.telephone && !data.email) data.champs_manquants.push('téléphone ou e-mail');\n  }\n  return data;\n}\nconst prep = $input.first().json;\nconst dit = $('Qualifier le message').first().json.dit || {};\nreturn [{ json: fusionner(prep.actuel || {}, dit, false) }];\n"
+          "jsCode": "function fusionner(base, dit, creation) {\n  const data = Object.assign({}, base || {});\n  const cles = ['nom', 'prenom', 'telephone', 'email', 'type_bien', 'secteur', 'budget', 'delai', 'financement', 'delai_acquisition', 'financement_statut'];\n  for (const cle of cles) {\n    if (dit[cle]) data[cle] = dit[cle];\n  }\n  if (!data.prenom && data.nom && String(data.nom).includes(' ')) {\n    const parts = String(data.nom).split(/\\s+/).filter(Boolean);\n    if (parts.length >= 2) {\n      data.prenom = parts[0];\n      data.nom = parts.slice(1).join(' ');\n    }\n  }\n  if (dit.score_force) {\n    data.score_force = true;\n    data.score_impose = dit.score_impose;\n  } else {\n    data.score_force = false;\n    data.score_impose = '';\n  }\n  const cleListe = (value) => String(value || '').trim().toLowerCase().normalize('NFD').replace(/[\\u0300-\\u036f]/g, '');\n  const fusionListe = (actuelle, ajouts, retraits) => {\n    const leves = (retraits || []).map(cleListe);\n    const resultat = (Array.isArray(actuelle) ? actuelle : []).filter((item) => !leves.includes(cleListe(item)));\n    for (const item of ajouts || []) {\n      if (!resultat.some((existant) => cleListe(existant) === cleListe(item))) resultat.push(item);\n    }\n    return resultat;\n  };\n  data.freins = fusionListe(data.freins, dit.freins_ajoutes, dit.freins_leves);\n  data.motivations = fusionListe(data.motivations, dit.motivations_ajoutees, dit.motivations_levees);\n  data.freins_leves = fusionListe(data.freins_leves, dit.freins_leves, dit.freins_ajoutes);\n  data.motivations_levees = fusionListe(data.motivations_levees, dit.motivations_levees, dit.motivations_ajoutees);\n  if (!data.financement_statut) data.financement_statut = 'inconnu';\n  data.champs_manquants = [];\n  if (creation) {\n    if (!data.nom) data.champs_manquants.push('nom');\n    if (!data.prenom) data.champs_manquants.push('prénom');\n    if (!data.telephone && !data.email) data.champs_manquants.push('téléphone ou e-mail');\n  }\n  return data;\n}\nconst prep = $input.first().json;\nconst dit = $('Qualifier le message').first().json.dit || {};\nreturn [{ json: fusionner(prep.actuel || {}, dit, false) }];\n"
         },
         "type": "n8n-nodes-base.code",
         "typeVersion": 2,
         "position": [
-          -7104,
-          256
+          4192,
+          1024
         ],
-        "id": "6520d931-4c38-485c-880a-76f5af6530f3",
+        "id": "148ee995-71ab-4b8b-be3a-bb86fdcbae33",
         "name": "Extraire la modification"
       },
       {
         "parameters": {
-          "jsCode": "const data = Object.assign({}, $input.first().json);\nconst impose = data.score_impose || '';\nconst force = data.score_force === true && ['vert', 'orange', 'rouge'].includes(impose);\nconst delai = data.delai_acquisition || '';\nconst financement = data.financement_statut || 'inconnu';\nlet score = 'orange';\nif (force) score = impose;\nelse if (delai === 'immediat' || delai === 'moins_d_un_mois') score = 'vert';\nelse if (delai === 'plus_de_six_mois' || financement === 'aucun') score = 'rouge';\ndata.score_force = force;\nconst prep = $('Préparer la modification').first().json;\nconst line = (label, value) => (value ? label + ' : ' + value : null);\nconst lines = [[data.prenom, data.nom].filter(Boolean).join(' ') || 'Nom non précisé', line('Téléphone', data.telephone), line('E-mail', data.email), [data.type_bien, data.secteur].filter(Boolean).join(', '), line('Budget', data.budget), data.financement || null, line('Délai', data.delai), 'Score : ' + score].filter(Boolean);\nconst extraction = Object.assign({}, data, { score });\nconst message = 'Mise à jour de ' + (prep.cible || 'la fiche') + ' :\\n' + lines.join('\\n') + \"\\n\\nRien n'est enregistré pour l'instant. Réponds OK pour valider, ou annuler pour abandonner.\";\nreturn [{ json: { agent_id: prep.agent_id, acheteur_id: prep.acheteur_id, extraction, champs_manquants: data.champs_manquants || [], message } }];\n"
+          "jsCode": "const data = Object.assign({}, $input.first().json);\nconst impose = data.score_impose || '';\nconst force = data.score_force === true && ['vert', 'orange', 'rouge'].includes(impose);\nconst delai = data.delai_acquisition || '';\nconst financement = data.financement_statut || 'inconnu';\nlet score = 'orange';\nif (force) score = impose;\nelse if (delai === 'immediat' || delai === 'moins_d_un_mois') score = 'vert';\nelse if (delai === 'plus_de_six_mois' || financement === 'aucun') score = 'rouge';\ndata.score_force = force;\nconst prep = $('Préparer la modification').first().json;\nconst line = (label, value) => (value ? label + ' : ' + value : null);\nconst lines = [[data.prenom, data.nom].filter(Boolean).join(' ') || 'Nom non précisé', line('Téléphone', data.telephone), line('E-mail', data.email), [data.type_bien, data.secteur].filter(Boolean).join(', '), line('Budget', data.budget), data.financement || null, line('Délai', data.delai), line('Freins', (data.freins || []).join(', ')), line('Motivations', (data.motivations || []).join(', ')), 'Score : ' + score].filter(Boolean);\nconst extraction = Object.assign({}, data, { score });\nconst message = 'Mise à jour de ' + (prep.cible || 'la fiche') + ' :\\n' + lines.join('\\n') + \"\\n\\nRien n'est enregistré pour l'instant. Réponds OK pour valider, ou annuler pour abandonner.\";\nreturn [{ json: { agent_id: prep.agent_id, acheteur_id: prep.acheteur_id, extraction, champs_manquants: data.champs_manquants || [], message } }];\n"
         },
         "type": "n8n-nodes-base.code",
         "typeVersion": 2,
         "position": [
-          -6880,
-          256
+          4416,
+          1024
         ],
-        "id": "b0dcc2b6-6307-4d7f-98f8-767485406e4f",
+        "id": "d789abde-196a-4626-8fce-7cfe507d5c95",
         "name": "Appliquer la modification"
       },
       {
@@ -2693,10 +2713,10 @@
         "type": "n8n-nodes-base.supabase",
         "typeVersion": 1,
         "position": [
-          -6656,
-          256
+          4640,
+          1024
         ],
-        "id": "7123b85c-fa2d-4294-a071-5c98fcf937a4",
+        "id": "d35cf0d3-87d5-41ac-b200-4e5b41e0911b",
         "name": "Remplacer avant modification",
         "alwaysOutputData": true,
         "credentials": {
@@ -2743,10 +2763,10 @@
         "type": "n8n-nodes-base.supabase",
         "typeVersion": 1,
         "position": [
-          -6432,
-          256
+          4864,
+          1024
         ],
-        "id": "17070f86-9a4f-48ca-9b6b-0645f23dde70",
+        "id": "ea42d4a1-ddd9-4cbf-af4a-e47880b86429",
         "name": "Enregistrer la modification",
         "credentials": {
           "supabaseApi": {
@@ -2766,10 +2786,10 @@
         "type": "n8n-nodes-base.whatsApp",
         "typeVersion": 1.1,
         "position": [
-          -6208,
-          256
+          5088,
+          1024
         ],
-        "id": "d6a07eca-e4eb-43e2-bd9e-6fcee0e2394f",
+        "id": "cf35c55e-82be-4dcd-ae15-a5a1065283d1",
         "name": "Envoyer la modification",
         "webhookId": "m0dif177-0014-4000-8000-000000000014",
         "credentials": {
@@ -2790,10 +2810,10 @@
         "type": "n8n-nodes-base.whatsApp",
         "typeVersion": 1.1,
         "position": [
-          -7552,
-          2128
+          3744,
+          3712
         ],
-        "id": "65c49d29-dc6a-4917-9acf-40385fb2adb4",
+        "id": "c0bee4a5-f354-4558-867a-30b8633aa45d",
         "name": "Aucune fiche à modifier",
         "webhookId": "m0dif177-0015-4000-8000-000000000015",
         "credentials": {
@@ -2810,10 +2830,10 @@
         "type": "n8n-nodes-base.code",
         "typeVersion": 2,
         "position": [
-          -10240,
-          944
+          832,
+          1296
         ],
-        "id": "14581abc-8801-4a5c-8b71-7930c9f9e030",
+        "id": "832a9f8c-bc5f-4d61-89e1-af1aaa88db06",
         "name": "Commande du vocal"
       },
       {
@@ -2844,10 +2864,10 @@
         "type": "n8n-nodes-base.if",
         "typeVersion": 2.3,
         "position": [
-          -10016,
-          944
+          1056,
+          1296
         ],
-        "id": "2e478834-578c-4c27-98ce-f67d94e4c30d",
+        "id": "c7a7385a-21c8-4871-9208-816cb1b65296",
         "name": "If"
       },
       {
@@ -2878,10 +2898,10 @@
         "type": "n8n-nodes-base.if",
         "typeVersion": 2,
         "position": [
-          -9568,
-          1040
+          1728,
+          2128
         ],
-        "id": "31323613-bf8c-4da7-bbd1-0dae6196b6c0",
+        "id": "76254a00-43bc-4252-a7a3-c07185ef7d55",
         "name": "Cible nommée ?"
       },
       {
@@ -2902,10 +2922,10 @@
         "type": "n8n-nodes-base.supabase",
         "typeVersion": 1,
         "position": [
-          -9120,
-          320
+          1952,
+          1504
         ],
-        "id": "aa3c520c-ccdd-437e-962b-1696e0a65c6a",
+        "id": "e9a939bb-c219-4fe5-8f91-72c84dfba9f1",
         "name": "Trouver l'agent cible",
         "alwaysOutputData": true,
         "credentials": {
@@ -2930,10 +2950,10 @@
         "type": "n8n-nodes-base.supabase",
         "typeVersion": 1,
         "position": [
-          -8896,
-          320
+          2176,
+          1504
         ],
-        "id": "f4e73a49-a9bd-4b7b-b3a5-d08dcff04031",
+        "id": "3389b6f6-6800-491e-93bb-99eb5615266a",
         "name": "Charger les fiches cible",
         "alwaysOutputData": true,
         "credentials": {
@@ -2945,15 +2965,15 @@
       },
       {
         "parameters": {
-          "jsCode": "function norm(value) {\n  return String(value || '').trim().toLowerCase().normalize('NFD').replace(/[\\u0300-\\u036f]/g, '');\n}\nfunction formaterDate(value) {\n  if (!value) return '';\n  const date = new Date(value);\n  if (Number.isNaN(date.getTime())) return '';\n  return new Intl.DateTimeFormat('fr-FR', { timeZone: 'Europe/Paris', day: '2-digit', month: '2-digit', year: 'numeric' }).format(date);\n}\nfunction reponse(fiche, question, sujet) {\n  const identite = [fiche.prenom, fiche.nom].filter(Boolean).join(' ') || 'Cette fiche';\n  const lieu = [fiche.type_bien, fiche.secteur].filter(Boolean).join(', ');\n  const entete = lieu ? identite + ', ' + lieu : identite;\n  const demande = sujet || '';\n  const n = norm(question);\n  if (demande === 'budget' || n.includes('budget')) return entete + '. Budget : ' + (fiche.budget || 'non précisé') + '.';\n  if (demande === 'financement' || n.includes('financement')) return entete + '. Financement : ' + (fiche.financement_statut || 'inconnu') + '.';\n  if (demande === 'delai' || n.includes('delai')) return entete + '. Délai : ' + (fiche.delai_acquisition || 'non précisé') + '.';\n  if (demande === 'score' || n.includes('score')) return entete + '. Score : ' + (fiche.score || 'non précisé') + '.';\n  return [entete, fiche.budget ? 'Budget : ' + fiche.budget : '', fiche.score ? 'Score : ' + fiche.score : ''].filter(Boolean).join('\\n');\n}\nconst qual = $('Qualifier le message').first().json;\nconst prenom = norm(qual.prenom_cible);\nconst nom = norm(qual.nom_cible);\nconst libelle = qual.libelle || ((prenom + ' ' + nom).trim());\nconst questionCible = qual.mode_cible === 'question';\nconst rappelCible = qual.mode_cible === 'rappel_question' || qual.mode_cible === 'rappel_ecriture';\nconst agent = $('Trouver l\\'agent cible').first().json;\nconst rows = $input.all().map((item) => item.json).filter((row) => row.id);\nconst identite = (row) => {\n  const p = norm(row.prenom);\n  const n = norm(row.nom);\n  if (p && n) return p + ' ' + n;\n  return n;\n};\nconst cherche = (prenom + ' ' + nom).trim();\nconst trouves = rows.filter((row) => identite(row) === cherche);\nif (!trouves.length) {\n  return [{ json: { action: 'aucune', message: 'Aucune fiche pour ' + libelle + '.' } }];\n}\nif (trouves.length === 1 && rappelCible) {\n  return [{ json: { action: 'rappel', mode: qual.mode_cible, acheteur_id: trouves[0].id, agent_id: agent.id, libelle, texte: qual.texte_rappel || qual.text || '', echeance: qual.echeance_rappel || '', contenu: qual.contenu_rappel || '', canal: qual.canal_rappel || '', message: qual.message_rappel || '' } }];\n}\nif (trouves.length === 1 && questionCible) {\n  return [{ json: { action: 'reponse', message: reponse(trouves[0], qual.text || '', qual.sujet || '') } }];\n}\nif (trouves.length === 1) {\n  return [{ json: { action: 'une', acheteur_id: trouves[0].id } }];\n}\nconst candidats = trouves.map((row, index) => ({\n  index: index + 1,\n  id: row.id,\n  prenom: row.prenom || '',\n  nom: row.nom || '',\n  type_bien: row.type_bien || '',\n  secteur: row.secteur || '',\n  budget: row.budget || '',\n  created_at: row.created_at || '',\n  telephone: row.telephone || ''\n}));\nconst lignes = candidats.map((candidat) => {\n  const qui = [candidat.prenom, candidat.nom].filter(Boolean).join(' ') || libelle;\n  const recherche = [candidat.type_bien, candidat.secteur].filter(Boolean).join(', ');\n  const tel = candidat.telephone ? String(candidat.telephone).replace(/\\D/g, '').slice(-4) : '';\n  const details = [recherche, candidat.budget, formaterDate(candidat.created_at), tel].filter(Boolean).join(' - ');\n  return candidat.index + '. ' + qui + (details ? ' - ' + details : '');\n});\nconst message = \"J'ai trouvé \" + candidats.length + ' fiches pour ' + libelle + '.\\n' + lignes.join('\\n') + '\\nRépondez par le numéro de la fiche.';\nconst intention = rappelCible ? qual.mode_cible : (questionCible ? 'question_cible' : 'modification_cible');\nreturn [{ json: { action: 'liste', message, candidats, brouillon: { intention, question: qual.text || '', text: qual.text || '', sujet: qual.sujet || '', texte_rappel: qual.texte_rappel || '', echeance_rappel: qual.echeance_rappel || '', contenu_rappel: qual.contenu_rappel || '', canal_rappel: qual.canal_rappel || '', message_rappel: qual.message_rappel || '' }, agent_id: agent.id } }];\n"
+          "jsCode": "function norm(value) {\n  return String(value || '').trim().toLowerCase().normalize('NFD').replace(/[\\u0300-\\u036f]/g, '');\n}\nfunction formaterDate(value) {\n  if (!value) return '';\n  const date = new Date(value);\n  if (Number.isNaN(date.getTime())) return '';\n  return new Intl.DateTimeFormat('fr-FR', { timeZone: 'Europe/Paris', day: '2-digit', month: '2-digit', year: 'numeric' }).format(date);\n}\nfunction reponse(fiche, question, sujet) {\n  const identite = [fiche.prenom, fiche.nom].filter(Boolean).join(' ') || 'Cette fiche';\n  const lieu = [fiche.type_bien, fiche.secteur].filter(Boolean).join(', ');\n  const entete = lieu ? identite + ', ' + lieu : identite;\n  const demande = sujet || '';\n  const n = norm(question);\n  if (demande === 'budget' || n.includes('budget')) return entete + '. Budget : ' + (fiche.budget || 'non précisé') + '.';\n  if (demande === 'financement' || n.includes('financement')) return entete + '. Financement : ' + (fiche.financement_statut || 'inconnu') + '.';\n  if (demande === 'delai' || n.includes('delai')) return entete + '. Délai : ' + (fiche.delai_acquisition || 'non précisé') + '.';\n  if (demande === 'score' || n.includes('score')) return entete + '. Score : ' + (fiche.score || 'non précisé') + '.';\n  return [entete, fiche.budget ? 'Budget : ' + fiche.budget : '', fiche.score ? 'Score : ' + fiche.score : ''].filter(Boolean).join('\\n');\n}\nconst qual = $('Qualifier le message').first().json;\nconst prenom = norm(qual.prenom_cible);\nconst nom = norm(qual.nom_cible);\nconst libelle = qual.libelle || ((prenom + ' ' + nom).trim());\nconst questionCible = qual.mode_cible === 'question';\nconst rappelCible = qual.mode_cible === 'rappel_question' || qual.mode_cible === 'rappel_ecriture';\nconst agent = $('Trouver l\\'agent cible').first().json;\nconst rows = $input.all().map((item) => item.json).filter((row) => row.id);\nconst identite = (row) => {\n  const p = norm(row.prenom);\n  const n = norm(row.nom);\n  if (p && n) return p + ' ' + n;\n  return n;\n};\nconst cherche = (prenom + ' ' + nom).trim();\nconst trouves = rows.filter((row) => identite(row) === cherche);\nif (!trouves.length) {\n  return [{ json: { action: 'aucune', message: 'Aucune fiche pour ' + libelle + '.' } }];\n}\nif (trouves.length === 1 && rappelCible) {\n  return [{ json: { action: 'rappel', mode: qual.mode_cible, acheteur_id: trouves[0].id, agent_id: agent.id, libelle, texte: qual.texte_rappel || qual.text || '', echeance: qual.echeance_rappel || '', contenu: qual.contenu_rappel || '', canal: qual.canal_rappel || '', message: qual.message_rappel || '', contexte: qual.contexte_rappel || '' } }];\n}\nif (trouves.length === 1 && questionCible) {\n  return [{ json: { action: 'reponse', message: reponse(trouves[0], qual.text || '', qual.sujet || '') } }];\n}\nif (trouves.length === 1) {\n  return [{ json: { action: 'une', acheteur_id: trouves[0].id } }];\n}\nconst candidats = trouves.map((row, index) => ({\n  index: index + 1,\n  id: row.id,\n  prenom: row.prenom || '',\n  nom: row.nom || '',\n  type_bien: row.type_bien || '',\n  secteur: row.secteur || '',\n  budget: row.budget || '',\n  created_at: row.created_at || '',\n  telephone: row.telephone || ''\n}));\nconst lignes = candidats.map((candidat) => {\n  const qui = [candidat.prenom, candidat.nom].filter(Boolean).join(' ') || libelle;\n  const recherche = [candidat.type_bien, candidat.secteur].filter(Boolean).join(', ');\n  const tel = candidat.telephone ? String(candidat.telephone).replace(/\\D/g, '').slice(-4) : '';\n  const details = [recherche, candidat.budget, formaterDate(candidat.created_at), tel].filter(Boolean).join(' - ');\n  return candidat.index + '. ' + qui + (details ? ' - ' + details : '');\n});\nconst message = \"J'ai trouvé \" + candidats.length + ' fiches pour ' + libelle + '.\\n' + lignes.join('\\n') + '\\nRépondez par le numéro de la fiche.';\nconst intention = rappelCible ? qual.mode_cible : (questionCible ? 'question_cible' : 'modification_cible');\nreturn [{ json: { action: 'liste', message, candidats, brouillon: { intention, question: qual.text || '', text: qual.text || '', sujet: qual.sujet || '', texte_rappel: qual.texte_rappel || '', echeance_rappel: qual.echeance_rappel || '', contenu_rappel: qual.contenu_rappel || '', canal_rappel: qual.canal_rappel || '', message_rappel: qual.message_rappel || '', contexte_rappel: qual.contexte_rappel || '' }, agent_id: agent.id } }];\n"
         },
         "type": "n8n-nodes-base.code",
         "typeVersion": 2,
         "position": [
-          -8672,
-          320
+          2400,
+          1504
         ],
-        "id": "77aa698d-45f2-4399-a077-d7d9b5f65947",
+        "id": "fa3e50c6-9efc-4ab9-97a4-eb5ced158bf0",
         "name": "Décider la cible"
       },
       {
@@ -2983,10 +3003,10 @@
         "type": "n8n-nodes-base.if",
         "typeVersion": 2,
         "position": [
-          -8448,
-          320
+          2624,
+          1504
         ],
-        "id": "8f53a204-0962-4ca0-ad65-8697549d551c",
+        "id": "60acf684-81a9-4d31-ba4c-5a6ef1cf88aa",
         "name": "Liste de cibles ?"
       },
       {
@@ -3022,10 +3042,10 @@
         "type": "n8n-nodes-base.supabase",
         "typeVersion": 1,
         "position": [
-          -8224,
-          80
+          2848,
+          1312
         ],
-        "id": "5529a4a8-67f1-4cca-9454-9f965f766222",
+        "id": "579e3ed6-4fef-400a-b6cf-5b218a601d24",
         "name": "Remplacer avant cible",
         "alwaysOutputData": true,
         "credentials": {
@@ -3072,10 +3092,10 @@
         "type": "n8n-nodes-base.supabase",
         "typeVersion": 1,
         "position": [
-          -8000,
-          80
+          3072,
+          1312
         ],
-        "id": "6bcfe75c-584c-405c-914a-e8b1884241fc",
+        "id": "ad911469-1fed-4e6f-bde2-5efd4fc7b4b0",
         "name": "Enregistrer le choix cible",
         "credentials": {
           "supabaseApi": {
@@ -3095,10 +3115,10 @@
         "type": "n8n-nodes-base.whatsApp",
         "typeVersion": 1.1,
         "position": [
-          -7776,
-          80
+          3296,
+          1312
         ],
-        "id": "425320a6-f721-4318-95d0-3a4675110eb4",
+        "id": "0a61205e-22ad-43c2-bfd5-787230784533",
         "name": "Envoyer la liste cible",
         "webhookId": "c1b1e001-0008-4000-8000-000000000008",
         "credentials": {
@@ -3135,10 +3155,10 @@
         "type": "n8n-nodes-base.if",
         "typeVersion": 2,
         "position": [
-          -7776,
-          272
+          3296,
+          1552
         ],
-        "id": "cc365864-430d-441c-8f17-2b18317d6fff",
+        "id": "f38db7c5-f456-4f0d-9676-16636935429d",
         "name": "Une cible ?"
       },
       {
@@ -3159,10 +3179,10 @@
         "type": "n8n-nodes-base.supabase",
         "typeVersion": 1,
         "position": [
-          -7552,
-          176
+          3520,
+          1456
         ],
-        "id": "8ce146d8-bbad-4fe3-96c3-b4ed170e3f05",
+        "id": "716b4086-dd0e-40a1-9de4-abb0704bc2ee",
         "name": "Charger la fiche nommée",
         "alwaysOutputData": true,
         "credentials": {
@@ -3183,10 +3203,10 @@
         "type": "n8n-nodes-base.whatsApp",
         "typeVersion": 1.1,
         "position": [
-          -7552,
-          368
+          3520,
+          1648
         ],
-        "id": "5c537a7c-a2d8-4512-9903-dc2ed34cf18f",
+        "id": "a5a49e46-5e03-4719-822e-070b7ca09538",
         "name": "Envoyer aucune cible",
         "webhookId": "c1b1e001-0011-4000-8000-000000000011",
         "credentials": {
@@ -3223,10 +3243,10 @@
         "type": "n8n-nodes-base.if",
         "typeVersion": 2,
         "position": [
-          -8000,
-          3280
+          -1632,
+          2224
         ],
-        "id": "1f47d4b9-8ce6-4353-941e-4eba66193998",
+        "id": "7fecec1f-67bf-4395-8f56-33a481b560b8",
         "name": "Modifier la cible ?"
       },
       {
@@ -3247,10 +3267,10 @@
         "type": "n8n-nodes-base.supabase",
         "typeVersion": 1,
         "position": [
-          -7552,
-          3152
+          3744,
+          816
         ],
-        "id": "76d6fa34-f6cb-40cd-b98c-ca7c8c57f02d",
+        "id": "a8ecfb76-8598-48ab-959d-fc275899311d",
         "name": "Charger la fiche choisie",
         "alwaysOutputData": true,
         "credentials": {
@@ -3287,10 +3307,10 @@
         "type": "n8n-nodes-base.if",
         "typeVersion": 2,
         "position": [
-          -7552,
-          3424
+          -1184,
+          2400
         ],
-        "id": "0c295e78-d26a-4895-a7c5-f054118ff5d8",
+        "id": "bea91007-dd9d-4a65-b8d3-0f70e265109e",
         "name": "Rappel cible ?"
       },
       {
@@ -3304,10 +3324,10 @@
         "type": "n8n-nodes-base.whatsApp",
         "typeVersion": 1.1,
         "position": [
-          -7328,
-          3328
+          -960,
+          1200
         ],
-        "id": "ce9d1382-6a71-4280-bbc6-24f2f8b4e6f9",
+        "id": "b7d9f0b0-8de4-41b4-b4a6-11e12b1d0a61",
         "name": "Envoyer le rappel cible",
         "webhookId": "c1b1e001-0015-4000-8000-000000000015",
         "credentials": {
@@ -3344,10 +3364,10 @@
         "type": "n8n-nodes-base.if",
         "typeVersion": 2,
         "position": [
-          -8000,
-          352
+          3072,
+          1648
         ],
-        "id": "95447ae2-568b-4c57-879f-f28f1201789c",
+        "id": "a99e4c0c-636e-4c76-a601-3067558db92b",
         "name": "Réponse cible ?"
       },
       {
@@ -3361,10 +3381,10 @@
         "type": "n8n-nodes-base.whatsApp",
         "typeVersion": 1.1,
         "position": [
-          -7776,
-          496
+          3296,
+          1744
         ],
-        "id": "3ced4caa-3d0e-4162-be0c-b705ba637236",
+        "id": "e925636d-878b-4d22-af46-002093a5427f",
         "name": "Envoyer la réponse cible",
         "webhookId": "c1b1e001-0016-4000-8000-000000000016",
         "credentials": {
@@ -3401,10 +3421,10 @@
         "type": "n8n-nodes-base.if",
         "typeVersion": 2,
         "position": [
-          -8224,
-          416
+          2848,
+          1600
         ],
-        "id": "9715695a-a042-44b2-ae7f-0c44eabc9235",
+        "id": "1cc0f4b5-0bff-4c1d-8d65-0b99e69ea00f",
         "name": "Rappel demandé ?"
       },
       {
@@ -3434,23 +3454,23 @@
         "type": "n8n-nodes-base.if",
         "typeVersion": 2,
         "position": [
-          -7776,
-          3376
+          -1408,
+          2320
         ],
-        "id": "c2ca7ae7-c304-4699-b259-3cc7d62a55f5",
+        "id": "4afbaac8-f7ee-4858-b28f-db73532a491b",
         "name": "Suite rappel ?"
       },
       {
         "parameters": {
-          "jsCode": "let acheteur_id = '';\nlet agent_id = '';\nlet mode = '';\nlet texte = '';\nlet libelle = '';\nlet echeance = '';\nlet contenu = '';\nlet canal = '';\nlet message = '';\ntry {\n  const direct = $('Décider la cible').first().json;\n  if (direct && direct.action === 'rappel') {\n    acheteur_id = direct.acheteur_id || '';\n    agent_id = direct.agent_id || '';\n    mode = direct.mode || '';\n    texte = direct.texte || '';\n    libelle = direct.libelle || '';\n    echeance = direct.echeance || '';\n    contenu = direct.contenu || '';\n    canal = direct.canal || '';\n    message = direct.message || '';\n  }\n} catch (e) {}\ntry {\n  const suite = $('Décider la validation').first().json;\n  if (suite && suite.action === 'rappel_suite') {\n    acheteur_id = suite.acheteur_id || acheteur_id;\n    agent_id = suite.agent_id || agent_id;\n    mode = suite.mode || mode;\n    texte = suite.texte || texte;\n    libelle = suite.libelle || libelle;\n    echeance = suite.echeance || echeance;\n    contenu = suite.contenu || contenu;\n    canal = suite.canal || canal;\n    message = suite.message || message;\n  }\n} catch (e) {}\nreturn [{ json: { acheteur_id, agent_id, mode, texte, libelle, echeance, contenu, canal, message } }];\n"
+          "jsCode": "let acheteur_id = '';\nlet agent_id = '';\nlet mode = '';\nlet texte = '';\nlet libelle = '';\nlet echeance = '';\nlet contenu = '';\nlet canal = '';\nlet message = '';\nlet contexte = '';\ntry {\n  const direct = $('Décider la cible').first().json;\n  if (direct && direct.action === 'rappel') {\n    acheteur_id = direct.acheteur_id || '';\n    agent_id = direct.agent_id || '';\n    mode = direct.mode || '';\n    texte = direct.texte || '';\n    libelle = direct.libelle || '';\n    echeance = direct.echeance || '';\n    contenu = direct.contenu || '';\n    canal = direct.canal || '';\n    message = direct.message || '';\n    contexte = direct.contexte || '';\n  }\n} catch (e) {}\ntry {\n  const suite = $('Décider la validation').first().json;\n  if (suite && suite.action === 'rappel_suite') {\n    acheteur_id = suite.acheteur_id || acheteur_id;\n    agent_id = suite.agent_id || agent_id;\n    mode = suite.mode || mode;\n    texte = suite.texte || texte;\n    libelle = suite.libelle || libelle;\n    echeance = suite.echeance || echeance;\n    contenu = suite.contenu || contenu;\n    canal = suite.canal || canal;\n    message = suite.message || message;\n    contexte = suite.contexte || contexte;\n  }\n} catch (e) {}\nreturn [{ json: { acheteur_id, agent_id, mode, texte, libelle, echeance, contenu, canal, message, contexte } }];\n"
         },
         "type": "n8n-nodes-base.code",
         "typeVersion": 2,
         "position": [
-          -7552,
-          640
+          3072,
+          1056
         ],
-        "id": "f08d6f5a-8d3b-41da-9af3-19d3991d5a8d",
+        "id": "5ac02cb6-c09b-430d-84c3-307aa0ab7258",
         "name": "Unifier le rappel"
       },
       {
@@ -3474,10 +3494,10 @@
         "type": "n8n-nodes-base.supabase",
         "typeVersion": 1,
         "position": [
-          -7328,
-          640
+          3296,
+          1056
         ],
-        "id": "ff6a7f22-adca-4b73-84e5-4f111dd1a508",
+        "id": "8732da42-470e-47e0-8d78-80f0c349880f",
         "name": "Charger le rappel",
         "alwaysOutputData": true,
         "credentials": {
@@ -3489,15 +3509,15 @@
       },
       {
         "parameters": {
-          "jsCode": "const CANAUX = { appel: 'appel', whatsapp: 'WhatsApp', email: 'e-mail' };\nfunction jour(iso) {\n  if (!iso) return '';\n  const date = new Date(iso + 'T12:00:00Z');\n  if (Number.isNaN(date.getTime())) return iso;\n  return new Intl.DateTimeFormat('fr-FR', { timeZone: 'Europe/Paris', weekday: 'long', day: 'numeric', month: 'long' }).format(date);\n}\nconst demande = $('Unifier le rappel').first().json;\nconst aFaire = $input.all()\n  .map((item) => item.json)\n  .filter((row) => row.id && row.texte && (row.statut || 'a_faire') === 'a_faire')\n  .sort((a, b) => String(a.echeance || '').localeCompare(String(b.echeance || '')));\nconst libelle = demande.libelle || 'cette fiche';\nconst consigne = \"Rien n'est enregistré pour l'instant. Réponds OK pour valider, ou annuler pour abandonner.\";\nif (demande.mode === 'rappel_question') {\n  const message = aFaire.length\n    ? ('Tâches à faire pour ' + libelle + ' :\\n' + aFaire.map((row) => '- ' + jour(row.echeance) + ' : ' + row.texte).join('\\n'))\n    : ('Aucune tâche à faire pour ' + libelle + '.');\n  return [{ json: { action: 'reponse', message } }];\n}\nconst manque = [];\nif (!demande.echeance) manque.push('le jour');\nif (!demande.contenu) manque.push(\"ce qu'il faut faire\");\nif (manque.length) {\n  const message = 'Il me manque ' + manque.join(' et ') + ' pour créer la tâche de ' + libelle + '. Renvoyez la demande complète, par exemple : Pour ' + libelle + \", rappel jeudi à 10h pour faire le point sur l'offre.\";\n  return [{ json: { action: 'reponse', message } }];\n}\nconst canal = CANAUX[demande.canal] ? demande.canal : 'appel';\nconst corps = 'Nouvelle tâche pour ' + libelle + ' :\\n' + jour(demande.echeance) + ' - ' + demande.contenu + ' (' + CANAUX[canal] + ')';\nreturn [{ json: { action: 'brouillon', message: corps + '\\n\\n' + consigne, brouillon: { agent_id: demande.agent_id, acheteur_id: demande.acheteur_id, libelle, echeance: demande.echeance, texte: demande.contenu, canal, message_suggere: demande.message || '' } } }];\n"
+          "jsCode": "const CANAUX = { appel: 'appel', whatsapp: 'WhatsApp', email: 'e-mail' };\nfunction jour(iso) {\n  if (!iso) return '';\n  const date = new Date(iso + 'T12:00:00Z');\n  if (Number.isNaN(date.getTime())) return iso;\n  return new Intl.DateTimeFormat('fr-FR', { timeZone: 'Europe/Paris', weekday: 'long', day: 'numeric', month: 'long' }).format(date);\n}\nconst demande = $('Unifier le rappel').first().json;\nconst fiche = $input.first().json || {};\nconst aFaire = $('Charger le rappel').all()\n  .map((item) => item.json)\n  .filter((row) => row.id && row.texte && (row.statut || 'a_faire') === 'a_faire')\n  .sort((a, b) => String(a.echeance || '').localeCompare(String(b.echeance || '')));\nconst libelle = demande.libelle || 'cette fiche';\nconst consigne = \"Rien n'est enregistré pour l'instant. Réponds OK pour valider, ou annuler pour abandonner.\";\nif (demande.mode === 'rappel_question') {\n  const message = aFaire.length\n    ? ('Tâches à faire pour ' + libelle + ' :\\n' + aFaire.map((row) => '- ' + jour(row.echeance) + ' : ' + row.texte).join('\\n'))\n    : ('Aucune tâche à faire pour ' + libelle + '.');\n  return [{ json: { action: 'reponse', message } }];\n}\nconst manque = [];\nif (!demande.echeance) manque.push('le jour');\nif (!demande.contenu) manque.push(\"ce qu'il faut faire\");\nif (manque.length) {\n  const message = 'Il me manque ' + manque.join(' et ') + ' pour créer la tâche de ' + libelle + '. Renvoyez la demande complète, par exemple : Pour ' + libelle + \", rappel jeudi à 10h pour faire le point sur l'offre.\";\n  return [{ json: { action: 'reponse', message } }];\n}\nconst canal = CANAUX[demande.canal] ? demande.canal : 'appel';\nconst contexte = demande.contexte || (Array.isArray(fiche.freins) && fiche.freins[0]) || (Array.isArray(fiche.motivations) && fiche.motivations[0]) || '';\nconst corps = 'Nouvelle tâche pour ' + libelle + ' :\\n' + jour(demande.echeance) + ' - ' + demande.contenu + ' (' + CANAUX[canal] + ')' + (contexte ? '\\nContexte : ' + contexte : '');\nreturn [{ json: { action: 'brouillon', message: corps + '\\n\\n' + consigne, brouillon: { agent_id: demande.agent_id, acheteur_id: demande.acheteur_id, libelle, echeance: demande.echeance, texte: demande.contenu, canal, message_suggere: demande.message || '', contexte } } }];\n"
         },
         "type": "n8n-nodes-base.code",
         "typeVersion": 2,
         "position": [
-          -7104,
-          640
+          3520,
+          1056
         ],
-        "id": "c938a58e-9552-4dfb-9c80-9b7bf17446ee",
+        "id": "495b0ae3-2e29-4b8a-9292-415839322c74",
         "name": "Rédiger le rappel"
       },
       {
@@ -3527,10 +3547,10 @@
         "type": "n8n-nodes-base.if",
         "typeVersion": 2,
         "position": [
-          -6880,
-          640
+          3744,
+          1056
         ],
-        "id": "bb49cd15-c4ca-4c16-b657-c3729d2b8a73",
+        "id": "47e0c483-8ab0-459a-ad6b-bb9c6f0e5bd1",
         "name": "Question sur le rappel ?"
       },
       {
@@ -3544,10 +3564,10 @@
         "type": "n8n-nodes-base.whatsApp",
         "typeVersion": 1.1,
         "position": [
-          -6656,
-          544
+          3968,
+          1216
         ],
-        "id": "15ef5dae-aa3e-4525-8d65-99ee8b162d17",
+        "id": "e234ae39-e73e-406f-abc3-8faba8e9b049",
         "name": "Envoyer la réponse rappel",
         "webhookId": "r4pp3e01-0007-4000-8000-000000000007",
         "credentials": {
@@ -3590,10 +3610,10 @@
         "type": "n8n-nodes-base.supabase",
         "typeVersion": 1,
         "position": [
-          -6656,
-          832
+          3968,
+          1584
         ],
-        "id": "15a39539-5747-40d3-be3f-5c8baeffc464",
+        "id": "4a38eb8f-510b-459a-850d-ab50da08e2e7",
         "name": "Remplacer avant rappel",
         "alwaysOutputData": true,
         "credentials": {
@@ -3640,10 +3660,10 @@
         "type": "n8n-nodes-base.supabase",
         "typeVersion": 1,
         "position": [
-          -6432,
-          832
+          4192,
+          1584
         ],
-        "id": "261f44a1-b965-4d37-81fa-d2587d062be3",
+        "id": "088c6af9-634f-47a8-8b4c-dfc1b8de4dff",
         "name": "Enregistrer le brouillon rappel",
         "credentials": {
           "supabaseApi": {
@@ -3663,10 +3683,10 @@
         "type": "n8n-nodes-base.whatsApp",
         "typeVersion": 1.1,
         "position": [
-          -6208,
-          832
+          4416,
+          1584
         ],
-        "id": "39c2084b-56f6-4d70-8450-d338ee14bd2c",
+        "id": "1a2dbf65-e762-4bf3-b861-5d15f4066ad3",
         "name": "Envoyer le brouillon rappel",
         "webhookId": "r4pp3e01-0010-4000-8000-000000000010",
         "credentials": {
@@ -3703,10 +3723,10 @@
         "type": "n8n-nodes-base.if",
         "typeVersion": 2,
         "position": [
-          -8896,
-          3088
+          -2528,
+          2112
         ],
-        "id": "3fdf0996-9189-4bc7-9be5-ca227fa481b7",
+        "id": "a310a09a-d2d9-4a01-9a43-6f34bdff8480",
         "name": "Valider le rappel ?"
       },
       {
@@ -3739,6 +3759,10 @@
               {
                 "fieldId": "message_suggere",
                 "fieldValue": "={{ $('Décider la validation').item.json.message_suggere }}"
+              },
+              {
+                "fieldId": "contexte",
+                "fieldValue": "={{ $('Décider la validation').item.json.contexte }}"
               }
             ]
           }
@@ -3746,10 +3770,10 @@
         "type": "n8n-nodes-base.supabase",
         "typeVersion": 1,
         "position": [
-          -8000,
-          2608
+          -2304,
+          256
         ],
-        "id": "9a22a6ed-73d6-459c-8291-5685fe00d5df",
+        "id": "342a250c-ea9c-4355-aa0c-0425fa3fee6d",
         "name": "Créer le rappel",
         "credentials": {
           "supabaseApi": {
@@ -3790,10 +3814,10 @@
         "type": "n8n-nodes-base.supabase",
         "typeVersion": 1,
         "position": [
-          -7776,
-          2480
+          -2080,
+          256
         ],
-        "id": "25cbdf02-66c9-495b-abfe-be10a8b5048d",
+        "id": "e0eb733d-ca2d-4cb0-bb46-4f24321436bb",
         "name": "Marquer le rappel validé",
         "credentials": {
           "supabaseApi": {
@@ -3813,10 +3837,10 @@
         "type": "n8n-nodes-base.whatsApp",
         "typeVersion": 1.1,
         "position": [
-          -7552,
-          2480
+          -1856,
+          256
         ],
-        "id": "7640c802-2c6b-49a1-8ee5-7eb164d6a766",
+        "id": "f4e69b37-74de-4091-8411-98a6a480a49d",
         "name": "Confirmer le rappel",
         "webhookId": "r4pp3e01-0018-4000-8000-000000000018",
         "credentials": {
@@ -3834,21 +3858,53 @@
           "genericAuthType": "httpHeaderAuth",
           "sendBody": true,
           "specifyBody": "json",
-          "jsonBody": "={{ JSON.stringify({\"model\": \"openai/gpt-4.1-mini\", \"temperature\": 0, \"response_format\": {\"type\": \"json_object\"}, \"messages\": [{\"role\": \"system\", \"content\": \"Nous sommes le \" + $now.setZone('Europe/Paris').setLocale('fr').toFormat('cccc d LLLL yyyy') + \" (\" + $now.setZone('Europe/Paris').toISODate() + \"). Tu qualifies un message d'agent immobilier, en français, vocal transcrit ou texte. Réponds uniquement avec un objet JSON. N'invente rien : chaîne vide si ce n'est pas dit. intention vaut exactement l'une de ces valeurs : question_cible si une question vise une personne dont le prénom et le nom sont dits (Pour Léo Martin, quel est son budget ? / Où en est le financement de Léo Martin ?) ; modification_cible si un changement vise une personne dont le prénom et le nom sont dits (Pour Léo Martin, il veut un T4. / Passe Léo Martin en vert. / Mets le budget de Léo Martin à 450 000.) ; rappel_cible si un rappel vise une personne dont le prénom et le nom sont dits (Pour Léo Martin, créer un rappel pour mardi 29 septembre à 10h. / Rappelle-moi d'envoyer les annonces à Léo Martin jeudi. / Est-ce que Léo Martin a un rappel ? / Quelles sont les tâches de Léo Martin ?) ; consultation si c'est une question sans prénom et nom ensemble (Quel est son budget ? / Le budget de Martin ?) ; modification si c'est un changement sans prénom et nom ensemble (Il veut un T4. / Passe-le en vert. / Budget 400 000, il a vu sa banque, il veut acheter d'ici un mois.) ; debrief si c'est une nouvelle fiche ou une description (Léo Martin, T3 à Toulouse centre, budget 380 000 euros, apport déjà constitué, banque pas encore vue, projet à 6 mois.). mode_cible vaut question, modification, rappel_question, rappel_ecriture, ou une chaîne vide. Si intention est question_cible, mode_cible vaut question. Si intention est modification_cible, mode_cible vaut modification. Si intention est rappel_cible et que le message demande si un rappel existe, mode_cible vaut rappel_question, sinon rappel_ecriture. Sinon mode_cible est une chaîne vide. prenom_cible et nom_cible sont le prénom et le nom de la personne visée, avec les majuscules et accents du message. Les deux, ou aucun. nom_cite est le nom d'une consultation quand les deux parties ne sont pas dites, sinon une chaîne vide. sujet vaut budget, financement, delai, score ou fiche pour une question, sinon une chaîne vide. texte_rappel est, pour un rappel à écrire, seulement le moment ou la phrase à retenir, sans le nom. Exemple : mardi 29 septembre à 10h. Chaîne vide si le message demande seulement si un rappel existe. echeance_rappel est, pour un rappel à écrire, le jour de la tâche au format AAAA-MM-JJ, calculé depuis la date du jour : demain, dans 3 jours, un jour de la semaine désigne le prochain jour de ce nom, la semaine prochaine désigne le lundi suivant. Chaîne vide si aucun jour n'est dit. contenu_rappel est ce qu'il faut faire, formulé comme une tâche courte à l'infinitif, sans le nom de la personne, en gardant l'heure si elle est dite (Rappeler vers 10h pour faire le point sur l'offre / Envoyer les nouvelles annonces). Si le message demande un rappel avec seulement un moment, contenu_rappel vaut Rappeler suivi de l'heure si elle est dite (Rappeler à 10h). Chaîne vide si ce n'est pas un rappel à écrire. canal_rappel vaut appel, whatsapp ou email selon le moyen dit ou évident (rappeler ou appeler donne appel, envoyer un message WhatsApp donne whatsapp, envoyer un e-mail donne email), sinon une chaîne vide. message_rappel est, si contenu_rappel n'est pas vide et que la tâche consiste à écrire à la personne ou à la recontacter, un message court, poli et sans signature que l'agent pourrait lui envoyer, en la vouvoyant et en l'appelant par son prénom. Sinon une chaîne vide. Champs de fiche, uniquement ce qui est dit, sinon chaîne vide : nom, prenom, telephone, email, type_bien, secteur, budget, delai, financement. nom est le nom de famille. prenom est le prénom. Pour une nouvelle fiche, sépare-les : Léo Martin donne prenom Léo et nom Martin. telephone est le numéro dit. email est l'adresse e-mail dite. Laisse nom, prenom, telephone et email vides quand ils servent seulement à désigner la personne visée. delai est la formulation du message, par exemple 6 mois ou un mois. financement est la formulation du message. delai_acquisition vaut immediat, moins_d_un_mois, un_a_six_mois, plus_de_six_mois, ou une chaîne vide. Un délai immédiat vaut immediat. D'ici un mois, dans un mois ou moins d'un mois vaut moins_d_un_mois. Un délai de 2 ou 3 mois vaut un_a_six_mois. Un délai de 6 mois ou plus vaut plus_de_six_mois. Chaîne vide si le délai n'est pas dit. financement_statut vaut solide si l'apport est constitué et que la banque a été vue, ou si l'accord est obtenu. Il vaut en_cours si l'apport existe mais que la banque n'a pas encore été vue. Il vaut aucun s'il n'y a pas de démarche. Chaîne vide si le financement n'est pas dit. Si on impose la couleur vert, orange ou rouge, score_impose vaut cette couleur et score_force vaut true. Sinon score_force vaut false et score_impose est une chaîne vide.\"}, {\"role\": \"user\", \"content\": $json.text}]}) }}",
+          "jsonBody": "={{ JSON.stringify({\"model\": \"openai/gpt-4.1-mini\", \"temperature\": 0, \"response_format\": {\"type\": \"json_object\"}, \"messages\": [{\"role\": \"system\", \"content\": \"Nous sommes le \" + $now.setZone('Europe/Paris').setLocale('fr').toFormat('cccc d LLLL yyyy') + \" (\" + $now.setZone('Europe/Paris').toISODate() + \"). Tu qualifies un message d'agent immobilier, en français, vocal transcrit ou texte. Réponds uniquement avec un objet JSON. N'invente rien : chaîne vide si ce n'est pas dit. intention vaut exactement l'une de ces valeurs : question_cible si une question vise une personne dont le prénom et le nom sont dits (Pour Léo Martin, quel est son budget ? / Où en est le financement de Léo Martin ?) ; modification_cible si un changement vise une personne dont le prénom et le nom sont dits (Pour Léo Martin, il veut un T4. / Passe Léo Martin en vert. / Mets le budget de Léo Martin à 450 000.) ; rappel_cible si un rappel vise une personne dont le prénom et le nom sont dits (Pour Léo Martin, créer un rappel pour mardi 29 septembre à 10h. / Rappelle-moi d'envoyer les annonces à Léo Martin jeudi. / Est-ce que Léo Martin a un rappel ? / Quelles sont les tâches de Léo Martin ?) ; consultation si c'est une question sans prénom et nom ensemble (Quel est son budget ? / Le budget de Martin ?) ; modification si c'est un changement sans prénom et nom ensemble (Il veut un T4. / Passe-le en vert. / Budget 400 000, il a vu sa banque, il veut acheter d'ici un mois.) ; debrief si c'est une nouvelle fiche ou une description (Léo Martin, T3 à Toulouse centre, budget 380 000 euros, apport déjà constitué, banque pas encore vue, projet à 6 mois.). mode_cible vaut question, modification, rappel_question, rappel_ecriture, ou une chaîne vide. Si intention est question_cible, mode_cible vaut question. Si intention est modification_cible, mode_cible vaut modification. Si intention est rappel_cible et que le message demande si un rappel existe, mode_cible vaut rappel_question, sinon rappel_ecriture. Sinon mode_cible est une chaîne vide. prenom_cible et nom_cible sont le prénom et le nom de la personne visée, avec les majuscules et accents du message. Les deux, ou aucun. nom_cite est le nom d'une consultation quand les deux parties ne sont pas dites, sinon une chaîne vide. sujet vaut budget, financement, delai, score ou fiche pour une question, sinon une chaîne vide. texte_rappel est, pour un rappel à écrire, seulement le moment ou la phrase à retenir, sans le nom. Exemple : mardi 29 septembre à 10h. Chaîne vide si le message demande seulement si un rappel existe. echeance_rappel est, pour un rappel à écrire, le jour de la tâche au format AAAA-MM-JJ, calculé depuis la date du jour : demain, dans 3 jours, un jour de la semaine désigne le prochain jour de ce nom, la semaine prochaine désigne le lundi suivant. Chaîne vide si aucun jour n'est dit. contenu_rappel est ce qu'il faut faire, formulé comme une tâche courte à l'infinitif, sans le nom de la personne, en gardant l'heure si elle est dite (Rappeler vers 10h pour faire le point sur l'offre / Envoyer les nouvelles annonces). Si le message demande un rappel avec seulement un moment, contenu_rappel vaut Rappeler suivi de l'heure si elle est dite (Rappeler à 10h). Chaîne vide si ce n'est pas un rappel à écrire. canal_rappel vaut appel, whatsapp ou email selon le moyen dit ou évident (rappeler ou appeler donne appel, envoyer un message WhatsApp donne whatsapp, envoyer un e-mail donne email), sinon une chaîne vide. message_rappel est, si contenu_rappel n'est pas vide et que la tâche consiste à écrire à la personne ou à la recontacter, un message court, poli et sans signature que l'agent pourrait lui envoyer, en la vouvoyant et en l'appelant par son prénom. Sinon une chaîne vide. contexte_rappel est, pour un rappel à écrire, une phrase courte qui explique pourquoi la tâche existe, tirée du message (A visité deux biens à Balma, attend d'autres propositions / Attend le retour de sa banque), sans le nom de la personne et sans répéter contenu_rappel. Chaîne vide si le message ne donne pas de raison. freins_ajoutes est la liste des freins ou blocages du projet d'achat dits dans le message (banque qui refuse ou tarde, bien actuel à vendre, conjoint qui hésite), chacun en phrase courte sans le nom de la personne (Blocage avec la banque pour le prêt). freins_leves est la liste des freins que le message présente comme résolus. motivations_ajoutees est la liste des raisons d'acheter dites dans le message (Naissance d'un enfant à venir / Mutation professionnelle à Toulouse), chacune en phrase courte sans le nom de la personne. motivations_levees est la liste des motivations que le message dit ne plus être valables. Ces quatre listes sont vides si rien n'est dit : n'en déduis rien. Champs de fiche, uniquement ce qui est dit, sinon chaîne vide : nom, prenom, telephone, email, type_bien, secteur, budget, delai, financement. nom est le nom de famille. prenom est le prénom. Pour une nouvelle fiche, sépare-les : Léo Martin donne prenom Léo et nom Martin. telephone est le numéro dit. email est l'adresse e-mail dite. Laisse nom, prenom, telephone et email vides quand ils servent seulement à désigner la personne visée. delai est la formulation du message, par exemple 6 mois ou un mois. financement est la formulation du message. delai_acquisition vaut immediat, moins_d_un_mois, un_a_six_mois, plus_de_six_mois, ou une chaîne vide. Un délai immédiat vaut immediat. D'ici un mois, dans un mois ou moins d'un mois vaut moins_d_un_mois. Un délai de 2 ou 3 mois vaut un_a_six_mois. Un délai de 6 mois ou plus vaut plus_de_six_mois. Chaîne vide si le délai n'est pas dit. financement_statut vaut solide si l'apport est constitué et que la banque a été vue, ou si l'accord est obtenu. Il vaut en_cours si l'apport existe mais que la banque n'a pas encore été vue. Il vaut aucun s'il n'y a pas de démarche. Chaîne vide si le financement n'est pas dit. Si on impose la couleur vert, orange ou rouge, score_impose vaut cette couleur et score_force vaut true. Sinon score_force vaut false et score_impose est une chaîne vide.\"}, {\"role\": \"user\", \"content\": $json.text}]}) }}",
           "options": {}
         },
         "type": "n8n-nodes-base.httpRequest",
         "typeVersion": 4.4,
         "position": [
-          -10048,
-          1200
+          1280,
+          2128
         ],
-        "id": "be3ee700-1948-47c3-8a87-cbda0e1f21a0",
+        "id": "1060168c-071f-41b0-9b48-278e6d1ac0ac",
         "name": "Lire l'intention",
         "credentials": {
           "httpHeaderAuth": {
             "id": "6bIjYgv58bFvfX9B",
             "name": "OpenRouter API \"Era Vocal API\" - MJ"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "useCustomSchema": true,
+          "schema": "eravocal",
+          "operation": "get",
+          "tableId": "acheteurs",
+          "filters": {
+            "conditions": [
+              {
+                "keyName": "id",
+                "keyValue": "={{ $('Unifier le rappel').first().json.acheteur_id }}"
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.supabase",
+        "typeVersion": 1,
+        "position": [
+          3408,
+          1248
+        ],
+        "id": "18ab06e4-52eb-4f7d-8556-a53656d357ee",
+        "name": "Charger la fiche du rappel",
+        "executeOnce": true,
+        "alwaysOutputData": true,
+        "credentials": {
+          "supabaseApi": {
+            "id": "P40Z9AdwC5m9ITuj",
+            "name": "ERA Immo - Estimateur de biens"
           }
         }
       }
@@ -5174,7 +5230,7 @@
         "main": [
           [
             {
-              "node": "Rédiger le rappel",
+              "node": "Charger la fiche du rappel",
               "type": "main",
               "index": 0
             }
@@ -5277,6 +5333,17 @@
           [
             {
               "node": "Qualifier le message",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Charger la fiche du rappel": {
+        "main": [
+          [
+            {
+              "node": "Rédiger le rappel",
               "type": "main",
               "index": 0
             }

@@ -38,9 +38,11 @@ Un tap ouvre la fiche. Pas de bouton « Nouveau prospect ».
 3. Carrousel « Prochaines actions » : `ProspectTaskCard`, largeur fixe, la carte suivante dépasse.
 4. Deux colonnes à partir de `lg` : Informations prospect, Projet immobilier, Financement, puis Critères, Motivations et freins, Historique.
 
-Chaque bloc métier a Modifier, qui ouvre `SimpleEditSheet`. Cette feuille est un placeholder : Annuler et Enregistrer ferment sans écrire les champs.
+Chaque bloc métier a Modifier, qui ouvre `SimpleEditSheet`. Cette feuille est un placeholder : Annuler et Enregistrer ferment sans écrire les champs. Exception : Motivations et freins ouvre `ListesEditSheet` (retrait par croix, ajout par champ et bouton ou Entrée), enregistré en base pour une fiche réelle.
 
-Informations, Projet et Financement ont Voir plus / Voir moins. Les lignes visibles viennent en partie du prospect (type, budget, apport, critères, motivation, frein, historique). Le reste est le même texte pour tous les prospects (locataire, CDI, 3 200 €, banque consultée, etc.).
+Motivations et freins : deux listes de pastilles (freins en orange `#E07B39`), `-` si vide.
+
+Informations, Projet et Financement ont Voir plus / Voir moins. Les lignes visibles viennent en partie du prospect (type, budget, apport, critères, motivations, freins, historique). Le reste est le même texte pour tous les prospects (locataire, CDI, 3 200 €, banque consultée, etc.).
 
 Historique : types `vocal`, `note`, `tache`, `tache_annulee`. Les tâches terminées ou annulées du prospect arrivent en tête, la plus récente d'abord (« Tâche réalisée » ou « Tâche annulée »). Vocal et note se déplient. La « transcription complète » est une phrase générée, pas le vocal d'origine. Une tâche d'historique est affichée en entier, sans dépliage.
 

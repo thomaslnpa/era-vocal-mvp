@@ -24,8 +24,8 @@ interface Prospect {
   financement: string
   apport: string
   criteres: string[]
-  motivation: string
-  frein: string
+  motivations: string[]
+  freins: string[]
   historique: { date: string; type: string; resume: string }[]
 }
 
@@ -66,8 +66,8 @@ const DEMO_DATA: Prospect[] = [
     financement: 'En cours',
     apport: '30 000 €',
     criteres: ['Balcon — indispensable', 'Parking — souhaité', 'Minimum 2 chambres'],
-    motivation: 'Recherche active d\'une résidence principale.',
-    frein: 'Accord bancaire en attente.',
+    motivations: ['Recherche active d\'une résidence principale.'],
+    freins: ['Accord bancaire en attente.'],
     historique: [
       { date: '19 sept. 2026', type: 'vocal', resume: 'Recherche toujours active. Accord bancaire en attente. Souhaite acheter avant janvier.' },
       { date: '12 sept. 2026', type: 'vocal', resume: 'Recherche d\'un T3 sur Toulouse centre. Budget environ 300 000 €.' },
@@ -89,8 +89,8 @@ const DEMO_DATA: Prospect[] = [
     financement: 'Non démarré',
     apport: '50 000 €',
     criteres: ['Jardin', 'Garage', '4 chambres minimum'],
-    motivation: 'Projet de déménagement pour rapprocher les enfants de l\'école.',
-    frein: 'Projet mis en pause. Situation professionnelle incertaine.',
+    motivations: ['Rapprocher les enfants de l\'école.'],
+    freins: ['Projet mis en pause.', 'Situation professionnelle incertaine.'],
     historique: [
       { date: '5 sept. 2026', type: 'note', resume: 'Projet initialement prévu pour l\'automne. Contact à reprendre.' },
     ],
@@ -110,8 +110,8 @@ const DEMO_DATA: Prospect[] = [
     financement: 'Accord obtenu',
     apport: '80 000 €',
     criteres: ['Vue dégagée', 'Ascenseur', 'Deux places de parking'],
-    motivation: 'Financement validé, prête à signer rapidement.',
-    frein: 'Peu de biens disponibles sur le secteur.',
+    motivations: ['Financement validé, prête à signer rapidement.'],
+    freins: ['Peu de biens disponibles sur le secteur.'],
     historique: [
       { date: '18 sept. 2026', type: 'vocal', resume: 'Accord de prêt confirmé. Très motivée. Budget extensible jusqu\'à 550 000 €.' },
     ],
@@ -131,8 +131,8 @@ const DEMO_DATA: Prospect[] = [
     financement: 'En cours',
     apport: '20 000 €',
     criteres: ['Lumineux', 'Calme'],
-    motivation: 'Premier achat. Veut sécuriser son investissement.',
-    frein: 'Hésite encore entre louer et acheter.',
+    motivations: ['Premier achat.', 'Veut sécuriser son investissement.'],
+    freins: ['Hésite encore entre louer et acheter.'],
     historique: [],
   },
   {
@@ -150,8 +150,8 @@ const DEMO_DATA: Prospect[] = [
     financement: 'Non démarré',
     apport: '40 000 €',
     criteres: ['Jardin', 'Quartier calme'],
-    motivation: 'Famille qui s\'agrandit, besoin de plus d\'espace.',
-    frein: 'Doit d\'abord vendre son appartement actuel.',
+    motivations: ['Famille qui s\'agrandit, besoin de plus d\'espace.'],
+    freins: ['Doit d\'abord vendre son appartement actuel.'],
     historique: [],
   },
 ]
@@ -271,15 +271,19 @@ function acheteurToProspect(a: Tables<{ schema: 'eravocal' }, 'acheteurs'>): Pro
     financement: a.financement_statut ? FINANCEMENT_LABEL[a.financement_statut] : '',
     apport: typeof details.apport === 'string' ? details.apport : '',
     criteres: [],
-    motivation: '',
-    frein: '',
+    motivations: a.motivations,
+    freins: a.freins,
     historique: [],
   }
 }
 
+type ListesProspect = Pick<Prospect, 'freins' | 'motivations'>
+
 // Acheteurs réels + fiches de démo, mis à jour en temps réel
-function useProspects(): Prospect[] {
+function useProspects() {
+  const [demo, setDemo] = useState<Prospect[]>(PROSPECTS)
   const [reels, setReels] = useState<Prospect[]>([])
+  const loadRef = useRef<() => void>(() => {})
 
   useEffect(() => {
     let active = true
@@ -288,6 +292,7 @@ function useProspects(): Prospect[] {
       if (error) return console.error('Supabase acheteurs :', error.message)
       if (active) setReels(data.map(acheteurToProspect))
     }
+    loadRef.current = load
     load()
     const channel = supabase
       .channel('acheteurs-live')
@@ -299,7 +304,22 @@ function useProspects(): Prospect[] {
     }
   }, [])
 
-  return [...reels, ...PROSPECTS]
+  const modifierListes = (id: Prospect['id'], listes: ListesProspect) => {
+    const appliquer = (prev: Prospect[]) => prev.map(p => (p.id === id ? { ...p, ...listes } : p))
+    if (demo.some(p => p.id === id)) return setDemo(appliquer)
+    setReels(appliquer)
+    supabase
+      .from('acheteurs')
+      .update(listes)
+      .eq('id', String(id))
+      .then(({ error }) => {
+        if (!error) return
+        console.error('Supabase acheteurs :', error.message)
+        loadRef.current()
+      })
+  }
+
+  return { prospects: [...reels, ...demo], modifierListes }
 }
 
 type ChampsTache = Pick<Tache, 'echeance' | 'texte' | 'contexte'>
@@ -1020,9 +1040,10 @@ function ProspectRow({ prospect: p, prochaine, onClick }: { prospect: Prospect; 
 }
 
 // ── Screen: Detail ────────────────────────────────────────────────────────────
-function DetailScreen({ prospect: p, tachesApi, onBack }: {
+function DetailScreen({ prospect: p, tachesApi, onModifierListes, onBack }: {
   prospect: Prospect
   tachesApi: TachesApi
+  onModifierListes: (listes: ListesProspect) => void
   onBack: () => void
 }) {
   const [editSection, setEditSection] = useState<string | null>(null)
@@ -1219,12 +1240,22 @@ function DetailScreen({ prospect: p, tachesApi, onBack }: {
           <InfoCard title="Motivations & freins" onEdit={() => setEditSection('motivations')}>
             <div className="space-y-3">
               <div>
-                <p className="text-xs text-[#9CA3AF] mb-1">Motivation</p>
-                <p className="text-sm text-[#374151] font-500">{p.motivation || '-'}</p>
+                <p className="text-xs text-[#9CA3AF] mb-1.5">Motivations</p>
+                {p.motivations.length === 0 && <p className="text-sm text-[#9CA3AF]">-</p>}
+                <div className="flex flex-wrap gap-1.5">
+                  {p.motivations.map(m => (
+                    <span key={m} className="text-xs font-500 text-[#374151] bg-[#F3F4F6] px-2.5 py-1 rounded-full">{m}</span>
+                  ))}
+                </div>
               </div>
               <div>
-                <p className="text-xs text-[#9CA3AF] mb-1">Frein actuel</p>
-                <p className="text-sm text-[#E07B39] font-500">{p.frein || '-'}</p>
+                <p className="text-xs text-[#9CA3AF] mb-1.5">Freins</p>
+                {p.freins.length === 0 && <p className="text-sm text-[#9CA3AF]">-</p>}
+                <div className="flex flex-wrap gap-1.5">
+                  {p.freins.map(f => (
+                    <span key={f} className="text-xs font-500 text-[#E07B39] bg-[#FFF3E0] px-2.5 py-1 rounded-full">{f}</span>
+                  ))}
+                </div>
               </div>
             </div>
           </InfoCard>
@@ -1287,15 +1318,21 @@ function DetailScreen({ prospect: p, tachesApi, onBack }: {
       </div>
 
       {/* Edit sheets */}
-      {editSection && (
+      {editSection === 'motivations' && (
+        <ListesEditSheet
+          listes={{ motivations: p.motivations, freins: p.freins }}
+          onSave={onModifierListes}
+          onClose={() => setEditSection(null)}
+        />
+      )}
+      {editSection && editSection !== 'motivations' && (
         <Overlay onClose={() => setEditSection(null)}>
           <SimpleEditSheet
             title={
               editSection === 'info' ? 'Informations prospect' :
               editSection === 'projet' ? 'Projet immobilier' :
               editSection === 'financement' ? 'Financement' :
-              editSection === 'criteres' ? 'Critères importants' :
-              'Motivations & freins'
+              'Critères importants'
             }
             onClose={() => setEditSection(null)}
           />
@@ -1323,6 +1360,86 @@ function SimpleEditSheet({ title, onClose }: { title: string; onClose: () => voi
         </button>
       </div>
     </div>
+  )
+}
+
+function ListeEditable({ titre, items, couleur, placeholder, onChange }: {
+  titre: string
+  items: string[]
+  couleur: string
+  placeholder: string
+  onChange: (items: string[]) => void
+}) {
+  const [saisie, setSaisie] = useState('')
+
+  function ajouter() {
+    const valeur = saisie.trim()
+    if (valeur && !items.some(i => i.toLowerCase() === valeur.toLowerCase())) onChange([...items, valeur])
+    setSaisie('')
+  }
+
+  return (
+    <div>
+      <label className="text-xs font-600 text-[#6B7280] block mb-1.5">{titre}</label>
+      <div className="space-y-1.5 mb-2">
+        {items.length === 0 && <p className="text-sm text-[#9CA3AF] italic">Aucun élément.</p>}
+        {items.map(item => (
+          <div key={item} className="flex items-center gap-2 bg-[#F9FAFB] rounded-xl pl-3.5 pr-1.5 py-1.5">
+            <p className={`text-sm flex-1 ${couleur}`}>{item}</p>
+            <button
+              onClick={() => onChange(items.filter(i => i !== item))}
+              aria-label={`Retirer ${item}`}
+              className="w-8 h-8 rounded-lg flex items-center justify-center text-[#9CA3AF] active:bg-[#F3F4F6]"
+            >
+              ✕
+            </button>
+          </div>
+        ))}
+      </div>
+      <div className="flex gap-2">
+        <input
+          value={saisie}
+          onChange={e => setSaisie(e.target.value)}
+          onKeyDown={e => e.key === 'Enter' && ajouter()}
+          placeholder={placeholder}
+          className="flex-1 min-w-0 bg-[#F9FAFB] border border-[#E5E7EB] rounded-xl px-3.5 py-2.5 text-sm outline-none focus:border-[#850831]"
+        />
+        <button onClick={ajouter} className="shrink-0 px-3.5 rounded-xl bg-[#F3F4F6] text-sm font-600 text-[#850831] active:bg-[#E5E7EB]">
+          Ajouter
+        </button>
+      </div>
+    </div>
+  )
+}
+
+function ListesEditSheet({ listes, onSave, onClose }: {
+  listes: ListesProspect
+  onSave: (listes: ListesProspect) => void
+  onClose: () => void
+}) {
+  const [motivations, setMotivations] = useState(listes.motivations)
+  const [freins, setFreins] = useState(listes.freins)
+
+  function enregistrer() {
+    onSave({ motivations, freins })
+    onClose()
+  }
+
+  return (
+    <Overlay onClose={onClose}>
+      <div className="bg-white rounded-t-3xl px-5 pt-5 pb-10">
+        <div className="w-10 h-1 bg-[#E5E7EB] rounded-full mx-auto md:hidden mb-5" />
+        <h3 className="text-base font-700 text-[#111827] mb-4">Motivations & freins</h3>
+        <div className="space-y-5">
+          <ListeEditable titre="Motivations" items={motivations} couleur="text-[#374151]" placeholder="Ex. Naissance d'un enfant à venir" onChange={setMotivations} />
+          <ListeEditable titre="Freins" items={freins} couleur="text-[#E07B39]" placeholder="Ex. Blocage avec la banque" onChange={setFreins} />
+        </div>
+        <div className="flex gap-3 mt-5">
+          <button onClick={onClose} className="flex-1 py-3.5 rounded-2xl border border-[#E5E7EB] text-sm font-600 text-[#6B7280]">Fermer</button>
+          <button onClick={enregistrer} className="flex-1 py-3.5 rounded-2xl bg-[#850831] text-white text-sm font-700 active:scale-[0.98] transition-transform">Enregistrer</button>
+        </div>
+      </div>
+    </Overlay>
   )
 }
 
@@ -1710,7 +1827,7 @@ function NavItem({ icon, label, active, onClick }: { icon: string; label: string
 export default function App() {
   const [screen, setScreen] = useState<Screen>('home')
   const [navTab, setNavTab] = useState<'home' | 'prospects'>('home')
-  const prospects = useProspects()
+  const { prospects, modifierListes } = useProspects()
   const tachesApi = useTaches()
   const [selectedId, setSelectedId] = useState<Prospect['id']>(PROSPECTS[0].id)
   // Dérivé de la liste pour que la fiche ouverte suive les mises à jour temps réel
@@ -1751,6 +1868,7 @@ export default function App() {
             <DetailScreen
               prospect={selectedProspect}
               tachesApi={tachesApi}
+              onModifierListes={listes => modifierListes(selectedProspect.id, listes)}
               onBack={() => setScreen(navTab)}
             />
           )}

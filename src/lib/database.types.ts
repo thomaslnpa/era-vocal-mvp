@@ -27,7 +27,9 @@ export type Database = {
           financement_statut:
             | Database["eravocal"]["Enums"]["financement_statut"]
             | null
+          freins: string[]
           id: string
+          motivations: string[]
           nom: string
           prenom: string | null
           projet: Database["eravocal"]["Enums"]["projet_type"] | null
@@ -50,7 +52,9 @@ export type Database = {
           financement_statut?:
             | Database["eravocal"]["Enums"]["financement_statut"]
             | null
+          freins?: string[]
           id?: string
+          motivations?: string[]
           nom: string
           prenom?: string | null
           projet?: Database["eravocal"]["Enums"]["projet_type"] | null
@@ -73,7 +77,9 @@ export type Database = {
           financement_statut?:
             | Database["eravocal"]["Enums"]["financement_statut"]
             | null
+          freins?: string[]
           id?: string
+          motivations?: string[]
           nom?: string
           prenom?: string | null
           projet?: Database["eravocal"]["Enums"]["projet_type"] | null
